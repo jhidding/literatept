@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>LiteratePT</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <!-- Bootstrap 4.5.0 stylesheet -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/mods.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  
+  <!-- pandoc-eqnos: equation style -->
+  <style>
+    .eqnos { display: inline-block; position: relative; width: 100%; }
+    .eqnos br { display: none; }
+    .eqnos-number { position: absolute; right: 0em; top: 50%; line-height: 0; }
+  </style>
+<!-- <script data-main="scripts/main" src="js/require.js"></script> -->
+  <!-- Load React. -->
+  <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+<!--  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script> -->
+
+
+</head>
+<body class="d-flex flex-column">
+
+<nav id="TOC" class="navbar navbar-dark bg-dark">
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <a href="#" class="ml-5 mr-auto navbar-brand">LiteratePT<br><span style="font-size: smaller">a translation of smallpt 
+        </span></a>
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+<ul>
+<li><a href="#literatept">LiteratePT</a></li>
+<li><a href="#vectors">Vectors</a></li>
+<li><a href="#colour">Colour</a></li>
+<li><a href="#geometry">Geometry</a></li>
+<li><a href="#scene">Scene</a></li>
+<li><a href="#path-tracing">Path tracing</a></li>
+<li><a href="#image">Image</a></li>
+<li><a href="#main">Main</a></li>
+</ul>
+</div>
+</nav>
+
+<!-- <nav class="navbar navbar-dark navbar-expand-md bg-dark mb-4">
+<p class="subtitle">a translation of smallpt</p>
+</nav>
+ -->
+
+<main role="main" class="flex-fill"><div class="container my-5">
+<h1 id="literatept">LiteratePT</h1>
+<p>SmallPT is a global illumination ray tracer in 100 lines of C++. Let’s translate it to Rust; not in a 100 lines, but extremely literate. I’ll sacrifice some of SmallPt’s compactness for better semantics.</p>
+<p>This uses the following programming techniques:</p>
+<ul>
+<li>Property testing</li>
+<li>Traits</li>
+<li>Algebraic data types</li>
+</ul>
+<div class="annotated-code">
+<p><span><em>«Cargo.toml»=</em></span></p>
+<div class="sourceCode" id="cb1" data-file="Cargo.toml"><pre class="sourceCode toml"><code class="sourceCode toml"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">[</span><span class="dt">package</span><span class="kw">]</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="dt">name</span> <span class="op">=</span> <span class="st">&quot;literatept&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="dt">version</span> <span class="op">=</span> <span class="st">&quot;0.1.0&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="dt">authors</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;Johan Hidding &lt;j.hidding@esciencecenter.nl&gt;&quot;</span><span class="op">]</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="dt">edition</span> <span class="op">=</span> <span class="st">&quot;2018&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="kw">[</span><span class="dt">profile</span><span class="kw">.</span><span class="dt">release</span><span class="kw">]</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="dt">opt-level</span> <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="kw">[</span><span class="dt">dependencies</span><span class="kw">]</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="er">&lt;&lt;dependencies&gt;&gt;</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="kw">[</span><span class="dt">dev-dependencies</span><span class="kw">]</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a><span class="er">&lt;&lt;dev-dependencies&gt;&gt;</span></span></code></pre></div>
+</div>
+<ul>
+<li><input type="checkbox" disabled="" />
+The package description can be extended using <a href="https://doc.rust-lang.org/cargo/reference/manifest.html">more keys and their definitions</a></li>
+</ul>
+<div class="annotated-code">
+<p><span><em>«dependencies»=</em></span></p>
+<div class="sourceCode" id="dependencies"><pre class="sourceCode toml"><code class="sourceCode toml"><span id="dependencies-1"><a href="#dependencies-1"></a><span class="dt">rand</span> <span class="op">=</span> <span class="st">&quot;0.7.3&quot;</span></span>
+<span id="dependencies-2"><a href="#dependencies-2"></a><span class="dt">rayon</span> <span class="op">=</span> <span class="st">&quot;1.3.0&quot;</span></span></code></pre></div>
+</div>
+<h1 id="vectors">Vectors</h1>
+<p><span class="math inline">\(\renewcommand{\vec}[1]{{\bf #1}}\)</span> The <code>Vec</code> type has three public members <span class="math inline">\(x\)</span>, <span class="math inline">\(y\)</span> and <span class="math inline">\(z\)</span>.</p>
+<div class="annotated-code">
+<p><span><em>«vector»=</em></span></p>
+<div class="sourceCode" id="vector"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="vector-1"><a href="#vector-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="at">,</span><span class="bu">Copy</span><span class="at">,</span><span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="vector-2"><a href="#vector-2"></a><span class="kw">struct</span> Vec3</span>
+<span id="vector-3"><a href="#vector-3"></a>    <span class="op">{</span> <span class="kw">pub</span> x: <span class="dt">f64</span>, <span class="kw">pub</span> y: <span class="dt">f64</span>, <span class="kw">pub</span> z: <span class="dt">f64</span> <span class="op">}</span></span>
+<span id="vector-4"><a href="#vector-4"></a></span>
+<span id="vector-5"><a href="#vector-5"></a><span class="kw">const</span> <span class="kw">fn</span> vec(x: <span class="dt">f64</span>, y: <span class="dt">f64</span>, z: <span class="dt">f64</span>) -&gt; Vec3 <span class="op">{</span></span>
+<span id="vector-6"><a href="#vector-6"></a>    Vec3 <span class="op">{</span> x: x, y: y, z: z <span class="op">}</span></span>
+<span id="vector-7"><a href="#vector-7"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>We derive the <code>Clone</code>, <code>Copy</code>, and <code>Debug</code> traits, meaning that we can print debug statements involving <code>Vec</code> instances, and that we can clone instances usinge the <code>.clone()</code> method. The <code>Copy</code> trait means that the <code>Vec</code> can be copied implicitly, creating call-by-value semantics on this type.</p>
+<h3 id="operators">Operators</h3>
+<p>Each of the operators only occupy a single line of code in SmallPt, but this is probably better.</p>
+<div class="annotated-code">
+<p><span><em>«vector»+</em></span></p>
+<div class="sourceCode" id="vector"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="vector-1"><a href="#vector-1"></a><span class="kw">impl</span> <span class="pp">std::ops::</span>Add <span class="kw">for</span> Vec3 <span class="op">{</span></span>
+<span id="vector-2"><a href="#vector-2"></a>    <span class="kw">type</span> Output = <span class="kw">Self</span>;</span>
+<span id="vector-3"><a href="#vector-3"></a>    <span class="kw">fn</span> add(<span class="kw">self</span>, other: <span class="kw">Self</span>) -&gt; <span class="kw">Self</span> <span class="op">{</span></span>
+<span id="vector-4"><a href="#vector-4"></a>        <span class="kw">Self</span> <span class="op">{</span> x: <span class="kw">self</span>.x + other.x</span>
+<span id="vector-5"><a href="#vector-5"></a>             , y: <span class="kw">self</span>.y + other.y</span>
+<span id="vector-6"><a href="#vector-6"></a>             , z: <span class="kw">self</span>.z + other.z <span class="op">}</span></span>
+<span id="vector-7"><a href="#vector-7"></a>    <span class="op">}</span></span>
+<span id="vector-8"><a href="#vector-8"></a><span class="op">}</span></span>
+<span id="vector-9"><a href="#vector-9"></a></span>
+<span id="vector-10"><a href="#vector-10"></a><span class="kw">impl</span> <span class="pp">std::ops::</span>Sub <span class="kw">for</span> Vec3 <span class="op">{</span></span>
+<span id="vector-11"><a href="#vector-11"></a>    <span class="kw">type</span> Output = <span class="kw">Self</span>;</span>
+<span id="vector-12"><a href="#vector-12"></a>    <span class="kw">fn</span> sub(<span class="kw">self</span>, other: <span class="kw">Self</span>) -&gt; <span class="kw">Self</span> <span class="op">{</span></span>
+<span id="vector-13"><a href="#vector-13"></a>        <span class="kw">Self</span> <span class="op">{</span> x: <span class="kw">self</span>.x - other.x</span>
+<span id="vector-14"><a href="#vector-14"></a>             , y: <span class="kw">self</span>.y - other.y</span>
+<span id="vector-15"><a href="#vector-15"></a>             , z: <span class="kw">self</span>.z - other.z <span class="op">}</span></span>
+<span id="vector-16"><a href="#vector-16"></a>    <span class="op">}</span></span>
+<span id="vector-17"><a href="#vector-17"></a><span class="op">}</span></span>
+<span id="vector-18"><a href="#vector-18"></a></span>
+<span id="vector-19"><a href="#vector-19"></a><span class="kw">impl</span> <span class="pp">std::ops::</span>Neg <span class="kw">for</span> Vec3 <span class="op">{</span></span>
+<span id="vector-20"><a href="#vector-20"></a>    <span class="kw">type</span> Output = <span class="kw">Self</span>;</span>
+<span id="vector-21"><a href="#vector-21"></a>    <span class="kw">fn</span> neg(<span class="kw">self</span>) -&gt; <span class="kw">Self</span>::Output <span class="op">{</span></span>
+<span id="vector-22"><a href="#vector-22"></a>        <span class="kw">Self</span> <span class="op">{</span> x: -<span class="kw">self</span>.x, y: -<span class="kw">self</span>.y, z: -<span class="kw">self</span>.z <span class="op">}</span></span>
+<span id="vector-23"><a href="#vector-23"></a>    <span class="op">}</span></span>
+<span id="vector-24"><a href="#vector-24"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>SmallPt defines four kinds of multiplication: scaling, point-wise multiplication, dot product and outer product. The point-wise multiplication is only used to manipulate colors, for which we’ll use separate structures.</p>
+<p>Here’s scaling,</p>
+<div class="annotated-code">
+<p><span><em>«vector»+</em></span></p>
+<div class="sourceCode" id="vector"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="vector-1"><a href="#vector-1"></a><span class="kw">impl</span> <span class="pp">std::ops::</span>Mul&lt;<span class="dt">f64</span>&gt; <span class="kw">for</span> Vec3 <span class="op">{</span></span>
+<span id="vector-2"><a href="#vector-2"></a>    <span class="kw">type</span> Output = <span class="kw">Self</span>;</span>
+<span id="vector-3"><a href="#vector-3"></a>    <span class="kw">fn</span> mul(<span class="kw">self</span>, s: <span class="dt">f64</span>) -&gt; <span class="kw">Self</span> <span class="op">{</span></span>
+<span id="vector-4"><a href="#vector-4"></a>        <span class="kw">Self</span> <span class="op">{</span> x: <span class="kw">self</span>.x * s</span>
+<span id="vector-5"><a href="#vector-5"></a>             , y: <span class="kw">self</span>.y * s</span>
+<span id="vector-6"><a href="#vector-6"></a>             , z: <span class="kw">self</span>.z * s <span class="op">}</span></span>
+<span id="vector-7"><a href="#vector-7"></a>    <span class="op">}</span></span>
+<span id="vector-8"><a href="#vector-8"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>the dot-product,</p>
+<p><span class="math display">\[\vec{a} \cdot \vec{b} = a_x b_x + a_y b_y + a_z b_z\]</span></p>
+<div class="annotated-code">
+<p><span><em>«vector»+</em></span></p>
+<div class="sourceCode" id="vector"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="vector-1"><a href="#vector-1"></a><span class="kw">impl</span> <span class="pp">std::ops::</span>Mul&lt;Vec3&gt; <span class="kw">for</span> Vec3 <span class="op">{</span></span>
+<span id="vector-2"><a href="#vector-2"></a>    <span class="kw">type</span> Output = <span class="dt">f64</span>;</span>
+<span id="vector-3"><a href="#vector-3"></a>    <span class="kw">fn</span> mul(<span class="kw">self</span>, other: <span class="kw">Self</span>) -&gt; <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="vector-4"><a href="#vector-4"></a>        <span class="kw">self</span>.x * other.x +</span>
+<span id="vector-5"><a href="#vector-5"></a>        <span class="kw">self</span>.y * other.y +</span>
+<span id="vector-6"><a href="#vector-6"></a>        <span class="kw">self</span>.z * other.z</span>
+<span id="vector-7"><a href="#vector-7"></a>    <span class="op">}</span></span>
+<span id="vector-8"><a href="#vector-8"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>and outer product for which we abuse the <code>%</code> operator,</p>
+<p><span class="math display">\[\vec{a} \wedge \vec{b} = \det \begin{pmatrix}
+\hat{x} &amp; \hat{y} &amp; \hat{z}\\
+a_x &amp; a_y &amp; a_z \\
+b_x &amp; b_y &amp; b_z
+\end{pmatrix}\]</span></p>
+<div class="annotated-code">
+<p><span><em>«vector»+</em></span></p>
+<div class="sourceCode" id="vector"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="vector-1"><a href="#vector-1"></a><span class="kw">impl</span> <span class="pp">std::ops::</span>Rem <span class="kw">for</span> Vec3 <span class="op">{</span></span>
+<span id="vector-2"><a href="#vector-2"></a>    <span class="kw">type</span> Output = <span class="kw">Self</span>;</span>
+<span id="vector-3"><a href="#vector-3"></a>    <span class="kw">fn</span> rem(<span class="kw">self</span>, other: <span class="kw">Self</span>) -&gt; <span class="kw">Self</span> <span class="op">{</span></span>
+<span id="vector-4"><a href="#vector-4"></a>        <span class="kw">Self</span> <span class="op">{</span> x: <span class="kw">self</span>.y * other.z - <span class="kw">self</span>.z * other.y</span>
+<span id="vector-5"><a href="#vector-5"></a>             , y: <span class="kw">self</span>.z * other.x - <span class="kw">self</span>.x * other.z</span>
+<span id="vector-6"><a href="#vector-6"></a>             , z: <span class="kw">self</span>.x * other.y - <span class="kw">self</span>.y * other.x <span class="op">}</span></span>
+<span id="vector-7"><a href="#vector-7"></a>    <span class="op">}</span></span>
+<span id="vector-8"><a href="#vector-8"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>Vectors can be normalized to a unit-vector.</p>
+<div class="annotated-code">
+<p><span><em>«vector»+</em></span></p>
+<div class="sourceCode" id="vector"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="vector-1"><a href="#vector-1"></a><span class="kw">impl</span> Vec3 <span class="op">{</span></span>
+<span id="vector-2"><a href="#vector-2"></a>    <span class="kw">fn</span> abs(<span class="kw">self</span>) -&gt; <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="vector-3"><a href="#vector-3"></a>        (<span class="kw">self</span> * <span class="kw">self</span>).sqrt()</span>
+<span id="vector-4"><a href="#vector-4"></a>    <span class="op">}</span></span>
+<span id="vector-5"><a href="#vector-5"></a></span>
+<span id="vector-6"><a href="#vector-6"></a>    <span class="kw">fn</span> normalize(<span class="kw">self</span>) -&gt; <span class="kw">Self</span> <span class="op">{</span></span>
+<span id="vector-7"><a href="#vector-7"></a>        <span class="kw">self</span> * (<span class="dv">1.0</span> / <span class="kw">self</span>.abs())</span>
+<span id="vector-8"><a href="#vector-8"></a>    <span class="op">}</span></span>
+<span id="vector-9"><a href="#vector-9"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<h2 id="tests">Tests</h2>
+<p>We use the <code>quickcheck</code> crate to do some property testing on the <code>Vec</code> type.</p>
+<div class="annotated-code">
+<p><span><em>«dev-dependencies»=</em></span></p>
+<div class="sourceCode" id="dev-dependencies"><pre class="sourceCode toml"><code class="sourceCode toml"><span id="dev-dependencies-1"><a href="#dev-dependencies-1"></a><span class="dt">quickcheck</span> <span class="op">=</span> <span class="st">&quot;0.9&quot;</span></span>
+<span id="dev-dependencies-2"><a href="#dev-dependencies-2"></a><span class="dt">quickcheck_macros</span> <span class="op">=</span> <span class="st">&quot;0.9&quot;</span></span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«import-quickcheck»=</em></span></p>
+<div class="sourceCode" id="import-quickcheck"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="import-quickcheck-1"><a href="#import-quickcheck-1"></a><span class="at">#[</span>cfg<span class="at">(</span>test<span class="at">)]</span></span>
+<span id="import-quickcheck-2"><a href="#import-quickcheck-2"></a><span class="kw">extern</span> <span class="kw">crate</span> quickcheck;</span>
+<span id="import-quickcheck-3"><a href="#import-quickcheck-3"></a></span>
+<span id="import-quickcheck-4"><a href="#import-quickcheck-4"></a><span class="at">#[</span>cfg<span class="at">(</span>test<span class="at">)]</span></span>
+<span id="import-quickcheck-5"><a href="#import-quickcheck-5"></a><span class="at">#[</span>macro_use<span class="at">(</span>quickcheck<span class="at">)]</span></span>
+<span id="import-quickcheck-6"><a href="#import-quickcheck-6"></a><span class="kw">extern</span> <span class="kw">crate</span> quickcheck_macros;</span></code></pre></div>
+</div>
+<p>We need to be able to generate <code>Arbitrary</code> instances of <code>Vec</code>. I’m not sure if this will ever yield a zero-vector, or a sequence of vectors that lie in the same plane.</p>
+<div class="annotated-code">
+<p><span><em>«vector-tests»=</em></span></p>
+<div class="sourceCode" id="vector-tests"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="vector-tests-1"><a href="#vector-tests-1"></a><span class="kw">impl</span> Arbitrary <span class="kw">for</span> Vec3 <span class="op">{</span></span>
+<span id="vector-tests-2"><a href="#vector-tests-2"></a>    <span class="kw">fn</span> arbitrary&lt;G: Gen&gt;(g: &amp;<span class="kw">mut</span> G) -&gt; <span class="kw">Self</span> <span class="op">{</span></span>
+<span id="vector-tests-3"><a href="#vector-tests-3"></a>        <span class="kw">let</span> x = <span class="dt">f64</span>::arbitrary(g);</span>
+<span id="vector-tests-4"><a href="#vector-tests-4"></a>        <span class="kw">let</span> y = <span class="dt">f64</span>::arbitrary(g);</span>
+<span id="vector-tests-5"><a href="#vector-tests-5"></a>        <span class="kw">let</span> z = <span class="dt">f64</span>::arbitrary(g);</span>
+<span id="vector-tests-6"><a href="#vector-tests-6"></a>        vec(x, y, z)</span>
+<span id="vector-tests-7"><a href="#vector-tests-7"></a>    <span class="op">}</span></span>
+<span id="vector-tests-8"><a href="#vector-tests-8"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>Now we can check that for any vectors <span class="math inline">\(\vec{a}\)</span> and <span class="math inline">\(\vec{b}\)</span>, we have,</p>
+<p><span class="math display">\[(\vec{a} \wedge \vec{b}) \cdot \vec{a} = 0,\]</span></p>
+<div class="annotated-code">
+<p><span><em>«vector-tests»+</em></span></p>
+<div class="sourceCode" id="vector-tests"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="vector-tests-1"><a href="#vector-tests-1"></a><span class="at">#[</span>quickcheck<span class="at">]</span></span>
+<span id="vector-tests-2"><a href="#vector-tests-2"></a><span class="kw">fn</span> outer_product_orthogonal(a: Vec3, b: Vec3) -&gt; <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="vector-tests-3"><a href="#vector-tests-3"></a>    <span class="kw">let</span> c = a % b;</span>
+<span id="vector-tests-4"><a href="#vector-tests-4"></a>    (a * c).abs() &lt; <span class="dv">1e-6</span> &amp;&amp; (b * c).abs() &lt; <span class="dv">1e-6</span></span>
+<span id="vector-tests-5"><a href="#vector-tests-5"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>that any normalized vector has length 1,</p>
+<div class="annotated-code">
+<p><span><em>«vector-tests»+</em></span></p>
+<div class="sourceCode" id="vector-tests"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="vector-tests-1"><a href="#vector-tests-1"></a><span class="at">#[</span>quickcheck<span class="at">]</span></span>
+<span id="vector-tests-2"><a href="#vector-tests-2"></a><span class="kw">fn</span> normalized_vec_length(a: Vec3) -&gt; <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="vector-tests-3"><a href="#vector-tests-3"></a>    <span class="kw">if</span> (a * a) == <span class="dv">0.0</span> <span class="op">{</span> <span class="kw">return</span> <span class="cn">true</span>; <span class="op">}</span></span>
+<span id="vector-tests-4"><a href="#vector-tests-4"></a>    <span class="kw">let</span> b = a.normalize();</span>
+<span id="vector-tests-5"><a href="#vector-tests-5"></a>    (<span class="dv">1.0</span> - b * b).abs() &lt; <span class="dv">1e-6</span></span>
+<span id="vector-tests-6"><a href="#vector-tests-6"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>and that the outer product upholds anti-symmetry,</p>
+<p><span class="math display">\[\vec{a} \wedge \vec{b} = - \vec{b} \wedge \vec{a}.\]</span></p>
+<div class="annotated-code">
+<p><span><em>«vector-tests»+</em></span></p>
+<div class="sourceCode" id="vector-tests"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="vector-tests-1"><a href="#vector-tests-1"></a><span class="at">#[</span>quickcheck<span class="at">]</span></span>
+<span id="vector-tests-2"><a href="#vector-tests-2"></a><span class="kw">fn</span> outer_product_anti_symmetry(a: Vec3, b: Vec3) -&gt; <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="vector-tests-3"><a href="#vector-tests-3"></a>    <span class="kw">let</span> c = a % b;</span>
+<span id="vector-tests-4"><a href="#vector-tests-4"></a>    <span class="kw">let</span> d = b % a;</span>
+<span id="vector-tests-5"><a href="#vector-tests-5"></a>    (c + d).abs() &lt; <span class="dv">1e-6</span></span>
+<span id="vector-tests-6"><a href="#vector-tests-6"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<h1 id="colour">Colour</h1>
+<p>A sphere has material properties. We can choose between <em>diffuse</em>, <em>specular</em> and <em>refractive</em> type.</p>
+<div class="annotated-code">
+<p><span><em>«material»=</em></span></p>
+<div class="sourceCode" id="material"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="material-1"><a href="#material-1"></a><span class="kw">enum</span> Reflection</span>
+<span id="material-2"><a href="#material-2"></a>    <span class="op">{</span> Diffuse</span>
+<span id="material-3"><a href="#material-3"></a>    , Specular</span>
+<span id="material-4"><a href="#material-4"></a>    , Refractive <span class="op">}</span></span></code></pre></div>
+</div>
+<div class="alert alert-info">
+<p>Note that the Rust <code>enum</code> types are much richer than the <code>enum</code> you may be used to from C/C++. Together with <code>struct</code>, <code>enum</code> gives the corner stones of <em>algebraic data types</em>. Where a <code>struct</code> collects different members into a <em>product type</em>, an <code>enum</code> is a <em>sum type</em>, meaning that it either contains one value or the other.</p>
+</div>
+<div class="annotated-code">
+<p><span><em>«colour»=</em></span></p>
+<div class="sourceCode" id="colour"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="colour-1"><a href="#colour-1"></a><span class="at">#[</span>inline<span class="at">]</span></span>
+<span id="colour-2"><a href="#colour-2"></a><span class="kw">fn</span> clamp(x: <span class="dt">f64</span>) -&gt; <span class="dt">f64</span> <span class="op">{</span> <span class="kw">if</span> x &lt; <span class="dv">0</span>. <span class="op">{</span> <span class="dv">0</span>. <span class="op">}</span> <span class="kw">else</span> <span class="kw">if</span> x &gt; <span class="dv">1</span>. <span class="op">{</span> <span class="dv">1</span>. <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> x <span class="op">}</span> <span class="op">}</span></span>
+<span id="colour-3"><a href="#colour-3"></a></span>
+<span id="colour-4"><a href="#colour-4"></a><span class="kw">trait</span> Colour: <span class="bu">Sized</span></span>
+<span id="colour-5"><a href="#colour-5"></a>            + <span class="pp">std::ops::</span>Add&lt;Output=<span class="kw">Self</span>&gt;</span>
+<span id="colour-6"><a href="#colour-6"></a>            + <span class="pp">std::ops::</span>Mul&lt;Output=<span class="kw">Self</span>&gt;</span>
+<span id="colour-7"><a href="#colour-7"></a>            + <span class="pp">std::ops::</span>Mul&lt;<span class="dt">f64</span>, Output=<span class="kw">Self</span>&gt; <span class="op">{</span></span>
+<span id="colour-8"><a href="#colour-8"></a>    <span class="kw">fn</span> to_rgb(&amp;<span class="kw">self</span>) -&gt; (<span class="dt">f64</span>, <span class="dt">f64</span>, <span class="dt">f64</span>);</span>
+<span id="colour-9"><a href="#colour-9"></a>    <span class="kw">fn</span> clamp(&amp;<span class="kw">self</span>) -&gt; <span class="kw">Self</span>;</span>
+<span id="colour-10"><a href="#colour-10"></a></span>
+<span id="colour-11"><a href="#colour-11"></a>    <span class="kw">fn</span> max(&amp;<span class="kw">self</span>) -&gt; <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="colour-12"><a href="#colour-12"></a>        <span class="kw">let</span> (r, g, b) = <span class="kw">self</span>.to_rgb();</span>
+<span id="colour-13"><a href="#colour-13"></a>        <span class="kw">if</span> r &gt; g &amp;&amp; r &gt; b <span class="op">{</span> r <span class="op">}</span></span>
+<span id="colour-14"><a href="#colour-14"></a>        <span class="kw">else</span> <span class="kw">if</span> g &gt; b <span class="op">{</span> g <span class="op">}</span></span>
+<span id="colour-15"><a href="#colour-15"></a>        <span class="kw">else</span> <span class="op">{</span> b <span class="op">}</span></span>
+<span id="colour-16"><a href="#colour-16"></a>    <span class="op">}</span></span>
+<span id="colour-17"><a href="#colour-17"></a></span>
+<span id="colour-18"><a href="#colour-18"></a>    <span class="kw">fn</span> to_u24(&amp;<span class="kw">self</span>) -&gt; (<span class="dt">u8</span>, <span class="dt">u8</span>, <span class="dt">u8</span>) <span class="op">{</span></span>
+<span id="colour-19"><a href="#colour-19"></a>        <span class="kw">let</span> to_int = |x| (clamp(x).powf(<span class="dv">1</span>./<span class="dv">2.2</span>) * <span class="dv">255</span>. + <span class="dv">0.5</span>).floor() <span class="kw">as</span> <span class="dt">u8</span>;</span>
+<span id="colour-20"><a href="#colour-20"></a>        <span class="kw">let</span> (r, g, b) = <span class="kw">self</span>.to_rgb();</span>
+<span id="colour-21"><a href="#colour-21"></a>        (to_int(r), to_int(g), to_int(b))</span>
+<span id="colour-22"><a href="#colour-22"></a>    <span class="op">}</span></span>
+<span id="colour-23"><a href="#colour-23"></a><span class="op">}</span></span>
+<span id="colour-24"><a href="#colour-24"></a></span>
+<span id="colour-25"><a href="#colour-25"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="at">,</span><span class="bu">Copy</span><span class="at">,</span><span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="colour-26"><a href="#colour-26"></a><span class="kw">struct</span> RGBColour (<span class="dt">f64</span>, <span class="dt">f64</span>, <span class="dt">f64</span>);</span>
+<span id="colour-27"><a href="#colour-27"></a></span>
+<span id="colour-28"><a href="#colour-28"></a><span class="kw">const</span> <span class="kw">fn</span> rgb(r: <span class="dt">f64</span>, g: <span class="dt">f64</span>, b: <span class="dt">f64</span>) -&gt; RGBColour <span class="op">{</span></span>
+<span id="colour-29"><a href="#colour-29"></a>    RGBColour (r, g, b)</span>
+<span id="colour-30"><a href="#colour-30"></a><span class="op">}</span></span>
+<span id="colour-31"><a href="#colour-31"></a></span>
+<span id="colour-32"><a href="#colour-32"></a><span class="kw">const</span> BLACK: RGBColour = rgb(<span class="dv">0.0</span>, <span class="dv">0.0</span>, <span class="dv">0.0</span>);</span>
+<span id="colour-33"><a href="#colour-33"></a></span>
+<span id="colour-34"><a href="#colour-34"></a><span class="kw">impl</span> <span class="pp">std::ops::</span>Add <span class="kw">for</span> RGBColour <span class="op">{</span></span>
+<span id="colour-35"><a href="#colour-35"></a>    <span class="kw">type</span> Output = <span class="kw">Self</span>;</span>
+<span id="colour-36"><a href="#colour-36"></a>    <span class="kw">fn</span> add(<span class="kw">self</span>, other: <span class="kw">Self</span>) -&gt; <span class="kw">Self</span> <span class="op">{</span></span>
+<span id="colour-37"><a href="#colour-37"></a>        <span class="kw">let</span> RGBColour(r1,g1,b1) = <span class="kw">self</span>;</span>
+<span id="colour-38"><a href="#colour-38"></a>        <span class="kw">let</span> RGBColour(r2,g2,b2) = other;</span>
+<span id="colour-39"><a href="#colour-39"></a>        RGBColour(r1+r2,g1+g2,b1+b2)</span>
+<span id="colour-40"><a href="#colour-40"></a>    <span class="op">}</span></span>
+<span id="colour-41"><a href="#colour-41"></a><span class="op">}</span></span>
+<span id="colour-42"><a href="#colour-42"></a></span>
+<span id="colour-43"><a href="#colour-43"></a><span class="kw">impl</span> <span class="pp">std::ops::</span>Mul <span class="kw">for</span> RGBColour <span class="op">{</span></span>
+<span id="colour-44"><a href="#colour-44"></a>    <span class="kw">type</span> Output = <span class="kw">Self</span>;</span>
+<span id="colour-45"><a href="#colour-45"></a>    <span class="kw">fn</span> mul(<span class="kw">self</span>, other: <span class="kw">Self</span>) -&gt; <span class="kw">Self</span> <span class="op">{</span></span>
+<span id="colour-46"><a href="#colour-46"></a>        <span class="kw">let</span> RGBColour(r1,g1,b1) = <span class="kw">self</span>;</span>
+<span id="colour-47"><a href="#colour-47"></a>        <span class="kw">let</span> RGBColour(r2,g2,b2) = other;</span>
+<span id="colour-48"><a href="#colour-48"></a>        RGBColour(r1*r2,g1*g2,b1*b2)</span>
+<span id="colour-49"><a href="#colour-49"></a>    <span class="op">}</span></span>
+<span id="colour-50"><a href="#colour-50"></a><span class="op">}</span></span>
+<span id="colour-51"><a href="#colour-51"></a></span>
+<span id="colour-52"><a href="#colour-52"></a><span class="kw">impl</span> <span class="pp">std::ops::</span>Mul&lt;<span class="dt">f64</span>&gt; <span class="kw">for</span> RGBColour <span class="op">{</span></span>
+<span id="colour-53"><a href="#colour-53"></a>    <span class="kw">type</span> Output = <span class="kw">Self</span>;</span>
+<span id="colour-54"><a href="#colour-54"></a>    <span class="kw">fn</span> mul(<span class="kw">self</span>, s: <span class="dt">f64</span>) -&gt; <span class="kw">Self</span> <span class="op">{</span></span>
+<span id="colour-55"><a href="#colour-55"></a>        <span class="kw">let</span> RGBColour(r1,g1,b1) = <span class="kw">self</span>;</span>
+<span id="colour-56"><a href="#colour-56"></a>        RGBColour(r1*s,g1*s,b1*s)</span>
+<span id="colour-57"><a href="#colour-57"></a>    <span class="op">}</span></span>
+<span id="colour-58"><a href="#colour-58"></a><span class="op">}</span></span>
+<span id="colour-59"><a href="#colour-59"></a></span>
+<span id="colour-60"><a href="#colour-60"></a><span class="kw">impl</span> Colour <span class="kw">for</span> RGBColour <span class="op">{</span></span>
+<span id="colour-61"><a href="#colour-61"></a>    <span class="kw">fn</span> to_rgb(&amp;<span class="kw">self</span>) -&gt; (<span class="dt">f64</span>, <span class="dt">f64</span>, <span class="dt">f64</span>) <span class="op">{</span></span>
+<span id="colour-62"><a href="#colour-62"></a>        <span class="kw">let</span> RGBColour(r, g, b) = <span class="kw">self</span>;</span>
+<span id="colour-63"><a href="#colour-63"></a>        (*r, *g, *b)</span>
+<span id="colour-64"><a href="#colour-64"></a>    <span class="op">}</span></span>
+<span id="colour-65"><a href="#colour-65"></a></span>
+<span id="colour-66"><a href="#colour-66"></a>    <span class="kw">fn</span> clamp(&amp;<span class="kw">self</span>) -&gt; <span class="kw">Self</span> <span class="op">{</span></span>
+<span id="colour-67"><a href="#colour-67"></a>        <span class="kw">let</span> RGBColour(r, g, b) = <span class="kw">self</span>;</span>
+<span id="colour-68"><a href="#colour-68"></a>        RGBColour(clamp(*r), clamp(*g), clamp(*b))</span>
+<span id="colour-69"><a href="#colour-69"></a>    <span class="op">}</span></span>
+<span id="colour-70"><a href="#colour-70"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<h1 id="geometry">Geometry</h1>
+<p>With floating-point calculations, round-off can become a problem. If we bounce a ray off a sphere, how do we make sure that we don’t detect another intersection with the same sphere? One way is to make sure that every ray travels a mininum distance before bouncing off anything. We’ll call this distance <code>EPS</code>, short for <em>epsilon</em>, being the greek letter <span class="math inline">\(\epsilon\)</span>, generally denoting small quantities.</p>
+<div class="annotated-code">
+<p><span><em>«constants»=</em></span></p>
+<div class="sourceCode" id="constants"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="constants-1"><a href="#constants-1"></a><span class="kw">const</span> EPS: <span class="dt">f64</span> = <span class="dv">1e-4</span>;</span></code></pre></div>
+</div>
+<p>We now define the <code>Ray</code> and <code>Sphere</code> types.</p>
+<div class="annotated-code">
+<p><span><em>«ray»=</em></span></p>
+<div class="sourceCode" id="ray"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="ray-1"><a href="#ray-1"></a><span class="kw">struct</span> Ray</span>
+<span id="ray-2"><a href="#ray-2"></a>    <span class="op">{</span> <span class="kw">pub</span> origin: Vec3</span>
+<span id="ray-3"><a href="#ray-3"></a>    , <span class="kw">pub</span> direction: Vec3 <span class="op">}</span></span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«sphere»=</em></span></p>
+<div class="sourceCode" id="sphere"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="sphere-1"><a href="#sphere-1"></a><span class="kw">struct</span> Sphere</span>
+<span id="sphere-2"><a href="#sphere-2"></a>    <span class="op">{</span> <span class="kw">pub</span> radius: <span class="dt">f64</span></span>
+<span id="sphere-3"><a href="#sphere-3"></a>    , <span class="kw">pub</span> position: Vec3</span>
+<span id="sphere-4"><a href="#sphere-4"></a>    &lt;&lt;sphere-members&gt;&gt;</span>
+<span id="sphere-5"><a href="#sphere-5"></a>    <span class="op">}</span></span></code></pre></div>
+</div>
+<p>The <code>Shpere</code> has a method to detect intersection with a <code>Ray</code>.</p>
+<div class="annotated-code">
+<p><span><em>«sphere»+</em></span></p>
+<div class="sourceCode" id="sphere"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="sphere-1"><a href="#sphere-1"></a><span class="kw">impl</span> Sphere <span class="op">{</span></span>
+<span id="sphere-2"><a href="#sphere-2"></a>    <span class="kw">fn</span> intersect(&amp;<span class="kw">self</span>, ray: &amp;Ray) -&gt; <span class="dt">Option</span>&lt;<span class="dt">f64</span>&gt; <span class="op">{</span></span>
+<span id="sphere-3"><a href="#sphere-3"></a>        &lt;&lt;sphere-ray-intersect&gt;&gt;</span>
+<span id="sphere-4"><a href="#sphere-4"></a>    <span class="op">}</span></span>
+<span id="sphere-5"><a href="#sphere-5"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>The equation for the surface of a sphere at position <span class="math inline">\(\vec{p}\)</span> and radius <span class="math inline">\(r\)</span> is,</p>
+<p><span id="eq:sphere" class="eqnos"><span class="math display">\[S:\ (\vec{p} - \vec{x})^2 = r^2,\]</span><span class="eqnos-number">(1)</span></span></p>
+<p>and a ray from origin <span class="math inline">\(\vec{o}\)</span> and direction <span class="math inline">\(\vec{\hat{d}}\)</span> describes the half-line,</p>
+<p><span id="eq:ray" class="eqnos"><span class="math display">\[L:\ \vec{x} = \vec{o} + t\vec{\hat{d}}.\]</span><span class="eqnos-number">(2)</span></span></p>
+<p>Equating these gives a quadratic equation for <span class="math inline">\(t\)</span>, taking <span class="math inline">\(\vec{q} = \vec{p} - \vec{o}\)</span>,</p>
+<p><span id="eq:sphere-ray-intersect" class="eqnos"><span class="math display">\[\begin{align}
+S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
+           &amp;t^2 - 2t\vec{\hat{d}}\vec{q} + \vec{q}^2 - r^2 = 0\\
+           &amp;t = \vec{\hat{d}}\vec{q} \pm \sqrt{(\vec{\hat{d}}\vec{q})^2 - \vec{q}^2 + r^2}.
+\end{align}\]</span><span class="eqnos-number">(3)</span></span></p>
+<p>We first compute the determinant (part under the square root),</p>
+<div class="annotated-code">
+<p><span><em>«sphere-ray-intersect»=</em></span></p>
+<div class="sourceCode" id="sphere-ray-intersect"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="sphere-ray-intersect-1"><a href="#sphere-ray-intersect-1"></a><span class="kw">let</span> q = <span class="kw">self</span>.position - ray.origin;</span>
+<span id="sphere-ray-intersect-2"><a href="#sphere-ray-intersect-2"></a><span class="kw">let</span> b = ray.direction * q;</span>
+<span id="sphere-ray-intersect-3"><a href="#sphere-ray-intersect-3"></a><span class="kw">let</span> r = <span class="kw">self</span>.radius;</span>
+<span id="sphere-ray-intersect-4"><a href="#sphere-ray-intersect-4"></a><span class="kw">let</span> det = b*b - q*q + r*r;</span></code></pre></div>
+</div>
+<p>If it is negative, there is no solution and the ray does not intersect with the sphere.</p>
+<div class="annotated-code">
+<p><span><em>«sphere-ray-intersect»+</em></span></p>
+<div class="sourceCode" id="sphere-ray-intersect"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="sphere-ray-intersect-1"><a href="#sphere-ray-intersect-1"></a><span class="kw">if</span> det &lt; <span class="dv">0</span>. <span class="op">{</span></span>
+<span id="sphere-ray-intersect-2"><a href="#sphere-ray-intersect-2"></a>    <span class="kw">return</span> <span class="cn">None</span>;</span>
+<span id="sphere-ray-intersect-3"><a href="#sphere-ray-intersect-3"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>Otherwise, it is safe to compute the square-root and return the first intersection at a distance larger than <code>EPS</code>.</p>
+<div class="annotated-code">
+<p><span><em>«sphere-ray-intersect»+</em></span></p>
+<div class="sourceCode" id="sphere-ray-intersect"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="sphere-ray-intersect-1"><a href="#sphere-ray-intersect-1"></a><span class="kw">let</span> rdet = det.sqrt();</span>
+<span id="sphere-ray-intersect-2"><a href="#sphere-ray-intersect-2"></a><span class="kw">if</span> b - rdet &gt; EPS <span class="op">{</span></span>
+<span id="sphere-ray-intersect-3"><a href="#sphere-ray-intersect-3"></a>    <span class="cn">Some</span>(b - rdet)</span>
+<span id="sphere-ray-intersect-4"><a href="#sphere-ray-intersect-4"></a><span class="op">}</span> <span class="kw">else</span> <span class="kw">if</span> b + rdet &gt; EPS <span class="op">{</span></span>
+<span id="sphere-ray-intersect-5"><a href="#sphere-ray-intersect-5"></a>    <span class="cn">Some</span>(b + rdet)</span>
+<span id="sphere-ray-intersect-6"><a href="#sphere-ray-intersect-6"></a><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="sphere-ray-intersect-7"><a href="#sphere-ray-intersect-7"></a>    <span class="cn">None</span></span>
+<span id="sphere-ray-intersect-8"><a href="#sphere-ray-intersect-8"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<h1 id="scene">Scene</h1>
+<p>The scene in SmallPt is an adaptation of the Cornell box.</p>
+<div class="annotated-code">
+<p><span><em>«sphere-members»=</em></span></p>
+<div class="sourceCode" id="sphere-members"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="sphere-members-1"><a href="#sphere-members-1"></a>, <span class="kw">pub</span> emission: RGBColour</span>
+<span id="sphere-members-2"><a href="#sphere-members-2"></a>, <span class="kw">pub</span> colour: RGBColour</span>
+<span id="sphere-members-3"><a href="#sphere-members-3"></a>, <span class="kw">pub</span> reflection: Reflection</span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«scene»=</em></span></p>
+<div class="sourceCode" id="scene"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="scene-1"><a href="#scene-1"></a><span class="kw">const</span> SPHERES: <span class="op">[</span>Sphere;<span class="dv">9</span><span class="op">]</span> =</span>
+<span id="scene-2"><a href="#scene-2"></a>    &lt;&lt;scene-spheres&gt;&gt;</span></code></pre></div>
+</div>
+<p>The scene consists of a red ceiling,</p>
+<div class="annotated-code">
+<p><span><em>«scene-spheres»=</em></span></p>
+<div class="sourceCode" id="scene-spheres"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="scene-spheres-1"><a href="#scene-spheres-1"></a><span class="op">[</span> Sphere <span class="op">{</span> radius:  <span class="dv">1e5</span>,  position: vec(<span class="dv">1e5</span>+<span class="dv">1</span>.,   <span class="dv">40.8</span>, <span class="dv">81.6</span>), emission: BLACK</span>
+<span id="scene-spheres-2"><a href="#scene-spheres-2"></a>         , colour: rgb(<span class="dv">0.75</span>, <span class="dv">0.25</span>, <span class="dv">0.25</span>), reflection: <span class="pp">Reflection::</span>Diffuse <span class="op">}</span></span></code></pre></div>
+</div>
+<p>four grey walls, one of which is black to emulate photons escaping,</p>
+<div class="annotated-code">
+<p><span><em>«scene-spheres»+</em></span></p>
+<div class="sourceCode" id="scene-spheres"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="scene-spheres-1"><a href="#scene-spheres-1"></a>, Sphere <span class="op">{</span> radius:  <span class="dv">1e5</span>,  position: vec(<span class="dv">50</span>., <span class="dv">40.8</span>, <span class="dv">1e5</span>),       emission: BLACK</span>
+<span id="scene-spheres-2"><a href="#scene-spheres-2"></a>         , colour: rgb(<span class="dv">0.75</span>, <span class="dv">0.75</span>, <span class="dv">0.75</span>), reflection: <span class="pp">Reflection::</span>Diffuse <span class="op">}</span></span>
+<span id="scene-spheres-3"><a href="#scene-spheres-3"></a>, Sphere <span class="op">{</span> radius:  <span class="dv">1e5</span>,  position: vec(<span class="dv">50</span>., <span class="dv">40.8</span>, -<span class="dv">1e5</span>+<span class="dv">170</span>.),  emission: BLACK</span>
+<span id="scene-spheres-4"><a href="#scene-spheres-4"></a>         , colour: BLACK,                 reflection: <span class="pp">Reflection::</span>Diffuse <span class="op">}</span></span>
+<span id="scene-spheres-5"><a href="#scene-spheres-5"></a>, Sphere <span class="op">{</span> radius:  <span class="dv">1e5</span>,  position: vec(<span class="dv">50</span>., <span class="dv">1e5</span>, <span class="dv">81.6</span>),       emission: BLACK</span>
+<span id="scene-spheres-6"><a href="#scene-spheres-6"></a>         , colour: rgb(<span class="dv">0.75</span>, <span class="dv">0.75</span>, <span class="dv">0.75</span>), reflection: <span class="pp">Reflection::</span>Diffuse <span class="op">}</span></span>
+<span id="scene-spheres-7"><a href="#scene-spheres-7"></a>, Sphere <span class="op">{</span> radius:  <span class="dv">1e5</span>,  position: vec(<span class="dv">50</span>., -<span class="dv">1e5</span>+<span class="dv">81.6</span>, <span class="dv">81.6</span>), emission: BLACK</span>
+<span id="scene-spheres-8"><a href="#scene-spheres-8"></a>         , colour: rgb(<span class="dv">0.75</span>, <span class="dv">0.75</span>, <span class="dv">0.75</span>), reflection: <span class="pp">Reflection::</span>Diffuse <span class="op">}</span></span></code></pre></div>
+</div>
+<p>a blue floor,</p>
+<div class="annotated-code">
+<p><span><em>«scene-spheres»+</em></span></p>
+<div class="sourceCode" id="scene-spheres"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="scene-spheres-1"><a href="#scene-spheres-1"></a>, Sphere <span class="op">{</span> radius:  <span class="dv">1e5</span>,  position: vec(-<span class="dv">1e5</span>+<span class="dv">99</span>., <span class="dv">40.8</span>, <span class="dv">81.6</span>), emission: BLACK</span>
+<span id="scene-spheres-2"><a href="#scene-spheres-2"></a>         , colour: rgb(<span class="dv">0.25</span>, <span class="dv">0.25</span>, <span class="dv">0.75</span>), reflection: <span class="pp">Reflection::</span>Diffuse <span class="op">}</span></span></code></pre></div>
+</div>
+<p>a glass and a metal sphere,</p>
+<div class="annotated-code">
+<p><span><em>«scene-spheres»+</em></span></p>
+<div class="sourceCode" id="scene-spheres"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="scene-spheres-1"><a href="#scene-spheres-1"></a>, Sphere <span class="op">{</span> radius: <span class="dv">16.5</span>,  position: vec(<span class="dv">27</span>., <span class="dv">16.5</span>, <span class="dv">47</span>.), emission: BLACK</span>
+<span id="scene-spheres-2"><a href="#scene-spheres-2"></a>         , colour: rgb(<span class="dv">0.999</span>, <span class="dv">0.999</span>, <span class="dv">0.999</span>), reflection: <span class="pp">Reflection::</span>Specular <span class="op">}</span></span>
+<span id="scene-spheres-3"><a href="#scene-spheres-3"></a>, Sphere <span class="op">{</span> radius: <span class="dv">16.5</span>,  position: vec(<span class="dv">73</span>., <span class="dv">16.5</span>, <span class="dv">78</span>.), emission: BLACK</span>
+<span id="scene-spheres-4"><a href="#scene-spheres-4"></a>         , colour: rgb(<span class="dv">0.999</span>, <span class="dv">0.999</span>, <span class="dv">0.999</span>), reflection: <span class="pp">Reflection::</span>Refractive <span class="op">}</span></span></code></pre></div>
+</div>
+<p>and a plafonniere</p>
+<div class="annotated-code">
+<p><span><em>«scene-spheres»+</em></span></p>
+<div class="sourceCode" id="scene-spheres"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="scene-spheres-1"><a href="#scene-spheres-1"></a>, Sphere <span class="op">{</span> radius:  <span class="dv">600</span>.,  position: vec(<span class="dv">50</span>., <span class="dv">681.6</span>-<span class="dv">0.27</span>, <span class="dv">81.6</span>)</span>
+<span id="scene-spheres-2"><a href="#scene-spheres-2"></a>         , emission: rgb(<span class="dv">12.0</span>, <span class="dv">12.0</span>, <span class="dv">12.0</span>), colour: BLACK</span>
+<span id="scene-spheres-3"><a href="#scene-spheres-3"></a>         , reflection: <span class="pp">Reflection::</span>Diffuse <span class="op">}</span> <span class="op">]</span>;</span></code></pre></div>
+</div>
+<p>Given this scene, we can define the function <code>intersect</code> which computes the first intersection of a ray with any of the objects in the scene. If the ray intersects, a tuple is returned giving the distance and reference to the obstructing object.</p>
+<div class="annotated-code">
+<p><span><em>«scene»+</em></span></p>
+<div class="sourceCode" id="scene"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="scene-1"><a href="#scene-1"></a><span class="kw">fn</span> intersect(ray: &amp;Ray) -&gt; <span class="dt">Option</span>&lt;(<span class="dt">f64</span>, &amp;<span class="ot">&#39;static</span> Sphere)&gt; <span class="op">{</span></span>
+<span id="scene-2"><a href="#scene-2"></a>    <span class="kw">let</span> <span class="kw">mut</span> result : <span class="dt">Option</span>&lt;(<span class="dt">f64</span>, &amp;Sphere)&gt; = <span class="cn">None</span>;</span>
+<span id="scene-3"><a href="#scene-3"></a>    <span class="kw">for</span> s <span class="kw">in</span> &amp;SPHERES <span class="op">{</span></span>
+<span id="scene-4"><a href="#scene-4"></a>        <span class="kw">if</span> <span class="kw">let</span> <span class="cn">Some</span>(d) = s.intersect(ray) <span class="op">{</span></span>
+<span id="scene-5"><a href="#scene-5"></a>            <span class="kw">if</span> result.is_none() || result.unwrap().<span class="dv">0</span> &gt; d <span class="op">{</span></span>
+<span id="scene-6"><a href="#scene-6"></a>                result = <span class="cn">Some</span>((d, s));</span>
+<span id="scene-7"><a href="#scene-7"></a>            <span class="op">}</span></span>
+<span id="scene-8"><a href="#scene-8"></a>        <span class="op">}</span></span>
+<span id="scene-9"><a href="#scene-9"></a>    <span class="op">}</span></span>
+<span id="scene-10"><a href="#scene-10"></a>    result</span>
+<span id="scene-11"><a href="#scene-11"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>It feel like we’ve done a lot of work here, but we’ve only arrived at line 48 of SmallPt.</p>
+<h1 id="path-tracing">Path tracing</h1>
+<div class="annotated-code">
+<p><span><em>«import-rand»=</em></span></p>
+<div class="sourceCode" id="import-rand"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="import-rand-1"><a href="#import-rand-1"></a><span class="kw">extern</span> <span class="kw">crate</span> rand;</span>
+<span id="import-rand-2"><a href="#import-rand-2"></a><span class="kw">use</span> <span class="pp">rand::</span>Rng;</span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«imports»=</em></span></p>
+<div class="sourceCode" id="imports"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="imports-1"><a href="#imports-1"></a><span class="kw">extern</span> <span class="kw">crate</span> rayon;</span>
+<span id="imports-2"><a href="#imports-2"></a></span>
+<span id="imports-3"><a href="#imports-3"></a><span class="kw">use</span> <span class="pp">rayon::prelude::</span>*;</span>
+<span id="imports-4"><a href="#imports-4"></a><span class="kw">use</span> <span class="pp">std::</span><span class="dt">f64</span>::<span class="pp">consts::</span>PI;</span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«path-tracing»=</em></span></p>
+<div class="sourceCode" id="path-tracing"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="path-tracing-1"><a href="#path-tracing-1"></a><span class="kw">fn</span> radiance(ray: &amp;Ray, <span class="kw">mut</span> depth: <span class="dt">u16</span>) -&gt; RGBColour <span class="op">{</span></span>
+<span id="path-tracing-2"><a href="#path-tracing-2"></a>    <span class="kw">let</span> <span class="kw">mut</span> rng = <span class="pp">rand::</span>thread_rng();</span>
+<span id="path-tracing-3"><a href="#path-tracing-3"></a>    <span class="kw">let</span> hit = intersect(ray);</span>
+<span id="path-tracing-4"><a href="#path-tracing-4"></a>    <span class="kw">if</span> hit.is_none() <span class="op">{</span> <span class="kw">return</span> BLACK; <span class="op">}</span></span>
+<span id="path-tracing-5"><a href="#path-tracing-5"></a>    <span class="kw">let</span> (d, obj) = hit.unwrap();</span>
+<span id="path-tracing-6"><a href="#path-tracing-6"></a>    <span class="kw">let</span> x = ray.origin + ray.direction * d;</span>
+<span id="path-tracing-7"><a href="#path-tracing-7"></a>    <span class="kw">let</span> n = (x - obj.position).normalize();</span>
+<span id="path-tracing-8"><a href="#path-tracing-8"></a>    <span class="kw">let</span> normal = <span class="kw">if</span> n * ray.direction &lt; <span class="dv">0</span>. <span class="op">{</span> n <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> -n <span class="op">}</span>;</span>
+<span id="path-tracing-9"><a href="#path-tracing-9"></a>    <span class="kw">let</span> <span class="kw">mut</span> f = obj.colour;</span>
+<span id="path-tracing-10"><a href="#path-tracing-10"></a>    <span class="kw">let</span> p = f.max();</span>
+<span id="path-tracing-11"><a href="#path-tracing-11"></a>    depth += <span class="dv">1</span>;</span>
+<span id="path-tracing-12"><a href="#path-tracing-12"></a>    <span class="kw">if</span> depth &gt; <span class="dv">5</span> <span class="op">{</span></span>
+<span id="path-tracing-13"><a href="#path-tracing-13"></a>        <span class="kw">if</span> rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;() &lt; p <span class="op">{</span></span>
+<span id="path-tracing-14"><a href="#path-tracing-14"></a>            f = f * (<span class="dv">1</span>. / p);</span>
+<span id="path-tracing-15"><a href="#path-tracing-15"></a>        <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="path-tracing-16"><a href="#path-tracing-16"></a>            <span class="kw">return</span> obj.emission;</span>
+<span id="path-tracing-17"><a href="#path-tracing-17"></a>        <span class="op">}</span></span>
+<span id="path-tracing-18"><a href="#path-tracing-18"></a>    <span class="op">}</span></span>
+<span id="path-tracing-19"><a href="#path-tracing-19"></a>    <span class="kw">let</span> light = <span class="kw">match</span> obj.reflection <span class="op">{</span></span>
+<span id="path-tracing-20"><a href="#path-tracing-20"></a>        <span class="pp">Reflection::</span>Diffuse =&gt; <span class="op">{</span></span>
+<span id="path-tracing-21"><a href="#path-tracing-21"></a>            <span class="kw">let</span> r1 : <span class="dt">f64</span> = <span class="dv">2</span>.*PI*rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;();</span>
+<span id="path-tracing-22"><a href="#path-tracing-22"></a>            <span class="kw">let</span> r2 : <span class="dt">f64</span> = rng.gen();</span>
+<span id="path-tracing-23"><a href="#path-tracing-23"></a>            <span class="kw">let</span> r2s = r2.sqrt();</span>
+<span id="path-tracing-24"><a href="#path-tracing-24"></a>            <span class="kw">let</span> ncl = <span class="kw">if</span> normal.x.abs() &gt; <span class="dv">0.1</span> <span class="op">{</span> vec(<span class="dv">0</span>., <span class="dv">1</span>., <span class="dv">0</span>.) <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> vec(<span class="dv">1</span>., <span class="dv">0</span>., <span class="dv">0</span>.) <span class="op">}</span>;</span>
+<span id="path-tracing-25"><a href="#path-tracing-25"></a>            <span class="kw">let</span> u = (ncl % normal).normalize();</span>
+<span id="path-tracing-26"><a href="#path-tracing-26"></a>            <span class="kw">let</span> v = normal % u;</span>
+<span id="path-tracing-27"><a href="#path-tracing-27"></a>            <span class="kw">let</span> d = (u*r1.cos()*r2s + v*r1.sin()*r2s + normal*(<span class="dv">1</span>.-r2).sqrt()).normalize();</span>
+<span id="path-tracing-28"><a href="#path-tracing-28"></a>            radiance(&amp;Ray <span class="op">{</span>origin: x, direction: d<span class="op">}</span>, depth)</span>
+<span id="path-tracing-29"><a href="#path-tracing-29"></a>        <span class="op">}</span></span>
+<span id="path-tracing-30"><a href="#path-tracing-30"></a>        <span class="pp">Reflection::</span>Specular =&gt; <span class="op">{</span></span>
+<span id="path-tracing-31"><a href="#path-tracing-31"></a>            <span class="kw">let</span> d = ray.direction - n * <span class="dv">2</span>.*(n*ray.direction);</span>
+<span id="path-tracing-32"><a href="#path-tracing-32"></a>            radiance(&amp;Ray <span class="op">{</span>origin: x, direction: d<span class="op">}</span>, depth)</span>
+<span id="path-tracing-33"><a href="#path-tracing-33"></a>        <span class="op">}</span></span>
+<span id="path-tracing-34"><a href="#path-tracing-34"></a>        <span class="pp">Reflection::</span>Refractive =&gt; <span class="op">{</span></span>
+<span id="path-tracing-35"><a href="#path-tracing-35"></a>            <span class="kw">let</span> d = ray.direction - n * <span class="dv">2</span>.*(n*ray.direction);</span>
+<span id="path-tracing-36"><a href="#path-tracing-36"></a>            <span class="kw">let</span> refl_ray = Ray <span class="op">{</span> origin: x, direction: d <span class="op">}</span>;</span>
+<span id="path-tracing-37"><a href="#path-tracing-37"></a>            <span class="kw">let</span> into = n * normal &gt; <span class="dv">0</span>.;</span>
+<span id="path-tracing-38"><a href="#path-tracing-38"></a>            <span class="kw">let</span> nc = <span class="dv">1</span>.;</span>
+<span id="path-tracing-39"><a href="#path-tracing-39"></a>            <span class="kw">let</span> nt = <span class="dv">1.5</span>;</span>
+<span id="path-tracing-40"><a href="#path-tracing-40"></a>            <span class="kw">let</span> nnt = <span class="kw">if</span> into <span class="op">{</span> nc / nt <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> nt / nc <span class="op">}</span>;</span>
+<span id="path-tracing-41"><a href="#path-tracing-41"></a>            <span class="kw">let</span> ddn = ray.direction * normal;</span>
+<span id="path-tracing-42"><a href="#path-tracing-42"></a>            <span class="kw">let</span> cos2t = <span class="dv">1</span>. - nnt*nnt*(<span class="dv">1</span>. - ddn*ddn);</span>
+<span id="path-tracing-43"><a href="#path-tracing-43"></a>            <span class="kw">if</span> cos2t &lt; <span class="dv">0</span>. <span class="op">{</span> <span class="co">// total internal reflection</span></span>
+<span id="path-tracing-44"><a href="#path-tracing-44"></a>                radiance(&amp;refl_ray, depth)</span>
+<span id="path-tracing-45"><a href="#path-tracing-45"></a>            <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="path-tracing-46"><a href="#path-tracing-46"></a>                <span class="kw">let</span> tdir = (ray.direction * nnt - n*(<span class="kw">if</span> into <span class="op">{</span><span class="dv">1</span>.<span class="op">}</span> <span class="kw">else</span> <span class="op">{</span>-<span class="dv">1</span>.<span class="op">}</span>) * (ddn*nnt + cos2t.sqrt())).normalize();</span>
+<span id="path-tracing-47"><a href="#path-tracing-47"></a>                <span class="kw">let</span> a = nt - nc;</span>
+<span id="path-tracing-48"><a href="#path-tracing-48"></a>                <span class="kw">let</span> b = nt + nc;</span>
+<span id="path-tracing-49"><a href="#path-tracing-49"></a>                <span class="kw">let</span> r0 = a*a/(b*b);</span>
+<span id="path-tracing-50"><a href="#path-tracing-50"></a>                <span class="kw">let</span> c = <span class="dv">1</span>. - (<span class="kw">if</span> into <span class="op">{</span> -ddn <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span>tdir * n<span class="op">}</span>);</span>
+<span id="path-tracing-51"><a href="#path-tracing-51"></a>                <span class="kw">let</span> re = r0 + (<span class="dv">1</span>.-r0) * c.powf(<span class="dv">5.0</span>);</span>
+<span id="path-tracing-52"><a href="#path-tracing-52"></a>                <span class="kw">let</span> tr = <span class="dv">1</span>.-re;</span>
+<span id="path-tracing-53"><a href="#path-tracing-53"></a>                <span class="kw">let</span> p = <span class="dv">0.25</span> + <span class="dv">0.5</span>*re;</span>
+<span id="path-tracing-54"><a href="#path-tracing-54"></a>                <span class="kw">let</span> rp = re/p;</span>
+<span id="path-tracing-55"><a href="#path-tracing-55"></a>                <span class="kw">let</span> tp = tr/(<span class="dv">1</span>.-p);</span>
+<span id="path-tracing-56"><a href="#path-tracing-56"></a>                <span class="kw">if</span> depth &gt; <span class="dv">2</span> <span class="op">{</span></span>
+<span id="path-tracing-57"><a href="#path-tracing-57"></a>                    <span class="kw">if</span> rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;() &lt; p <span class="op">{</span></span>
+<span id="path-tracing-58"><a href="#path-tracing-58"></a>                        radiance(&amp;refl_ray, depth) * rp</span>
+<span id="path-tracing-59"><a href="#path-tracing-59"></a>                    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="path-tracing-60"><a href="#path-tracing-60"></a>                        radiance(&amp;Ray <span class="op">{</span> origin: x, direction: tdir <span class="op">}</span>, depth) * tp</span>
+<span id="path-tracing-61"><a href="#path-tracing-61"></a>                    <span class="op">}</span></span>
+<span id="path-tracing-62"><a href="#path-tracing-62"></a>                <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="path-tracing-63"><a href="#path-tracing-63"></a>                    radiance(&amp;refl_ray, depth) * re + radiance(&amp;Ray <span class="op">{</span> origin: x, direction: tdir <span class="op">}</span>, depth) * tr</span>
+<span id="path-tracing-64"><a href="#path-tracing-64"></a>                <span class="op">}</span></span>
+<span id="path-tracing-65"><a href="#path-tracing-65"></a>            <span class="op">}</span></span>
+<span id="path-tracing-66"><a href="#path-tracing-66"></a>        <span class="op">}</span></span>
+<span id="path-tracing-67"><a href="#path-tracing-67"></a>    <span class="op">}</span>;</span>
+<span id="path-tracing-68"><a href="#path-tracing-68"></a>    obj.emission + f * light</span>
+<span id="path-tracing-69"><a href="#path-tracing-69"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<h1 id="image">Image</h1>
+<div class="annotated-code">
+<p><span><em>«image»=</em></span></p>
+<div class="sourceCode" id="image"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="image-1"><a href="#image-1"></a><span class="kw">struct</span> Image</span>
+<span id="image-2"><a href="#image-2"></a>    <span class="op">{</span> width: <span class="dt">usize</span></span>
+<span id="image-3"><a href="#image-3"></a>    , height: <span class="dt">usize</span></span>
+<span id="image-4"><a href="#image-4"></a>    , <span class="kw">pub</span> data: <span class="dt">Vec</span>&lt;RGBColour&gt; <span class="op">}</span></span>
+<span id="image-5"><a href="#image-5"></a></span>
+<span id="image-6"><a href="#image-6"></a><span class="kw">impl</span> Image <span class="op">{</span></span>
+<span id="image-7"><a href="#image-7"></a>    <span class="kw">fn</span> new(width: <span class="dt">usize</span>, height: <span class="dt">usize</span>) -&gt; Image <span class="op">{</span></span>
+<span id="image-8"><a href="#image-8"></a>        Image <span class="op">{</span></span>
+<span id="image-9"><a href="#image-9"></a>            width: width, height: height,</span>
+<span id="image-10"><a href="#image-10"></a>            data: <span class="pp">vec!</span><span class="op">[</span>BLACK; width*height<span class="op">]</span></span>
+<span id="image-11"><a href="#image-11"></a>        <span class="op">}</span></span>
+<span id="image-12"><a href="#image-12"></a>    <span class="op">}</span></span>
+<span id="image-13"><a href="#image-13"></a></span>
+<span id="image-14"><a href="#image-14"></a>    <span class="kw">fn</span> for_each&lt;F: <span class="pp">std::marker::</span><span class="bu">Sync</span> +  <span class="bu">Fn</span> (<span class="dt">usize</span>, <span class="dt">usize</span>, &amp;<span class="kw">mut</span> RGBColour)&gt;(&amp;<span class="kw">mut</span> <span class="kw">self</span>, f: F) <span class="op">{</span></span>
+<span id="image-15"><a href="#image-15"></a>        <span class="kw">let</span> w = <span class="kw">self</span>.width;</span>
+<span id="image-16"><a href="#image-16"></a>        <span class="kw">self</span>.data.par_iter_mut().enumerate().for_each(</span>
+<span id="image-17"><a href="#image-17"></a>            |(i, c)| <span class="op">{</span></span>
+<span id="image-18"><a href="#image-18"></a>                <span class="kw">let</span> x = i % w;</span>
+<span id="image-19"><a href="#image-19"></a>                <span class="kw">let</span> y = i / w;</span>
+<span id="image-20"><a href="#image-20"></a>                f(x, y, c);</span>
+<span id="image-21"><a href="#image-21"></a>            <span class="op">}</span></span>
+<span id="image-22"><a href="#image-22"></a>        );</span>
+<span id="image-23"><a href="#image-23"></a>    <span class="op">}</span></span>
+<span id="image-24"><a href="#image-24"></a></span>
+<span id="image-25"><a href="#image-25"></a>    <span class="kw">fn</span> size(&amp;<span class="kw">self</span>) -&gt; <span class="dt">usize</span> <span class="op">{</span> <span class="kw">self</span>.width * <span class="kw">self</span>.height <span class="op">}</span></span>
+<span id="image-26"><a href="#image-26"></a></span>
+<span id="image-27"><a href="#image-27"></a>    <span class="kw">fn</span> print_ppm(&amp;<span class="kw">self</span>, path: &amp;<span class="dt">str</span>) -&gt; <span class="pp">std::io::</span><span class="dt">Result</span>&lt;()&gt; <span class="op">{</span></span>
+<span id="image-28"><a href="#image-28"></a>        <span class="kw">use</span> <span class="pp">std::fs::</span>File;</span>
+<span id="image-29"><a href="#image-29"></a>        <span class="kw">use</span> <span class="pp">std::io::</span>Write;</span>
+<span id="image-30"><a href="#image-30"></a></span>
+<span id="image-31"><a href="#image-31"></a>        <span class="kw">let</span> <span class="kw">mut</span> out = <span class="pp">File::</span>create(path)?;</span>
+<span id="image-32"><a href="#image-32"></a>        <span class="pp">write!</span>(&amp;<span class="kw">mut</span> out, <span class="st">&quot;P3</span><span class="sc">\n</span><span class="st">{} {}</span><span class="sc">\n</span><span class="st">{}</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="kw">self</span>.width, <span class="kw">self</span>.height, <span class="dv">255</span>)?;</span>
+<span id="image-33"><a href="#image-33"></a></span>
+<span id="image-34"><a href="#image-34"></a>        <span class="kw">for</span> i <span class="kw">in</span> <span class="dv">0</span>..<span class="kw">self</span>.size() <span class="op">{</span></span>
+<span id="image-35"><a href="#image-35"></a>            <span class="kw">let</span> (r, g, b) = <span class="kw">self</span>.data<span class="op">[</span>i<span class="op">]</span>.to_u24();</span>
+<span id="image-36"><a href="#image-36"></a>            <span class="pp">write!</span>(&amp;<span class="kw">mut</span> out, <span class="st">&quot;{} {} {} &quot;</span>, r, g, b)?;</span>
+<span id="image-37"><a href="#image-37"></a>        <span class="op">}</span></span>
+<span id="image-38"><a href="#image-38"></a>        <span class="cn">Ok</span>(())</span>
+<span id="image-39"><a href="#image-39"></a>    <span class="op">}</span></span>
+<span id="image-40"><a href="#image-40"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<h1 id="main">Main</h1>
+<div class="annotated-code">
+<p><span><em>«src/main.rs»=</em></span></p>
+<div class="sourceCode" id="cb2" data-file="src/main.rs"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1"></a>&lt;&lt;import-quickcheck&gt;&gt;</span>
+<span id="cb2-2"><a href="#cb2-2"></a>&lt;&lt;import-rand&gt;&gt;</span>
+<span id="cb2-3"><a href="#cb2-3"></a>&lt;&lt;imports&gt;&gt;</span>
+<span id="cb2-4"><a href="#cb2-4"></a></span>
+<span id="cb2-5"><a href="#cb2-5"></a>&lt;&lt;constants&gt;&gt;</span>
+<span id="cb2-6"><a href="#cb2-6"></a>&lt;&lt;vector&gt;&gt;</span>
+<span id="cb2-7"><a href="#cb2-7"></a>&lt;&lt;colour&gt;&gt;</span>
+<span id="cb2-8"><a href="#cb2-8"></a>&lt;&lt;ray&gt;&gt;</span>
+<span id="cb2-9"><a href="#cb2-9"></a>&lt;&lt;material&gt;&gt;</span>
+<span id="cb2-10"><a href="#cb2-10"></a>&lt;&lt;sphere&gt;&gt;</span>
+<span id="cb2-11"><a href="#cb2-11"></a>&lt;&lt;scene&gt;&gt;</span>
+<span id="cb2-12"><a href="#cb2-12"></a>&lt;&lt;path-tracing&gt;&gt;</span>
+<span id="cb2-13"><a href="#cb2-13"></a>&lt;&lt;image&gt;&gt;</span>
+<span id="cb2-14"><a href="#cb2-14"></a></span>
+<span id="cb2-15"><a href="#cb2-15"></a><span class="at">#[</span>cfg<span class="at">(</span>test<span class="at">)]</span></span>
+<span id="cb2-16"><a href="#cb2-16"></a><span class="kw">mod</span> tests <span class="op">{</span></span>
+<span id="cb2-17"><a href="#cb2-17"></a>    <span class="kw">use</span> <span class="kw">super</span>::*;</span>
+<span id="cb2-18"><a href="#cb2-18"></a>    <span class="kw">use</span> <span class="pp">quickcheck::</span>*;</span>
+<span id="cb2-19"><a href="#cb2-19"></a></span>
+<span id="cb2-20"><a href="#cb2-20"></a>    &lt;&lt;vector-tests&gt;&gt;</span>
+<span id="cb2-21"><a href="#cb2-21"></a><span class="op">}</span></span>
+<span id="cb2-22"><a href="#cb2-22"></a></span>
+<span id="cb2-23"><a href="#cb2-23"></a><span class="kw">fn</span> main() -&gt; <span class="pp">std::io::</span><span class="dt">Result</span>&lt;()&gt; <span class="op">{</span></span>
+<span id="cb2-24"><a href="#cb2-24"></a>    <span class="kw">use</span> <span class="pp">rayon::</span>current_thread_index;</span>
+<span id="cb2-25"><a href="#cb2-25"></a></span>
+<span id="cb2-26"><a href="#cb2-26"></a>    <span class="kw">let</span> w: <span class="dt">usize</span> = <span class="dv">640</span>;</span>
+<span id="cb2-27"><a href="#cb2-27"></a>    <span class="kw">let</span> h: <span class="dt">usize</span> = <span class="dv">480</span>;</span>
+<span id="cb2-28"><a href="#cb2-28"></a>    <span class="kw">let</span> samps: <span class="dt">usize</span> = <span class="dv">1000</span>;</span>
+<span id="cb2-29"><a href="#cb2-29"></a>    <span class="kw">let</span> cam = Ray <span class="op">{</span> origin: vec(<span class="dv">50</span>., <span class="dv">52</span>., <span class="dv">295.6</span>), direction: vec(<span class="dv">0.0</span>, -<span class="dv">0.045</span>, -<span class="dv">1.0</span>).normalize() <span class="op">}</span>;</span>
+<span id="cb2-30"><a href="#cb2-30"></a>    <span class="kw">let</span> cx = vec(w <span class="kw">as</span> <span class="dt">f64</span> * <span class="dv">0.510</span> / h <span class="kw">as</span> <span class="dt">f64</span>, <span class="dv">0</span>., <span class="dv">0</span>.);</span>
+<span id="cb2-31"><a href="#cb2-31"></a>    <span class="kw">let</span> cy = (cx % cam.direction).normalize() * <span class="dv">0.510</span>;</span>
+<span id="cb2-32"><a href="#cb2-32"></a></span>
+<span id="cb2-33"><a href="#cb2-33"></a>    <span class="kw">let</span> <span class="kw">mut</span> img = <span class="pp">Image::</span>new(w, h);</span>
+<span id="cb2-34"><a href="#cb2-34"></a>    img.for_each(|x, y, c| <span class="op">{</span></span>
+<span id="cb2-35"><a href="#cb2-35"></a>        <span class="kw">let</span> <span class="kw">mut</span> rng = <span class="pp">rand::</span>thread_rng();</span>
+<span id="cb2-36"><a href="#cb2-36"></a>        <span class="kw">if</span> current_thread_index() == <span class="cn">Some</span>(<span class="dv">0</span>) <span class="op">{</span></span>
+<span id="cb2-37"><a href="#cb2-37"></a>            <span class="pp">eprint!</span>(<span class="st">&quot;</span><span class="sc">\r</span><span class="st">Rendering ({} spp) {:5.2}%&quot;</span>, samps*<span class="dv">4</span>, <span class="dv">100</span>.*(y <span class="kw">as</span> <span class="dt">f64</span> / (h-<span class="dv">1</span>) <span class="kw">as</span> <span class="dt">f64</span>));</span>
+<span id="cb2-38"><a href="#cb2-38"></a>        <span class="op">}</span></span>
+<span id="cb2-39"><a href="#cb2-39"></a>        <span class="kw">for</span> sy <span class="kw">in</span> <span class="dv">0</span>..<span class="dv">2</span> <span class="op">{</span></span>
+<span id="cb2-40"><a href="#cb2-40"></a>            <span class="kw">for</span> sx <span class="kw">in</span> <span class="dv">0</span>..<span class="dv">2</span> <span class="op">{</span></span>
+<span id="cb2-41"><a href="#cb2-41"></a>                <span class="kw">let</span> <span class="kw">mut</span> r = BLACK.clone();</span>
+<span id="cb2-42"><a href="#cb2-42"></a>                <span class="kw">for</span> _ <span class="kw">in</span> <span class="dv">0</span>..samps <span class="op">{</span></span>
+<span id="cb2-43"><a href="#cb2-43"></a>                    <span class="kw">let</span> r1 = <span class="dv">2</span>. * rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;();</span>
+<span id="cb2-44"><a href="#cb2-44"></a>                    <span class="kw">let</span> dx = <span class="kw">if</span> r1 &lt; <span class="dv">1</span>. <span class="op">{</span> r1.sqrt() - <span class="dv">1</span>. <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> <span class="dv">1</span>. - (<span class="dv">2</span>. - r1).sqrt() <span class="op">}</span>;</span>
+<span id="cb2-45"><a href="#cb2-45"></a>                    <span class="kw">let</span> r2 = <span class="dv">2</span>. * rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;();</span>
+<span id="cb2-46"><a href="#cb2-46"></a>                    <span class="kw">let</span> dy = <span class="kw">if</span> r2 &lt; <span class="dv">1</span>. <span class="op">{</span> r2.sqrt() - <span class="dv">1</span>. <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> <span class="dv">1</span>. - (<span class="dv">2</span>. - r2).sqrt() <span class="op">}</span>;</span>
+<span id="cb2-47"><a href="#cb2-47"></a>                    <span class="kw">let</span> d = cx*( ( (sx <span class="kw">as</span> <span class="dt">f64</span> + <span class="dv">0.5</span> + dx) / <span class="dv">2</span>. + x <span class="kw">as</span> <span class="dt">f64</span>) / w <span class="kw">as</span> <span class="dt">f64</span> - <span class="dv">0.5</span> )</span>
+<span id="cb2-48"><a href="#cb2-48"></a>                          + cy*( ( (sy <span class="kw">as</span> <span class="dt">f64</span> + <span class="dv">0.5</span> + dy) / <span class="dv">2</span>. + (h - y - <span class="dv">1</span>) <span class="kw">as</span> <span class="dt">f64</span>) / h <span class="kw">as</span> <span class="dt">f64</span> - <span class="dv">0.5</span> )</span>
+<span id="cb2-49"><a href="#cb2-49"></a>                          + cam.direction;</span>
+<span id="cb2-50"><a href="#cb2-50"></a>                    r = r + radiance(&amp;Ray <span class="op">{</span>origin: cam.origin + d*<span class="dv">140</span>., direction: d.normalize()<span class="op">}</span>, <span class="dv">0</span>) * (<span class="dv">1</span>./samps <span class="kw">as</span> <span class="dt">f64</span>);</span>
+<span id="cb2-51"><a href="#cb2-51"></a>                <span class="op">}</span></span>
+<span id="cb2-52"><a href="#cb2-52"></a>                *c = *c + r.clamp() * <span class="dv">0.25</span>;</span>
+<span id="cb2-53"><a href="#cb2-53"></a>            <span class="op">}</span></span>
+<span id="cb2-54"><a href="#cb2-54"></a>        <span class="op">}</span></span>
+<span id="cb2-55"><a href="#cb2-55"></a>    <span class="op">}</span>);</span>
+<span id="cb2-56"><a href="#cb2-56"></a></span>
+<span id="cb2-57"><a href="#cb2-57"></a>    <span class="pp">eprintln!</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Writing image.&quot;</span>);</span>
+<span id="cb2-58"><a href="#cb2-58"></a>    img.print_ppm(<span class="st">&quot;image_rust.ppm&quot;</span>)</span>
+<span id="cb2-59"><a href="#cb2-59"></a><span class="op">}</span></span></code></pre></div>
+</div>
+</div></main>
+
+
+
+<!-- Bootstrap 4.5.0 -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+<!-- Mathjax -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</body>
+</html>

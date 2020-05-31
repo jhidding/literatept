@@ -1,0 +1,23 @@
+# ~\~ language=TOML filename=Cargo.toml
+# ~\~ begin <<lit/index.md|Cargo.toml>>[0]
+[package]
+name = "literatept"
+version = "0.1.0"
+authors = ["Johan Hidding <j.hidding@esciencecenter.nl>"]
+edition = "2018"
+
+[profile.release]
+opt-level = 3
+
+[dependencies]
+# ~\~ begin <<lit/index.md|dependencies>>[0]
+rand = "0.7.3"
+rayon = "1.3.0"
+# ~\~ end
+
+[dev-dependencies]
+# ~\~ begin <<lit/index.md|dev-dependencies>>[0]
+quickcheck = "0.9"
+quickcheck_macros = "0.9"
+# ~\~ end
+# ~\~ end
