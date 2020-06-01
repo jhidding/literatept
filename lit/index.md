@@ -1,6 +1,9 @@
 ---
 title: LiteratePT
 subtitle: a translation of smallpt
+bibliography: lit/ref.bib
+reference-section-title: References
+link-citations: true
 ---
 
 # LiteratePT
@@ -36,6 +39,14 @@ opt-level = 3
 rand = "0.7.3"
 rayon = "1.3.0"
 ```
+
+``` {.rust #imports}
+extern crate rayon;
+
+use rayon::prelude::*;
+use std::f64::consts::PI;
+```
+
 
 # Vectors
 $\renewcommand{\vec}[1]{{\bf #1}}$
@@ -455,88 +466,253 @@ fn intersect(ray: &Ray) -> Option<(f64, &'static Sphere)> {
 It feel like we've done a lot of work here, but we've only arrived at line 48 of SmallPt.
 
 # Path tracing
+This is where all the physics happens. We need to generate random numbers.
 
 ``` {.rust #import-rand}
 extern crate rand;
 use rand::Rng;
 ```
 
-``` {.rust #imports}
-extern crate rayon;
-
-use rayon::prelude::*;
-use std::f64::consts::PI;
-```
+The `radiance` function computes how many photons are traveling at a certain position in space from a certain direction.
 
 ``` {.rust #path-tracing}
 fn radiance(ray: &Ray, mut depth: u16) -> RGBColour {
     let mut rng = rand::thread_rng();
-    let hit = intersect(ray);
-    if hit.is_none() { return BLACK; }
-    let (d, obj) = hit.unwrap();
-    let x = ray.origin + ray.direction * d;
-    let n = (x - obj.position).normalize();
-    let normal = if n * ray.direction < 0. { n } else { -n };
-    let mut f = obj.colour;
-    let p = f.max();
-    depth += 1;
-    if depth > 5 {
-        if rng.gen::<f64>() < p {
-            f = f * (1. / p);
-        } else {
-            return obj.emission;
-        }
+    <<do-intersect>>
+    <<russian-roulette-1>>
+    <<compute-normal>>
+    <<do-reflect>>
+    object.emission + f * light
+}
+```
+
+The second argument keeps track of how deep we are tracing. It is used as a control to switch between sampling methods. One method is to reduce the brightness of the ray at every reflection off a diffuse object until we hit a light source. The second method, also known as *Russion Roulette*, is to keep the brightness of the ray constant, but only reflect with a probability given by the colour of the object. The first method will always give a nice smooth image but may take a long time wasted on very dim rays. The Russian Roulette wastes less time per sample, but produces grainy images at low sample rates. That is why SmallPt switches sampling methods if we are deeper than $n$ reflections.
+
+First, we need to see if the ray intersects any object in the scene; if not, we return the colour `BLACK`.
+
+``` {.rust #do-intersect}
+let hit = intersect(ray);
+if hit.is_none() { return BLACK; }
+let (distance, object) = hit.unwrap();
+```
+
+## Russian Roulette 1
+The colour $f$ of an object reduces the radiance of a ray compared to the radiance of the reflected ray.
+
+$$r = f r_{\rm refl}.$${#eq:reflected-radiance}
+
+The first Russian Roulette happens at an integration depth of 5. The value $p$ is the probability of the ray being reflected. The value of $p$ can be anything between $0$ and $1$, and the math would still work out, however we choose it to be the maximum value of the colour of the object. Once the ray has overcome the odds of being absorbed, we have to renormalize the colour. If $p = 1$ the colour should remain the same. In other words, 
+
+$$r = \frac{1}{N}\sum_{\rm N} p f' r_{\rm refl} = f r_{\rm refl},$${#eq:russian-roulette}
+
+meaning that $$f' = f / p$$. If the ray got absorbed, the radiance equals the emission of the object.
+
+``` {.rust #russian-roulette-1}
+let mut f = object.colour;
+let p = f.max();
+depth += 1;
+if depth > 5 {
+    if rng.gen::<f64>() < p {
+        f = f * (1. / p);
+    } else {
+        return object.emission;
     }
-    let light = match obj.reflection {
-        Reflection::Diffuse => {
-            let r1 : f64 = 2.*PI*rng.gen::<f64>();
-            let r2 : f64 = rng.gen();
-            let r2s = r2.sqrt();
-            let ncl = if normal.x.abs() > 0.1 { vec(0., 1., 0.) } else { vec(1., 0., 0.) };
-            let u = (ncl % normal).normalize();
-            let v = normal % u;
-            let d = (u*r1.cos()*r2s + v*r1.sin()*r2s + normal*(1.-r2).sqrt()).normalize();
-            radiance(&Ray {origin: x, direction: d}, depth)
-        }
-        Reflection::Specular => {
-            let d = ray.direction - n * 2.*(n*ray.direction);
-            radiance(&Ray {origin: x, direction: d}, depth)
-        }
-        Reflection::Refractive => {
-            let d = ray.direction - n * 2.*(n*ray.direction);
-            let refl_ray = Ray { origin: x, direction: d };
-            let into = n * normal > 0.;
-            let nc = 1.;
-            let nt = 1.5;
-            let nnt = if into { nc / nt } else { nt / nc };
-            let ddn = ray.direction * normal;
-            let cos2t = 1. - nnt*nnt*(1. - ddn*ddn);
-            if cos2t < 0. { // total internal reflection
-                radiance(&refl_ray, depth)
-            } else {
-                let tdir = (ray.direction * nnt - n*(if into {1.} else {-1.}) * (ddn*nnt + cos2t.sqrt())).normalize();
-                let a = nt - nc;
-                let b = nt + nc;
-                let r0 = a*a/(b*b);
-                let c = 1. - (if into { -ddn } else {tdir * n});
-                let re = r0 + (1.-r0) * c.powf(5.0);
-                let tr = 1.-re;
-                let p = 0.25 + 0.5*re;
-                let rp = re/p;
-                let tp = tr/(1.-p);
-                if depth > 2 {
-                    if rng.gen::<f64>() < p {
-                        radiance(&refl_ray, depth) * rp
-                    } else {
-                        radiance(&Ray { origin: x, direction: tdir }, depth) * tp
-                    }
-                } else {
-                    radiance(&refl_ray, depth) * re + radiance(&Ray { origin: x, direction: tdir }, depth) * tr
-                }
-            }
-        }
-    };
-    obj.emission + f * light
+}
+```
+
+## Normals
+Now that we know that we hit an object, we need to compute the normal vector. Let $x$ be the position where the ray hits the object, and $\vec{n}$ be the normal vector (outward pointing) of the object.
+
+``` {.rust #compute-normal}
+let x = ray.origin + ray.direction * distance;
+let n = (x - object.position).normalize();
+```
+
+It could be that we're inside the object. In that case, the normal of reflection is opposite the normal of the object.
+
+``` {.rust #compute-normal}
+let n_refl = if n * ray.direction < 0. { n } else { -n };
+```
+
+## Reflection
+We're at the point that we need to compute how much light is reflected. Of course, this depends on the type of material that the object is made of. SmallPt has three material types, *diffuse*, *specular*, and *refractive*, that each have their own physics.
+
+``` {.rust #do-reflect}
+let light = match object.reflection {
+    Reflection::Diffuse => {
+        <<diffuse-reflection>>
+    }
+    Reflection::Specular => {
+        <<specular-reflection>>
+    }
+    Reflection::Refractive => {
+        <<refractive-reflection>>
+    }
+};
+```
+
+### Diffuse
+There are many types of diffuse reflection. You could imagine a surface where rays have equal probability of reflecting to any direction. This would mean sampling vectors on a hemisphere. We have a uniform probability over longitude:
+
+``` {.rust #diffuse-reflection}
+let phi = 2.*PI * rng.gen::<f64>();
+```
+
+Taking $\theta$ to be the angle of incidence to the normal of the surface, we have a $p(\theta) \sim \sin \theta$ probability over latitude. The inverse CDF sampling method then gives than $\cos \theta$ has a uniform distribution in the interval $[0, 1]$.
+
+However, there is a second effect. If you shine a uniform bundle of light on a surface at an angle, the light intensity drops with a factor $\cos \theta$. The combination of sampling the hemisphere and the lighting is known has *cosine-weighted sampling*, and there is a trick called *Malley's Method*.
+We can sample points on a uniform disc, and project those onto the hemisphere [@Pbr-13.6.3].
+
+On a disc we have $p(r) \sim r$, so $p(r^2) \sim 1$,
+
+``` {.rust #diffuse-reflection}
+let r2 : f64 = rng.gen();
+let r = r2.sqrt();
+```
+
+We need a set of orthogonal axes in the plane of reflection. We pick a vector to start with, and compute the outer product with the normal to give one vector $\vec{u}$ orthogonal to $\vec{n}$. To prevent numberloss, the first vector should not be too close to the normal. The second vector $\vec{v}$ is found by taking another outer product of $\vec{u} \times \vec{n}$.
+
+``` {.rust #diffuse-reflection}
+let ncl = if n_refl.x.abs() > 0.1 { vec(0., 1., 0.) } else { vec(1., 0., 0.) };
+let u = (ncl % n_refl).normalize();
+let v = n_refl % u;
+```
+
+The direction of the reflected ray is now known.
+
+``` {.rust #diffuse-reflection}
+let d = (u*phi.cos()*r + v*phi.sin()*r + n_refl*(1.-r2).sqrt()).normalize();
+```
+
+To compute the radiance, we need to know the radiance from the reflected ray.
+
+``` {.rust #diffuse-reflection}
+radiance(&Ray {origin: x, direction: d}, depth)
+```
+
+### Specular
+Specular reflection means we have to mirror the incident ray with respect to the normal. This means that only the $\vec{n}$ component of the direction flips,
+
+$$\vec{\hat{d}}' = \vec{\hat{d}} - 2 \vec{\hat{n}} (\vec{\hat{n}} \cdot \vec{\hat{d}})$$.
+
+``` {.rust #specular-reflection}
+let d = ray.direction - n * 2.*(n*ray.direction);
+radiance(&Ray {origin: x, direction: d}, depth)
+```
+
+### Refractive
+Now some real optics! Discarding polarisation, there are several ways a photon may go at the boundary between two transparent media: *total internal reflection*, *refraction*, or *partial reflection*.
+
+There is always a reflective component,
+
+``` {.rust #refractive-reflection}
+let d = ray.direction - n * 2.*(n*ray.direction);
+let reflected_ray = Ray { origin: x, direction: d };
+```
+
+We need to know if we're moving into or out of the object.
+
+``` {.rust #refractive-reflection}
+let into = n * n_refl > 0.;
+```
+
+#### Refractive index
+The refractive index of glass can vary, but $n = 1.5$ seems reasonable.
+
+``` {.rust #constants}
+const N_GLASS: f64 = 1.5;
+const N_AIR: f64 = 1.0;
+```
+
+Depending on whether, we're entering or leaving the glass object, the effective index of refraction is
+$n_{\rm air} / n_{\rm glass}$ or $n_{\rm glass} / n_{\rm air}$.
+
+``` {.rust #refractive-reflection}
+let n_eff = if into { N_AIR / N_GLASS } else { N_GLASS / N_AIR };
+```
+
+#### Total internal reflection
+Total internal reflection happens if the angle of incidence is larger than some critical angle $\theta_c$, given by
+
+$$\theta_c = \arcsin \frac{n_{\rm outside}}{n_{\rm inside}}.$${#eq:tir-critical-angle}
+
+We can easily compute $\mu = \cos \theta$ using the inner product, so with a little algebra, total-internal-reflection happens if,
+
+$$\begin{align}
+\sin \theta &> {n_o \over n_i}\\
+\sqrt{1 - \cos^2 \theta} &> {n_o \over n_i}\\
+1 - \mu^2 &> (\n_o \over n_i)^2\\
+(\n_i \over n_o)^2 (1 - \mu^2) &> 1
+\end{align}$$
+
+``` {.rust #refractive-reflection}
+let mu = ray.direction * n_refl;
+let cos2t = 1. - n_eff*n_eff*(1. - mu*mu);
+if cos2t < 0. {
+    <<total-internal-reflection>>
+} else {
+    <<partial-reflection>>
+}
+```
+
+In that case, we recurse with the reflected ray.
+
+``` {.rust #total-internal-reflection}
+radiance(&reflected_ray, depth)
+```
+
+#### Partial reflection
+In the case of partial reflection, we need to compute also the angle of the refracted ray. We have Snell's law,
+
+$${\sin \theta_i \over \sin \theta_o} = {n_o \over n_i} = {1 \over n_{\rm eff}}.$${#eq:snellius}
+
+We can decompose the incident ray direction into a normal component $d_n$ and a transverse component $d_t$. Then $|d_t| = \sin \theta_i$, and $|d_n| = \vec{d} \cdot \vec{n} = \cos \theta_i$. Similarly we can decompose the outgoing ray direction $\vec{d}'$,
+
+$$\begin{align}
+d_t' &= n_{\rm eff} (\vec{d} - \mu \vec{n})\\
+d_n' &= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
+\end{align}$$
+
+where $|d_t|^2 = 1 - \mu^2$. That is convenient, because it turns out we have already computed $|d_n'|$, it is the square root of `cos2t`. Now, we also see where the total internal reflection comes from; there is no solution to Snell's law for those angles.
+
+``` {.rust #partial-reflection}
+let tdir = (ray.direction * n_eff - n_refl * (mu*n_eff + cos2t.sqrt())).normalize();
+```
+
+Next, we need to compute the fraction of light that is reflected. The Fresnel equations describe this process, but they are very complicated and also deal with polarisation. We use Schlick's approximation instead (see {@Schlick1994}),
+
+$$R(\theta) = R_0 + (1 - R_0) (1 - \mu)^5,$$
+
+where
+
+$$R_0 = \left(\frac{n_i - n_o}{n_i + n_o}\right)^2.$$
+
+``` {.rust #constants}
+const R0: f64 =  (N_GLASS - N_AIR) * (N_GLASS - N_AIR)
+              / ((N_GLASS + N_AIR) * (N_GLASS + N_AIR));
+```
+
+``` {.rust #partial-reflection}
+let c = 1. - (if into { -mu } else {tdir * n});
+let re = R0 + (1. - R0) * c.powf(5.0);
+let tr = 1. - re;
+```
+
+#### Russian Roulette 2
+
+``` {.rust #partial-reflection}
+let p = 0.25 + 0.5*re;
+let rp = re/p;
+let tp = tr/(1.-p);
+if depth > 2 {
+    if rng.gen::<f64>() < p {
+        radiance(&reflected_ray, depth) * rp
+    } else {
+        radiance(&Ray { origin: x, direction: tdir }, depth) * tp
+    }
+} else {
+    radiance(&reflected_ray, depth) * re
+    + radiance(&Ray { origin: x, direction: tdir }, depth) * tr
 }
 ```
 
@@ -615,7 +791,7 @@ fn main() -> std::io::Result<()> {
 
     let w: usize = 640;
     let h: usize = 480;
-    let samps: usize = 1000;
+    let samps: usize = 100;
     let cam = Ray { origin: vec(50., 52., 295.6), direction: vec(0.0, -0.045, -1.0).normalize() };
     let cx = vec(w as f64 * 0.510 / h as f64, 0., 0.);
     let cy = (cx % cam.direction).normalize() * 0.510;

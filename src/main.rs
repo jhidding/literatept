@@ -22,6 +22,14 @@ use std::f64::consts::PI;
 // ~\~ begin <<lit/index.md|constants>>[0]
 const EPS: f64 = 1e-4;
 // ~\~ end
+// ~\~ begin <<lit/index.md|constants>>[1]
+const N_GLASS: f64 = 1.5;
+const N_AIR: f64 = 1.0;
+// ~\~ end
+// ~\~ begin <<lit/index.md|constants>>[2]
+const R0: f64 =  (N_GLASS - N_AIR) * (N_GLASS - N_AIR)
+              / ((N_GLASS + N_AIR) * (N_GLASS + N_AIR));
+// ~\~ end
 // ~\~ begin <<lit/index.md|vector>>[0]
 #[derive(Clone,Copy,Debug)]
 struct Vec3
@@ -267,72 +275,106 @@ fn intersect(ray: &Ray) -> Option<(f64, &'static Sphere)> {
 // ~\~ begin <<lit/index.md|path-tracing>>[0]
 fn radiance(ray: &Ray, mut depth: u16) -> RGBColour {
     let mut rng = rand::thread_rng();
+    // ~\~ begin <<lit/index.md|do-intersect>>[0]
     let hit = intersect(ray);
     if hit.is_none() { return BLACK; }
-    let (d, obj) = hit.unwrap();
-    let x = ray.origin + ray.direction * d;
-    let n = (x - obj.position).normalize();
-    let normal = if n * ray.direction < 0. { n } else { -n };
-    let mut f = obj.colour;
+    let (distance, object) = hit.unwrap();
+    // ~\~ end
+    // ~\~ begin <<lit/index.md|russian-roulette-1>>[0]
+    let mut f = object.colour;
     let p = f.max();
     depth += 1;
     if depth > 5 {
         if rng.gen::<f64>() < p {
             f = f * (1. / p);
         } else {
-            return obj.emission;
+            return object.emission;
         }
     }
-    let light = match obj.reflection {
+    // ~\~ end
+    // ~\~ begin <<lit/index.md|compute-normal>>[0]
+    let x = ray.origin + ray.direction * distance;
+    let n = (x - object.position).normalize();
+    // ~\~ end
+    // ~\~ begin <<lit/index.md|compute-normal>>[1]
+    let n_refl = if n * ray.direction < 0. { n } else { -n };
+    // ~\~ end
+    // ~\~ begin <<lit/index.md|do-reflect>>[0]
+    let light = match object.reflection {
         Reflection::Diffuse => {
-            let r1 : f64 = 2.*PI*rng.gen::<f64>();
+            // ~\~ begin <<lit/index.md|diffuse-reflection>>[0]
+            let phi = 2.*PI * rng.gen::<f64>();
+            // ~\~ end
+            // ~\~ begin <<lit/index.md|diffuse-reflection>>[1]
             let r2 : f64 = rng.gen();
-            let r2s = r2.sqrt();
-            let ncl = if normal.x.abs() > 0.1 { vec(0., 1., 0.) } else { vec(1., 0., 0.) };
-            let u = (ncl % normal).normalize();
-            let v = normal % u;
-            let d = (u*r1.cos()*r2s + v*r1.sin()*r2s + normal*(1.-r2).sqrt()).normalize();
+            let r = r2.sqrt();
+            // ~\~ end
+            // ~\~ begin <<lit/index.md|diffuse-reflection>>[2]
+            let ncl = if n_refl.x.abs() > 0.1 { vec(0., 1., 0.) } else { vec(1., 0., 0.) };
+            let u = (ncl % n_refl).normalize();
+            let v = n_refl % u;
+            // ~\~ end
+            // ~\~ begin <<lit/index.md|diffuse-reflection>>[3]
+            let d = (u*phi.cos()*r + v*phi.sin()*r + n_refl*(1.-r2).sqrt()).normalize();
+            // ~\~ end
+            // ~\~ begin <<lit/index.md|diffuse-reflection>>[4]
             radiance(&Ray {origin: x, direction: d}, depth)
+            // ~\~ end
         }
         Reflection::Specular => {
+            // ~\~ begin <<lit/index.md|specular-reflection>>[0]
             let d = ray.direction - n * 2.*(n*ray.direction);
             radiance(&Ray {origin: x, direction: d}, depth)
+            // ~\~ end
         }
         Reflection::Refractive => {
+            // ~\~ begin <<lit/index.md|refractive-reflection>>[0]
             let d = ray.direction - n * 2.*(n*ray.direction);
-            let refl_ray = Ray { origin: x, direction: d };
-            let into = n * normal > 0.;
-            let nc = 1.;
-            let nt = 1.5;
-            let nnt = if into { nc / nt } else { nt / nc };
-            let ddn = ray.direction * normal;
-            let cos2t = 1. - nnt*nnt*(1. - ddn*ddn);
-            if cos2t < 0. { // total internal reflection
-                radiance(&refl_ray, depth)
+            let reflected_ray = Ray { origin: x, direction: d };
+            // ~\~ end
+            // ~\~ begin <<lit/index.md|refractive-reflection>>[1]
+            let into = n * n_refl > 0.;
+            // ~\~ end
+            // ~\~ begin <<lit/index.md|refractive-reflection>>[2]
+            let n_eff = if into { N_AIR / N_GLASS } else { N_GLASS / N_AIR };
+            // ~\~ end
+            // ~\~ begin <<lit/index.md|refractive-reflection>>[3]
+            let mu = ray.direction * n_refl;
+            let cos2t = 1. - n_eff*n_eff*(1. - mu*mu);
+            if cos2t < 0. {
+                // ~\~ begin <<lit/index.md|total-internal-reflection>>[0]
+                radiance(&reflected_ray, depth)
+                // ~\~ end
             } else {
-                let tdir = (ray.direction * nnt - n*(if into {1.} else {-1.}) * (ddn*nnt + cos2t.sqrt())).normalize();
-                let a = nt - nc;
-                let b = nt + nc;
-                let r0 = a*a/(b*b);
-                let c = 1. - (if into { -ddn } else {tdir * n});
-                let re = r0 + (1.-r0) * c.powf(5.0);
-                let tr = 1.-re;
+                // ~\~ begin <<lit/index.md|partial-reflection>>[0]
+                let tdir = (ray.direction * n_eff - n_refl * (mu*n_eff + cos2t.sqrt())).normalize();
+                // ~\~ end
+                // ~\~ begin <<lit/index.md|partial-reflection>>[1]
+                let c = 1. - (if into { -mu } else {tdir * n});
+                let re = R0 + (1. - R0) * c.powf(5.0);
+                let tr = 1. - re;
+                // ~\~ end
+                // ~\~ begin <<lit/index.md|partial-reflection>>[2]
                 let p = 0.25 + 0.5*re;
                 let rp = re/p;
                 let tp = tr/(1.-p);
                 if depth > 2 {
                     if rng.gen::<f64>() < p {
-                        radiance(&refl_ray, depth) * rp
+                        radiance(&reflected_ray, depth) * rp
                     } else {
                         radiance(&Ray { origin: x, direction: tdir }, depth) * tp
                     }
                 } else {
-                    radiance(&refl_ray, depth) * re + radiance(&Ray { origin: x, direction: tdir }, depth) * tr
+                    radiance(&reflected_ray, depth) * re
+                    + radiance(&Ray { origin: x, direction: tdir }, depth) * tr
                 }
+                // ~\~ end
             }
+            // ~\~ end
         }
     };
-    obj.emission + f * light
+    // ~\~ end
+    object.emission + f * light
 }
 // ~\~ end
 // ~\~ begin <<lit/index.md|image>>[0]
@@ -423,7 +465,7 @@ fn main() -> std::io::Result<()> {
 
     let w: usize = 640;
     let h: usize = 480;
-    let samps: usize = 1000;
+    let samps: usize = 100;
     let cam = Ray { origin: vec(50., 52., 295.6), direction: vec(0.0, -0.045, -1.0).normalize() };
     let cx = vec(w as f64 * 0.510 / h as f64, 0., 0.);
     let cy = (cx % cam.direction).normalize() * 0.510;

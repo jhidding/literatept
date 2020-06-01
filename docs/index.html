@@ -113,6 +113,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#path-tracing">Path tracing</a></li>
 <li><a href="#image">Image</a></li>
 <li><a href="#main">Main</a></li>
+<li><a href="#bibliography">References</a></li>
 </ul>
 </div>
 </nav>
@@ -156,6 +157,13 @@ The package description can be extended using <a href="https://doc.rust-lang.org
 <p><span><em>«dependencies»=</em></span></p>
 <div class="sourceCode" id="dependencies"><pre class="sourceCode toml"><code class="sourceCode toml"><span id="dependencies-1"><a href="#dependencies-1"></a><span class="dt">rand</span> <span class="op">=</span> <span class="st">&quot;0.7.3&quot;</span></span>
 <span id="dependencies-2"><a href="#dependencies-2"></a><span class="dt">rayon</span> <span class="op">=</span> <span class="st">&quot;1.3.0&quot;</span></span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«imports»=</em></span></p>
+<div class="sourceCode" id="imports"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="imports-1"><a href="#imports-1"></a><span class="kw">extern</span> <span class="kw">crate</span> rayon;</span>
+<span id="imports-2"><a href="#imports-2"></a></span>
+<span id="imports-3"><a href="#imports-3"></a><span class="kw">use</span> <span class="pp">rayon::prelude::</span>*;</span>
+<span id="imports-4"><a href="#imports-4"></a><span class="kw">use</span> <span class="pp">std::</span><span class="dt">f64</span>::<span class="pp">consts::</span>PI;</span></code></pre></div>
 </div>
 <h1 id="vectors">Vectors</h1>
 <p><span class="math inline">\(\renewcommand{\vec}[1]{{\bf #1}}\)</span> The <code>Vec</code> type has three public members <span class="math inline">\(x\)</span>, <span class="math inline">\(y\)</span> and <span class="math inline">\(z\)</span>.</p>
@@ -535,89 +543,212 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 </div>
 <p>It feel like we’ve done a lot of work here, but we’ve only arrived at line 48 of SmallPt.</p>
 <h1 id="path-tracing">Path tracing</h1>
+<p>This is where all the physics happens. We need to generate random numbers.</p>
 <div class="annotated-code">
 <p><span><em>«import-rand»=</em></span></p>
 <div class="sourceCode" id="import-rand"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="import-rand-1"><a href="#import-rand-1"></a><span class="kw">extern</span> <span class="kw">crate</span> rand;</span>
 <span id="import-rand-2"><a href="#import-rand-2"></a><span class="kw">use</span> <span class="pp">rand::</span>Rng;</span></code></pre></div>
 </div>
-<div class="annotated-code">
-<p><span><em>«imports»=</em></span></p>
-<div class="sourceCode" id="imports"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="imports-1"><a href="#imports-1"></a><span class="kw">extern</span> <span class="kw">crate</span> rayon;</span>
-<span id="imports-2"><a href="#imports-2"></a></span>
-<span id="imports-3"><a href="#imports-3"></a><span class="kw">use</span> <span class="pp">rayon::prelude::</span>*;</span>
-<span id="imports-4"><a href="#imports-4"></a><span class="kw">use</span> <span class="pp">std::</span><span class="dt">f64</span>::<span class="pp">consts::</span>PI;</span></code></pre></div>
-</div>
+<p>The <code>radiance</code> function computes how many photons are traveling at a certain position in space from a certain direction.</p>
 <div class="annotated-code">
 <p><span><em>«path-tracing»=</em></span></p>
 <div class="sourceCode" id="path-tracing"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="path-tracing-1"><a href="#path-tracing-1"></a><span class="kw">fn</span> radiance(ray: &amp;Ray, <span class="kw">mut</span> depth: <span class="dt">u16</span>) -&gt; RGBColour <span class="op">{</span></span>
 <span id="path-tracing-2"><a href="#path-tracing-2"></a>    <span class="kw">let</span> <span class="kw">mut</span> rng = <span class="pp">rand::</span>thread_rng();</span>
-<span id="path-tracing-3"><a href="#path-tracing-3"></a>    <span class="kw">let</span> hit = intersect(ray);</span>
-<span id="path-tracing-4"><a href="#path-tracing-4"></a>    <span class="kw">if</span> hit.is_none() <span class="op">{</span> <span class="kw">return</span> BLACK; <span class="op">}</span></span>
-<span id="path-tracing-5"><a href="#path-tracing-5"></a>    <span class="kw">let</span> (d, obj) = hit.unwrap();</span>
-<span id="path-tracing-6"><a href="#path-tracing-6"></a>    <span class="kw">let</span> x = ray.origin + ray.direction * d;</span>
-<span id="path-tracing-7"><a href="#path-tracing-7"></a>    <span class="kw">let</span> n = (x - obj.position).normalize();</span>
-<span id="path-tracing-8"><a href="#path-tracing-8"></a>    <span class="kw">let</span> normal = <span class="kw">if</span> n * ray.direction &lt; <span class="dv">0</span>. <span class="op">{</span> n <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> -n <span class="op">}</span>;</span>
-<span id="path-tracing-9"><a href="#path-tracing-9"></a>    <span class="kw">let</span> <span class="kw">mut</span> f = obj.colour;</span>
-<span id="path-tracing-10"><a href="#path-tracing-10"></a>    <span class="kw">let</span> p = f.max();</span>
-<span id="path-tracing-11"><a href="#path-tracing-11"></a>    depth += <span class="dv">1</span>;</span>
-<span id="path-tracing-12"><a href="#path-tracing-12"></a>    <span class="kw">if</span> depth &gt; <span class="dv">5</span> <span class="op">{</span></span>
-<span id="path-tracing-13"><a href="#path-tracing-13"></a>        <span class="kw">if</span> rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;() &lt; p <span class="op">{</span></span>
-<span id="path-tracing-14"><a href="#path-tracing-14"></a>            f = f * (<span class="dv">1</span>. / p);</span>
-<span id="path-tracing-15"><a href="#path-tracing-15"></a>        <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span id="path-tracing-16"><a href="#path-tracing-16"></a>            <span class="kw">return</span> obj.emission;</span>
-<span id="path-tracing-17"><a href="#path-tracing-17"></a>        <span class="op">}</span></span>
-<span id="path-tracing-18"><a href="#path-tracing-18"></a>    <span class="op">}</span></span>
-<span id="path-tracing-19"><a href="#path-tracing-19"></a>    <span class="kw">let</span> light = <span class="kw">match</span> obj.reflection <span class="op">{</span></span>
-<span id="path-tracing-20"><a href="#path-tracing-20"></a>        <span class="pp">Reflection::</span>Diffuse =&gt; <span class="op">{</span></span>
-<span id="path-tracing-21"><a href="#path-tracing-21"></a>            <span class="kw">let</span> r1 : <span class="dt">f64</span> = <span class="dv">2</span>.*PI*rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;();</span>
-<span id="path-tracing-22"><a href="#path-tracing-22"></a>            <span class="kw">let</span> r2 : <span class="dt">f64</span> = rng.gen();</span>
-<span id="path-tracing-23"><a href="#path-tracing-23"></a>            <span class="kw">let</span> r2s = r2.sqrt();</span>
-<span id="path-tracing-24"><a href="#path-tracing-24"></a>            <span class="kw">let</span> ncl = <span class="kw">if</span> normal.x.abs() &gt; <span class="dv">0.1</span> <span class="op">{</span> vec(<span class="dv">0</span>., <span class="dv">1</span>., <span class="dv">0</span>.) <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> vec(<span class="dv">1</span>., <span class="dv">0</span>., <span class="dv">0</span>.) <span class="op">}</span>;</span>
-<span id="path-tracing-25"><a href="#path-tracing-25"></a>            <span class="kw">let</span> u = (ncl % normal).normalize();</span>
-<span id="path-tracing-26"><a href="#path-tracing-26"></a>            <span class="kw">let</span> v = normal % u;</span>
-<span id="path-tracing-27"><a href="#path-tracing-27"></a>            <span class="kw">let</span> d = (u*r1.cos()*r2s + v*r1.sin()*r2s + normal*(<span class="dv">1</span>.-r2).sqrt()).normalize();</span>
-<span id="path-tracing-28"><a href="#path-tracing-28"></a>            radiance(&amp;Ray <span class="op">{</span>origin: x, direction: d<span class="op">}</span>, depth)</span>
-<span id="path-tracing-29"><a href="#path-tracing-29"></a>        <span class="op">}</span></span>
-<span id="path-tracing-30"><a href="#path-tracing-30"></a>        <span class="pp">Reflection::</span>Specular =&gt; <span class="op">{</span></span>
-<span id="path-tracing-31"><a href="#path-tracing-31"></a>            <span class="kw">let</span> d = ray.direction - n * <span class="dv">2</span>.*(n*ray.direction);</span>
-<span id="path-tracing-32"><a href="#path-tracing-32"></a>            radiance(&amp;Ray <span class="op">{</span>origin: x, direction: d<span class="op">}</span>, depth)</span>
-<span id="path-tracing-33"><a href="#path-tracing-33"></a>        <span class="op">}</span></span>
-<span id="path-tracing-34"><a href="#path-tracing-34"></a>        <span class="pp">Reflection::</span>Refractive =&gt; <span class="op">{</span></span>
-<span id="path-tracing-35"><a href="#path-tracing-35"></a>            <span class="kw">let</span> d = ray.direction - n * <span class="dv">2</span>.*(n*ray.direction);</span>
-<span id="path-tracing-36"><a href="#path-tracing-36"></a>            <span class="kw">let</span> refl_ray = Ray <span class="op">{</span> origin: x, direction: d <span class="op">}</span>;</span>
-<span id="path-tracing-37"><a href="#path-tracing-37"></a>            <span class="kw">let</span> into = n * normal &gt; <span class="dv">0</span>.;</span>
-<span id="path-tracing-38"><a href="#path-tracing-38"></a>            <span class="kw">let</span> nc = <span class="dv">1</span>.;</span>
-<span id="path-tracing-39"><a href="#path-tracing-39"></a>            <span class="kw">let</span> nt = <span class="dv">1.5</span>;</span>
-<span id="path-tracing-40"><a href="#path-tracing-40"></a>            <span class="kw">let</span> nnt = <span class="kw">if</span> into <span class="op">{</span> nc / nt <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> nt / nc <span class="op">}</span>;</span>
-<span id="path-tracing-41"><a href="#path-tracing-41"></a>            <span class="kw">let</span> ddn = ray.direction * normal;</span>
-<span id="path-tracing-42"><a href="#path-tracing-42"></a>            <span class="kw">let</span> cos2t = <span class="dv">1</span>. - nnt*nnt*(<span class="dv">1</span>. - ddn*ddn);</span>
-<span id="path-tracing-43"><a href="#path-tracing-43"></a>            <span class="kw">if</span> cos2t &lt; <span class="dv">0</span>. <span class="op">{</span> <span class="co">// total internal reflection</span></span>
-<span id="path-tracing-44"><a href="#path-tracing-44"></a>                radiance(&amp;refl_ray, depth)</span>
-<span id="path-tracing-45"><a href="#path-tracing-45"></a>            <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span id="path-tracing-46"><a href="#path-tracing-46"></a>                <span class="kw">let</span> tdir = (ray.direction * nnt - n*(<span class="kw">if</span> into <span class="op">{</span><span class="dv">1</span>.<span class="op">}</span> <span class="kw">else</span> <span class="op">{</span>-<span class="dv">1</span>.<span class="op">}</span>) * (ddn*nnt + cos2t.sqrt())).normalize();</span>
-<span id="path-tracing-47"><a href="#path-tracing-47"></a>                <span class="kw">let</span> a = nt - nc;</span>
-<span id="path-tracing-48"><a href="#path-tracing-48"></a>                <span class="kw">let</span> b = nt + nc;</span>
-<span id="path-tracing-49"><a href="#path-tracing-49"></a>                <span class="kw">let</span> r0 = a*a/(b*b);</span>
-<span id="path-tracing-50"><a href="#path-tracing-50"></a>                <span class="kw">let</span> c = <span class="dv">1</span>. - (<span class="kw">if</span> into <span class="op">{</span> -ddn <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span>tdir * n<span class="op">}</span>);</span>
-<span id="path-tracing-51"><a href="#path-tracing-51"></a>                <span class="kw">let</span> re = r0 + (<span class="dv">1</span>.-r0) * c.powf(<span class="dv">5.0</span>);</span>
-<span id="path-tracing-52"><a href="#path-tracing-52"></a>                <span class="kw">let</span> tr = <span class="dv">1</span>.-re;</span>
-<span id="path-tracing-53"><a href="#path-tracing-53"></a>                <span class="kw">let</span> p = <span class="dv">0.25</span> + <span class="dv">0.5</span>*re;</span>
-<span id="path-tracing-54"><a href="#path-tracing-54"></a>                <span class="kw">let</span> rp = re/p;</span>
-<span id="path-tracing-55"><a href="#path-tracing-55"></a>                <span class="kw">let</span> tp = tr/(<span class="dv">1</span>.-p);</span>
-<span id="path-tracing-56"><a href="#path-tracing-56"></a>                <span class="kw">if</span> depth &gt; <span class="dv">2</span> <span class="op">{</span></span>
-<span id="path-tracing-57"><a href="#path-tracing-57"></a>                    <span class="kw">if</span> rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;() &lt; p <span class="op">{</span></span>
-<span id="path-tracing-58"><a href="#path-tracing-58"></a>                        radiance(&amp;refl_ray, depth) * rp</span>
-<span id="path-tracing-59"><a href="#path-tracing-59"></a>                    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span id="path-tracing-60"><a href="#path-tracing-60"></a>                        radiance(&amp;Ray <span class="op">{</span> origin: x, direction: tdir <span class="op">}</span>, depth) * tp</span>
-<span id="path-tracing-61"><a href="#path-tracing-61"></a>                    <span class="op">}</span></span>
-<span id="path-tracing-62"><a href="#path-tracing-62"></a>                <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span id="path-tracing-63"><a href="#path-tracing-63"></a>                    radiance(&amp;refl_ray, depth) * re + radiance(&amp;Ray <span class="op">{</span> origin: x, direction: tdir <span class="op">}</span>, depth) * tr</span>
-<span id="path-tracing-64"><a href="#path-tracing-64"></a>                <span class="op">}</span></span>
-<span id="path-tracing-65"><a href="#path-tracing-65"></a>            <span class="op">}</span></span>
-<span id="path-tracing-66"><a href="#path-tracing-66"></a>        <span class="op">}</span></span>
-<span id="path-tracing-67"><a href="#path-tracing-67"></a>    <span class="op">}</span>;</span>
-<span id="path-tracing-68"><a href="#path-tracing-68"></a>    obj.emission + f * light</span>
-<span id="path-tracing-69"><a href="#path-tracing-69"></a><span class="op">}</span></span></code></pre></div>
+<span id="path-tracing-3"><a href="#path-tracing-3"></a>    &lt;&lt;<span class="kw">do</span>-intersect&gt;&gt;</span>
+<span id="path-tracing-4"><a href="#path-tracing-4"></a>    &lt;&lt;russian-roulette-<span class="dv">1</span>&gt;&gt;</span>
+<span id="path-tracing-5"><a href="#path-tracing-5"></a>    &lt;&lt;compute-normal&gt;&gt;</span>
+<span id="path-tracing-6"><a href="#path-tracing-6"></a>    &lt;&lt;<span class="kw">do</span>-reflect&gt;&gt;</span>
+<span id="path-tracing-7"><a href="#path-tracing-7"></a>    object.emission + f * light</span>
+<span id="path-tracing-8"><a href="#path-tracing-8"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>The second argument keeps track of how deep we are tracing. It is used as a control to switch between sampling methods. One method is to reduce the brightness of the ray at every reflection off a diffuse object until we hit a light source. The second method, also known as <em>Russion Roulette</em>, is to keep the brightness of the ray constant, but only reflect with a probability given by the colour of the object. The first method will always give a nice smooth image but may take a long time wasted on very dim rays. The Russian Roulette wastes less time per sample, but produces grainy images at low sample rates. That is why SmallPt switches sampling methods if we are deeper than <span class="math inline">\(n\)</span> reflections.</p>
+<p>First, we need to see if the ray intersects any object in the scene; if not, we return the colour <code>BLACK</code>.</p>
+<div class="annotated-code">
+<p><span><em>«do-intersect»=</em></span></p>
+<div class="sourceCode" id="do-intersect"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="do-intersect-1"><a href="#do-intersect-1"></a><span class="kw">let</span> hit = intersect(ray);</span>
+<span id="do-intersect-2"><a href="#do-intersect-2"></a><span class="kw">if</span> hit.is_none() <span class="op">{</span> <span class="kw">return</span> BLACK; <span class="op">}</span></span>
+<span id="do-intersect-3"><a href="#do-intersect-3"></a><span class="kw">let</span> (distance, object) = hit.unwrap();</span></code></pre></div>
+</div>
+<h2 id="russian-roulette-1">Russian Roulette 1</h2>
+<p>The colour <span class="math inline">\(f\)</span> of an object reduces the radiance of a ray compared to the radiance of the reflected ray.</p>
+<p><span id="eq:reflected-radiance" class="eqnos"><span class="math display">\[r = f r_{\rm refl}.\]</span><span class="eqnos-number">(1)</span></span></p>
+<p>The first Russian Roulette happens at an integration depth of 5. The value <span class="math inline">\(p\)</span> is the probability of the ray being reflected. The value of <span class="math inline">\(p\)</span> can be anything between <span class="math inline">\(0\)</span> and <span class="math inline">\(1\)</span>, and the math would still work out, however we choose it to be the maximum value of the colour of the object. Once the ray has overcome the odds of being absorbed, we have to renormalize the colour. If <span class="math inline">\(p = 1\)</span> the colour should remain the same. In other words,</p>
+<p><span id="eq:russian-roulette" class="eqnos"><span class="math display">\[r = \frac{1}{N}\sum_{\rm N} p f&#39; r_{\rm refl} = f r_{\rm refl},\]</span><span class="eqnos-number">(2)</span></span></p>
+<p>meaning that <span class="math display">\[f&#39; = f / p\]</span>. If the ray got absorbed, the radiance equals the emission of the object.</p>
+<div class="annotated-code">
+<p><span><em>«russian-roulette-1»=</em></span></p>
+<div class="sourceCode" id="russian-roulette-1"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="russian-roulette-1-1"><a href="#russian-roulette-1-1"></a><span class="kw">let</span> <span class="kw">mut</span> f = object.colour;</span>
+<span id="russian-roulette-1-2"><a href="#russian-roulette-1-2"></a><span class="kw">let</span> p = f.max();</span>
+<span id="russian-roulette-1-3"><a href="#russian-roulette-1-3"></a>depth += <span class="dv">1</span>;</span>
+<span id="russian-roulette-1-4"><a href="#russian-roulette-1-4"></a><span class="kw">if</span> depth &gt; <span class="dv">5</span> <span class="op">{</span></span>
+<span id="russian-roulette-1-5"><a href="#russian-roulette-1-5"></a>    <span class="kw">if</span> rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;() &lt; p <span class="op">{</span></span>
+<span id="russian-roulette-1-6"><a href="#russian-roulette-1-6"></a>        f = f * (<span class="dv">1</span>. / p);</span>
+<span id="russian-roulette-1-7"><a href="#russian-roulette-1-7"></a>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="russian-roulette-1-8"><a href="#russian-roulette-1-8"></a>        <span class="kw">return</span> object.emission;</span>
+<span id="russian-roulette-1-9"><a href="#russian-roulette-1-9"></a>    <span class="op">}</span></span>
+<span id="russian-roulette-1-10"><a href="#russian-roulette-1-10"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<h2 id="normals">Normals</h2>
+<p>Now that we know that we hit an object, we need to compute the normal vector. Let <span class="math inline">\(x\)</span> be the position where the ray hits the object, and <span class="math inline">\(\vec{n}\)</span> be the normal vector (outward pointing) of the object.</p>
+<div class="annotated-code">
+<p><span><em>«compute-normal»=</em></span></p>
+<div class="sourceCode" id="compute-normal"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="compute-normal-1"><a href="#compute-normal-1"></a><span class="kw">let</span> x = ray.origin + ray.direction * distance;</span>
+<span id="compute-normal-2"><a href="#compute-normal-2"></a><span class="kw">let</span> n = (x - object.position).normalize();</span></code></pre></div>
+</div>
+<p>It could be that we’re inside the object. In that case, the normal of reflection is opposite the normal of the object.</p>
+<div class="annotated-code">
+<p><span><em>«compute-normal»+</em></span></p>
+<div class="sourceCode" id="compute-normal"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="compute-normal-1"><a href="#compute-normal-1"></a><span class="kw">let</span> n_refl = <span class="kw">if</span> n * ray.direction &lt; <span class="dv">0</span>. <span class="op">{</span> n <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> -n <span class="op">}</span>;</span></code></pre></div>
+</div>
+<h2 id="reflection">Reflection</h2>
+<p>We’re at the point that we need to compute how much light is reflected. Of course, this depends on the type of material that the object is made of. SmallPt has three material types, <em>diffuse</em>, <em>specular</em>, and <em>refractive</em>, that each have their own physics.</p>
+<div class="annotated-code">
+<p><span><em>«do-reflect»=</em></span></p>
+<div class="sourceCode" id="do-reflect"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="do-reflect-1"><a href="#do-reflect-1"></a><span class="kw">let</span> light = <span class="kw">match</span> object.reflection <span class="op">{</span></span>
+<span id="do-reflect-2"><a href="#do-reflect-2"></a>    <span class="pp">Reflection::</span>Diffuse =&gt; <span class="op">{</span></span>
+<span id="do-reflect-3"><a href="#do-reflect-3"></a>        &lt;&lt;diffuse-reflection&gt;&gt;</span>
+<span id="do-reflect-4"><a href="#do-reflect-4"></a>    <span class="op">}</span></span>
+<span id="do-reflect-5"><a href="#do-reflect-5"></a>    <span class="pp">Reflection::</span>Specular =&gt; <span class="op">{</span></span>
+<span id="do-reflect-6"><a href="#do-reflect-6"></a>        &lt;&lt;specular-reflection&gt;&gt;</span>
+<span id="do-reflect-7"><a href="#do-reflect-7"></a>    <span class="op">}</span></span>
+<span id="do-reflect-8"><a href="#do-reflect-8"></a>    <span class="pp">Reflection::</span>Refractive =&gt; <span class="op">{</span></span>
+<span id="do-reflect-9"><a href="#do-reflect-9"></a>        &lt;&lt;refractive-reflection&gt;&gt;</span>
+<span id="do-reflect-10"><a href="#do-reflect-10"></a>    <span class="op">}</span></span>
+<span id="do-reflect-11"><a href="#do-reflect-11"></a><span class="op">}</span>;</span></code></pre></div>
+</div>
+<h3 id="diffuse">Diffuse</h3>
+<p>There are many types of diffuse reflection. You could imagine a surface where rays have equal probability of reflecting to any direction. This would mean sampling vectors on a hemisphere. We have a uniform probability over longitude:</p>
+<div class="annotated-code">
+<p><span><em>«diffuse-reflection»=</em></span></p>
+<div class="sourceCode" id="diffuse-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="diffuse-reflection-1"><a href="#diffuse-reflection-1"></a><span class="kw">let</span> phi = <span class="dv">2</span>.*PI * rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;();</span></code></pre></div>
+</div>
+<p>Taking <span class="math inline">\(\theta\)</span> to be the angle of incidence to the normal of the surface, we have a <span class="math inline">\(p(\theta) \sim \sin \theta\)</span> probability over latitude. The inverse CDF sampling method then gives than <span class="math inline">\(\cos \theta\)</span> has a uniform distribution in the interval <span class="math inline">\([0, 1]\)</span>.</p>
+<p>However, there is a second effect. If you shine a uniform bundle of light on a surface at an angle, the light intensity drops with a factor <span class="math inline">\(\cos \theta\)</span>. The combination of sampling the hemisphere and the lighting is known has <em>cosine-weighted sampling</em>, and there is a trick called <em>Malley’s Method</em>. We can sample points on a uniform disc, and project those onto the hemisphere <span class="citation" data-cites="Pbr-13.6.3">(Pharr, Jakob, and Humphreys <a href="#ref-Pbr-13.6.3" role="doc-biblioref">2017</a>)</span>.</p>
+<p>On a disc we have <span class="math inline">\(p(r) \sim r\)</span>, so <span class="math inline">\(p(r^2) \sim 1\)</span>,</p>
+<div class="annotated-code">
+<p><span><em>«diffuse-reflection»+</em></span></p>
+<div class="sourceCode" id="diffuse-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="diffuse-reflection-1"><a href="#diffuse-reflection-1"></a><span class="kw">let</span> r2 : <span class="dt">f64</span> = rng.gen();</span>
+<span id="diffuse-reflection-2"><a href="#diffuse-reflection-2"></a><span class="kw">let</span> r = r2.sqrt();</span></code></pre></div>
+</div>
+<p>We need a set of orthogonal axes in the plane of reflection. We pick a vector to start with, and compute the outer product with the normal to give one vector <span class="math inline">\(\vec{u}\)</span> orthogonal to <span class="math inline">\(\vec{n}\)</span>. To prevent numberloss, the first vector should not be too close to the normal. The second vector <span class="math inline">\(\vec{v}\)</span> is found by taking another outer product of <span class="math inline">\(\vec{u} \times \vec{n}\)</span>.</p>
+<div class="annotated-code">
+<p><span><em>«diffuse-reflection»+</em></span></p>
+<div class="sourceCode" id="diffuse-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="diffuse-reflection-1"><a href="#diffuse-reflection-1"></a><span class="kw">let</span> ncl = <span class="kw">if</span> n_refl.x.abs() &gt; <span class="dv">0.1</span> <span class="op">{</span> vec(<span class="dv">0</span>., <span class="dv">1</span>., <span class="dv">0</span>.) <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> vec(<span class="dv">1</span>., <span class="dv">0</span>., <span class="dv">0</span>.) <span class="op">}</span>;</span>
+<span id="diffuse-reflection-2"><a href="#diffuse-reflection-2"></a><span class="kw">let</span> u = (ncl % n_refl).normalize();</span>
+<span id="diffuse-reflection-3"><a href="#diffuse-reflection-3"></a><span class="kw">let</span> v = n_refl % u;</span></code></pre></div>
+</div>
+<p>The direction of the reflected ray is now known.</p>
+<div class="annotated-code">
+<p><span><em>«diffuse-reflection»+</em></span></p>
+<div class="sourceCode" id="diffuse-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="diffuse-reflection-1"><a href="#diffuse-reflection-1"></a><span class="kw">let</span> d = (u*phi.cos()*r + v*phi.sin()*r + n_refl*(<span class="dv">1</span>.-r2).sqrt()).normalize();</span></code></pre></div>
+</div>
+<p>To compute the radiance, we need to know the radiance from the reflected ray.</p>
+<div class="annotated-code">
+<p><span><em>«diffuse-reflection»+</em></span></p>
+<div class="sourceCode" id="diffuse-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="diffuse-reflection-1"><a href="#diffuse-reflection-1"></a>radiance(&amp;Ray <span class="op">{</span>origin: x, direction: d<span class="op">}</span>, depth)</span></code></pre></div>
+</div>
+<h3 id="specular">Specular</h3>
+<p>Specular reflection means we have to mirror the incident ray with respect to the normal. This means that only the <span class="math inline">\(\vec{n}\)</span> component of the direction flips,</p>
+<p><span class="math display">\[\vec{\hat{d}}&#39; = \vec{\hat{d}} - 2 \vec{\hat{n}} (\vec{\hat{n}} \cdot \vec{\hat{d}})\]</span>.</p>
+<div class="annotated-code">
+<p><span><em>«specular-reflection»=</em></span></p>
+<div class="sourceCode" id="specular-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="specular-reflection-1"><a href="#specular-reflection-1"></a><span class="kw">let</span> d = ray.direction - n * <span class="dv">2</span>.*(n*ray.direction);</span>
+<span id="specular-reflection-2"><a href="#specular-reflection-2"></a>radiance(&amp;Ray <span class="op">{</span>origin: x, direction: d<span class="op">}</span>, depth)</span></code></pre></div>
+</div>
+<h3 id="refractive">Refractive</h3>
+<p>Now some real optics! Discarding polarisation, there are several ways a photon may go at the boundary between two transparent media: <em>total internal reflection</em>, <em>refraction</em>, or <em>partial reflection</em>.</p>
+<p>There is always a reflective component,</p>
+<div class="annotated-code">
+<p><span><em>«refractive-reflection»=</em></span></p>
+<div class="sourceCode" id="refractive-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="refractive-reflection-1"><a href="#refractive-reflection-1"></a><span class="kw">let</span> d = ray.direction - n * <span class="dv">2</span>.*(n*ray.direction);</span>
+<span id="refractive-reflection-2"><a href="#refractive-reflection-2"></a><span class="kw">let</span> reflected_ray = Ray <span class="op">{</span> origin: x, direction: d <span class="op">}</span>;</span></code></pre></div>
+</div>
+<p>We need to know if we’re moving into or out of the object.</p>
+<div class="annotated-code">
+<p><span><em>«refractive-reflection»+</em></span></p>
+<div class="sourceCode" id="refractive-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="refractive-reflection-1"><a href="#refractive-reflection-1"></a><span class="kw">let</span> into = n * n_refl &gt; <span class="dv">0</span>.;</span></code></pre></div>
+</div>
+<h4 id="refractive-index">Refractive index</h4>
+<p>The refractive index of glass can vary, but <span class="math inline">\(n = 1.5\)</span> seems reasonable.</p>
+<div class="annotated-code">
+<p><span><em>«constants»+</em></span></p>
+<div class="sourceCode" id="constants"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="constants-1"><a href="#constants-1"></a><span class="kw">const</span> N_GLASS: <span class="dt">f64</span> = <span class="dv">1.5</span>;</span>
+<span id="constants-2"><a href="#constants-2"></a><span class="kw">const</span> N_AIR: <span class="dt">f64</span> = <span class="dv">1.0</span>;</span></code></pre></div>
+</div>
+<p>Depending on whether, we’re entering or leaving the glass object, the effective index of refraction is <span class="math inline">\(n_{\rm air} / n_{\rm glass}\)</span> or <span class="math inline">\(n_{\rm glass} / n_{\rm air}\)</span>.</p>
+<div class="annotated-code">
+<p><span><em>«refractive-reflection»+</em></span></p>
+<div class="sourceCode" id="refractive-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="refractive-reflection-1"><a href="#refractive-reflection-1"></a><span class="kw">let</span> n_eff = <span class="kw">if</span> into <span class="op">{</span> N_AIR / N_GLASS <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> N_GLASS / N_AIR <span class="op">}</span>;</span></code></pre></div>
+</div>
+<h4 id="total-internal-reflection">Total internal reflection</h4>
+<p>Total internal reflection happens if the angle of incidence is larger than some critical angle <span class="math inline">\(\theta_c\)</span>, given by</p>
+<p><span id="eq:tir-critical-angle" class="eqnos"><span class="math display">\[\theta_c = \arcsin \frac{n_{\rm outside}}{n_{\rm inside}}.\]</span><span class="eqnos-number">(3)</span></span></p>
+<p>We can easily compute <span class="math inline">\(\mu = \cos \theta\)</span> using the inner product, so with a little algebra, total-internal-reflection happens if,</p>
+<p><span class="math display">\[\begin{align}
+\sin \theta &amp;&gt; {n_o \over n_i}\\
+\sqrt{1 - \cos^2 \theta} &amp;&gt; {n_o \over n_i}\\
+1 - \mu^2 &amp;&gt; (\n_o \over n_i)^2\\
+(\n_i \over n_o)^2 (1 - \mu^2) &amp;&gt; 1
+\end{align}\]</span></p>
+<div class="annotated-code">
+<p><span><em>«refractive-reflection»+</em></span></p>
+<div class="sourceCode" id="refractive-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="refractive-reflection-1"><a href="#refractive-reflection-1"></a><span class="kw">let</span> mu = ray.direction * n_refl;</span>
+<span id="refractive-reflection-2"><a href="#refractive-reflection-2"></a><span class="kw">let</span> cos2t = <span class="dv">1</span>. - n_eff*n_eff*(<span class="dv">1</span>. - mu*mu);</span>
+<span id="refractive-reflection-3"><a href="#refractive-reflection-3"></a><span class="kw">if</span> cos2t &lt; <span class="dv">0</span>. <span class="op">{</span></span>
+<span id="refractive-reflection-4"><a href="#refractive-reflection-4"></a>    &lt;&lt;total-internal-reflection&gt;&gt;</span>
+<span id="refractive-reflection-5"><a href="#refractive-reflection-5"></a><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="refractive-reflection-6"><a href="#refractive-reflection-6"></a>    &lt;&lt;partial-reflection&gt;&gt;</span>
+<span id="refractive-reflection-7"><a href="#refractive-reflection-7"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<p>In that case, we recurse with the reflected ray.</p>
+<div class="annotated-code">
+<p><span><em>«total-internal-reflection»=</em></span></p>
+<div class="sourceCode" id="total-internal-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="total-internal-reflection-1"><a href="#total-internal-reflection-1"></a>radiance(&amp;reflected_ray, depth)</span></code></pre></div>
+</div>
+<h4 id="partial-reflection">Partial reflection</h4>
+<p>In the case of partial reflection, we need to compute also the angle of the refracted ray. We have Snell’s law,</p>
+<p><span id="eq:snellius" class="eqnos"><span class="math display">\[{\sin \theta_i \over \sin \theta_o} = {n_o \over n_i} = {1 \over n_{\rm eff}}.\]</span><span class="eqnos-number">(4)</span></span></p>
+<p>We can decompose the incident ray direction into a normal component <span class="math inline">\(d_n\)</span> and a transverse component <span class="math inline">\(d_t\)</span>. Then <span class="math inline">\(|d_t| = \sin \theta_i\)</span>, and <span class="math inline">\(|d_n| = \vec{d} \cdot \vec{n} = \cos \theta_i\)</span>. Similarly we can decompose the outgoing ray direction <span class="math inline">\(\vec{d}&#39;\)</span>,</p>
+<p><span class="math display">\[\begin{align}
+d_t&#39; &amp;= n_{\rm eff} (\vec{d} - \mu \vec{n})\\
+d_n&#39; &amp;= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
+\end{align}\]</span></p>
+<p>where <span class="math inline">\(|d_t|^2 = 1 - \mu^2\)</span>. That is convenient, because it turns out we have already computed <span class="math inline">\(|d_n&#39;|\)</span>, it is the square root of <code>cos2t</code>. Now, we also see where the total internal reflection comes from; there is no solution to Snell’s law for those angles.</p>
+<div class="annotated-code">
+<p><span><em>«partial-reflection»=</em></span></p>
+<div class="sourceCode" id="partial-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="partial-reflection-1"><a href="#partial-reflection-1"></a><span class="kw">let</span> tdir = (ray.direction * n_eff - n_refl * (mu*n_eff + cos2t.sqrt())).normalize();</span></code></pre></div>
+</div>
+<p>Next, we need to compute the fraction of light that is reflected. The Fresnel equations describe this process, but they are very complicated and also deal with polarisation. We use Schlick’s approximation instead (see {<span class="citation" data-cites="Schlick1994">Schlick (<a href="#ref-Schlick1994" role="doc-biblioref">1994</a>)</span>}),</p>
+<p><span class="math display">\[R(\theta) = R_0 + (1 - R_0) (1 - \mu)^5,\]</span></p>
+<p>where</p>
+<p><span class="math display">\[R_0 = \left(\frac{n_i - n_o}{n_i + n_o}\right)^2.\]</span></p>
+<div class="annotated-code">
+<p><span><em>«constants»+</em></span></p>
+<div class="sourceCode" id="constants"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="constants-1"><a href="#constants-1"></a><span class="kw">const</span> R0: <span class="dt">f64</span> =  (N_GLASS - N_AIR) * (N_GLASS - N_AIR)</span>
+<span id="constants-2"><a href="#constants-2"></a>              / ((N_GLASS + N_AIR) * (N_GLASS + N_AIR));</span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«partial-reflection»+</em></span></p>
+<div class="sourceCode" id="partial-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="partial-reflection-1"><a href="#partial-reflection-1"></a><span class="kw">let</span> c = <span class="dv">1</span>. - (<span class="kw">if</span> into <span class="op">{</span> -mu <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span>tdir * n<span class="op">}</span>);</span>
+<span id="partial-reflection-2"><a href="#partial-reflection-2"></a><span class="kw">let</span> re = R0 + (<span class="dv">1</span>. - R0) * c.powf(<span class="dv">5.0</span>);</span>
+<span id="partial-reflection-3"><a href="#partial-reflection-3"></a><span class="kw">let</span> tr = <span class="dv">1</span>. - re;</span></code></pre></div>
+</div>
+<h4 id="russian-roulette-2">Russian Roulette 2</h4>
+<div class="annotated-code">
+<p><span><em>«partial-reflection»+</em></span></p>
+<div class="sourceCode" id="partial-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="partial-reflection-1"><a href="#partial-reflection-1"></a><span class="kw">let</span> p = <span class="dv">0.25</span> + <span class="dv">0.5</span>*re;</span>
+<span id="partial-reflection-2"><a href="#partial-reflection-2"></a><span class="kw">let</span> rp = re/p;</span>
+<span id="partial-reflection-3"><a href="#partial-reflection-3"></a><span class="kw">let</span> tp = tr/(<span class="dv">1</span>.-p);</span>
+<span id="partial-reflection-4"><a href="#partial-reflection-4"></a><span class="kw">if</span> depth &gt; <span class="dv">2</span> <span class="op">{</span></span>
+<span id="partial-reflection-5"><a href="#partial-reflection-5"></a>    <span class="kw">if</span> rng.<span class="pp">gen::</span>&lt;<span class="dt">f64</span>&gt;() &lt; p <span class="op">{</span></span>
+<span id="partial-reflection-6"><a href="#partial-reflection-6"></a>        radiance(&amp;reflected_ray, depth) * rp</span>
+<span id="partial-reflection-7"><a href="#partial-reflection-7"></a>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="partial-reflection-8"><a href="#partial-reflection-8"></a>        radiance(&amp;Ray <span class="op">{</span> origin: x, direction: tdir <span class="op">}</span>, depth) * tp</span>
+<span id="partial-reflection-9"><a href="#partial-reflection-9"></a>    <span class="op">}</span></span>
+<span id="partial-reflection-10"><a href="#partial-reflection-10"></a><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="partial-reflection-11"><a href="#partial-reflection-11"></a>    radiance(&amp;reflected_ray, depth) * re</span>
+<span id="partial-reflection-12"><a href="#partial-reflection-12"></a>    + radiance(&amp;Ray <span class="op">{</span> origin: x, direction: tdir <span class="op">}</span>, depth) * tr</span>
+<span id="partial-reflection-13"><a href="#partial-reflection-13"></a><span class="op">}</span></span></code></pre></div>
 </div>
 <h1 id="image">Image</h1>
 <div class="annotated-code">
@@ -693,7 +824,7 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 <span id="cb2-25"><a href="#cb2-25"></a></span>
 <span id="cb2-26"><a href="#cb2-26"></a>    <span class="kw">let</span> w: <span class="dt">usize</span> = <span class="dv">640</span>;</span>
 <span id="cb2-27"><a href="#cb2-27"></a>    <span class="kw">let</span> h: <span class="dt">usize</span> = <span class="dv">480</span>;</span>
-<span id="cb2-28"><a href="#cb2-28"></a>    <span class="kw">let</span> samps: <span class="dt">usize</span> = <span class="dv">1000</span>;</span>
+<span id="cb2-28"><a href="#cb2-28"></a>    <span class="kw">let</span> samps: <span class="dt">usize</span> = <span class="dv">100</span>;</span>
 <span id="cb2-29"><a href="#cb2-29"></a>    <span class="kw">let</span> cam = Ray <span class="op">{</span> origin: vec(<span class="dv">50</span>., <span class="dv">52</span>., <span class="dv">295.6</span>), direction: vec(<span class="dv">0.0</span>, -<span class="dv">0.045</span>, -<span class="dv">1.0</span>).normalize() <span class="op">}</span>;</span>
 <span id="cb2-30"><a href="#cb2-30"></a>    <span class="kw">let</span> cx = vec(w <span class="kw">as</span> <span class="dt">f64</span> * <span class="dv">0.510</span> / h <span class="kw">as</span> <span class="dt">f64</span>, <span class="dv">0</span>., <span class="dv">0</span>.);</span>
 <span id="cb2-31"><a href="#cb2-31"></a>    <span class="kw">let</span> cy = (cx % cam.direction).normalize() * <span class="dv">0.510</span>;</span>
@@ -725,6 +856,15 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 <span id="cb2-57"><a href="#cb2-57"></a>    <span class="pp">eprintln!</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Writing image.&quot;</span>);</span>
 <span id="cb2-58"><a href="#cb2-58"></a>    img.print_ppm(<span class="st">&quot;image_rust.ppm&quot;</span>)</span>
 <span id="cb2-59"><a href="#cb2-59"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<h1 id="bibliography" class="unnumbered">References</h1>
+<div id="refs" class="references" role="doc-bibliography">
+<div id="ref-Pbr-13.6.3">
+<p>Pharr, Matt, Wenzel Jakob, and Greg Humphreys. 2017. “Cosine-Weighted Hemisphere Sampling.” In <em>Physically Based Rendering</em>, Third Edition. Morgan Kaufmann. <a href="http://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations.html#Cosine-WeightedHemisphereSampling">http://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations.html#Cosine-WeightedHemisphereSampling</a>.</p>
+</div>
+<div id="ref-Schlick1994">
+<p>Schlick, Christophe. 1994. “An Inexpensive Brdf Model for Physically-Based Rendering.” <em>Computer Graphics Forum</em> 13 (3): 233–46. <a href="https://doi.org/10.1111/1467-8659.1330233">https://doi.org/10.1111/1467-8659.1330233</a>.</p>
+</div>
 </div>
 </div></main>
 
