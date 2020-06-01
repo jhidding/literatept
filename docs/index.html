@@ -126,11 +126,15 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 <main role="main" class="flex-fill"><div class="container my-5">
 <h1 id="literatept">LiteratePT</h1>
 <p>SmallPT is a global illumination ray tracer in 100 lines of C++. Let’s translate it to Rust; not in a 100 lines, but extremely literate. I’ll sacrifice some of SmallPt’s compactness for better semantics.</p>
+<figure>
+<img src="img/image.png" style="width:100%" alt="" /><figcaption>4000 spp rendering</figcaption>
+</figure>
 <p>This uses the following programming techniques:</p>
 <ul>
 <li>Property testing</li>
 <li>Traits</li>
 <li>Algebraic data types</li>
+<li>Multi-threading using Rayon</li>
 </ul>
 <div class="annotated-code">
 <p><span><em>«Cargo.toml»=</em></span></p>
@@ -822,9 +826,9 @@ d_n&#39; &amp;= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
 <span id="cb2-23"><a href="#cb2-23"></a><span class="kw">fn</span> main() -&gt; <span class="pp">std::io::</span><span class="dt">Result</span>&lt;()&gt; <span class="op">{</span></span>
 <span id="cb2-24"><a href="#cb2-24"></a>    <span class="kw">use</span> <span class="pp">rayon::</span>current_thread_index;</span>
 <span id="cb2-25"><a href="#cb2-25"></a></span>
-<span id="cb2-26"><a href="#cb2-26"></a>    <span class="kw">let</span> w: <span class="dt">usize</span> = <span class="dv">640</span>;</span>
-<span id="cb2-27"><a href="#cb2-27"></a>    <span class="kw">let</span> h: <span class="dt">usize</span> = <span class="dv">480</span>;</span>
-<span id="cb2-28"><a href="#cb2-28"></a>    <span class="kw">let</span> samps: <span class="dt">usize</span> = <span class="dv">100</span>;</span>
+<span id="cb2-26"><a href="#cb2-26"></a>    <span class="kw">let</span> w: <span class="dt">usize</span> = <span class="dv">1024</span>;</span>
+<span id="cb2-27"><a href="#cb2-27"></a>    <span class="kw">let</span> h: <span class="dt">usize</span> = <span class="dv">768</span>;</span>
+<span id="cb2-28"><a href="#cb2-28"></a>    <span class="kw">let</span> samps: <span class="dt">usize</span> = <span class="dv">5000</span>;</span>
 <span id="cb2-29"><a href="#cb2-29"></a>    <span class="kw">let</span> cam = Ray <span class="op">{</span> origin: vec(<span class="dv">50</span>., <span class="dv">52</span>., <span class="dv">295.6</span>), direction: vec(<span class="dv">0.0</span>, -<span class="dv">0.045</span>, -<span class="dv">1.0</span>).normalize() <span class="op">}</span>;</span>
 <span id="cb2-30"><a href="#cb2-30"></a>    <span class="kw">let</span> cx = vec(w <span class="kw">as</span> <span class="dt">f64</span> * <span class="dv">0.510</span> / h <span class="kw">as</span> <span class="dt">f64</span>, <span class="dv">0</span>., <span class="dv">0</span>.);</span>
 <span id="cb2-31"><a href="#cb2-31"></a>    <span class="kw">let</span> cy = (cx % cam.direction).normalize() * <span class="dv">0.510</span>;</span>

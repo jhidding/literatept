@@ -463,9 +463,9 @@ mod tests {
 fn main() -> std::io::Result<()> {
     use rayon::current_thread_index;
 
-    let w: usize = 640;
-    let h: usize = 480;
-    let samps: usize = 100;
+    let w: usize = 1024;
+    let h: usize = 768;
+    let samps: usize = 5000;
     let cam = Ray { origin: vec(50., 52., 295.6), direction: vec(0.0, -0.045, -1.0).normalize() };
     let cx = vec(w as f64 * 0.510 / h as f64, 0., 0.);
     let cy = (cx % cam.direction).normalize() * 0.510;

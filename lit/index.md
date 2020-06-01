@@ -10,11 +10,14 @@ link-citations: true
 
 SmallPT is a global illumination ray tracer in 100 lines of C++. Let's translate it to Rust; not in a 100 lines, but extremely literate. I'll sacrifice some of SmallPt's compactness for better semantics.
 
+![4000 spp rendering](img/image.png){style='width:100%'}
+
 This uses the following programming techniques:
 
 - Property testing
 * Traits
 - Algebraic data types
+- Multi-threading using Rayon
 
 ``` {.toml file=Cargo.toml}
 [package]
@@ -789,9 +792,9 @@ mod tests {
 fn main() -> std::io::Result<()> {
     use rayon::current_thread_index;
 
-    let w: usize = 640;
-    let h: usize = 480;
-    let samps: usize = 100;
+    let w: usize = 1024;
+    let h: usize = 768;
+    let samps: usize = 5000;
     let cam = Ray { origin: vec(50., 52., 295.6), direction: vec(0.0, -0.045, -1.0).normalize() };
     let cx = vec(w as f64 * 0.510 / h as f64, 0., 0.);
     let cy = (cx % cam.direction).normalize() * 0.510;
