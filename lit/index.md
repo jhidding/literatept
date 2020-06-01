@@ -8,7 +8,7 @@ link-citations: true
 
 # LiteratePT
 
-SmallPT is a global illumination ray tracer in 100 lines of C++. Let's translate it to Rust; not in a 100 lines, but extremely literate. I'll sacrifice some of SmallPt's compactness for better semantics.
+[SmallPT](https://www.kevinbeason.com/smallpt/) by Kevin Beason is a global illumination ray tracer in 100 lines of C++. Let's translate it to Rust; not in a 100 lines, but extremely literate. I'll sacrifice some of SmallPt's compactness for better semantics.
 
 ![4000 spp rendering](img/image.png){style='width:100%'}
 
@@ -627,7 +627,7 @@ const N_GLASS: f64 = 1.5;
 const N_AIR: f64 = 1.0;
 ```
 
-Depending on whether, we're entering or leaving the glass object, the effective index of refraction is
+Depending on whether we're entering or leaving the glass object, the effective index of refraction is
 $n_{\rm air} / n_{\rm glass}$ or $n_{\rm glass} / n_{\rm air}$.
 
 ``` {.rust #refractive-reflection}
@@ -644,8 +644,8 @@ We can easily compute $\mu = \cos \theta$ using the inner product, so with a lit
 $$\begin{align}
 \sin \theta &> {n_o \over n_i}\\
 \sqrt{1 - \cos^2 \theta} &> {n_o \over n_i}\\
-1 - \mu^2 &> (\n_o \over n_i)^2\\
-(\n_i \over n_o)^2 (1 - \mu^2) &> 1
+1 - \mu^2 &> (n_o \over n_i)^2\\
+(n_i \over n_o)^2 (1 - \mu^2) &> 1
 \end{align}$$
 
 ``` {.rust #refractive-reflection}
@@ -682,7 +682,7 @@ where $|d_t|^2 = 1 - \mu^2$. That is convenient, because it turns out we have al
 let tdir = (ray.direction * n_eff - n_refl * (mu*n_eff + cos2t.sqrt())).normalize();
 ```
 
-Next, we need to compute the fraction of light that is reflected. The Fresnel equations describe this process, but they are very complicated and also deal with polarisation. We use Schlick's approximation instead (see {@Schlick1994}),
+Next, we need to compute the fraction of light that is reflected. The Fresnel equations describe this process, but they are very complicated and also deal with polarisation. We use Schlick's approximation instead [@Schlick1994],
 
 $$R(\theta) = R_0 + (1 - R_0) (1 - \mu)^5,$$
 

@@ -125,7 +125,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 
 <main role="main" class="flex-fill"><div class="container my-5">
 <h1 id="literatept">LiteratePT</h1>
-<p>SmallPT is a global illumination ray tracer in 100 lines of C++. Let’s translate it to Rust; not in a 100 lines, but extremely literate. I’ll sacrifice some of SmallPt’s compactness for better semantics.</p>
+<p><a href="https://www.kevinbeason.com/smallpt/">SmallPT</a> by Kevin Beason is a global illumination ray tracer in 100 lines of C++. Let’s translate it to Rust; not in a 100 lines, but extremely literate. I’ll sacrifice some of SmallPt’s compactness for better semantics.</p>
 <figure>
 <img src="img/image.png" style="width:100%" alt="" /><figcaption>4000 spp rendering</figcaption>
 </figure>
@@ -679,7 +679,7 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 <div class="sourceCode" id="constants"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="constants-1"><a href="#constants-1"></a><span class="kw">const</span> N_GLASS: <span class="dt">f64</span> = <span class="dv">1.5</span>;</span>
 <span id="constants-2"><a href="#constants-2"></a><span class="kw">const</span> N_AIR: <span class="dt">f64</span> = <span class="dv">1.0</span>;</span></code></pre></div>
 </div>
-<p>Depending on whether, we’re entering or leaving the glass object, the effective index of refraction is <span class="math inline">\(n_{\rm air} / n_{\rm glass}\)</span> or <span class="math inline">\(n_{\rm glass} / n_{\rm air}\)</span>.</p>
+<p>Depending on whether we’re entering or leaving the glass object, the effective index of refraction is <span class="math inline">\(n_{\rm air} / n_{\rm glass}\)</span> or <span class="math inline">\(n_{\rm glass} / n_{\rm air}\)</span>.</p>
 <div class="annotated-code">
 <p><span><em>«refractive-reflection»+</em></span></p>
 <div class="sourceCode" id="refractive-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="refractive-reflection-1"><a href="#refractive-reflection-1"></a><span class="kw">let</span> n_eff = <span class="kw">if</span> into <span class="op">{</span> N_AIR / N_GLASS <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> N_GLASS / N_AIR <span class="op">}</span>;</span></code></pre></div>
@@ -691,8 +691,8 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 <p><span class="math display">\[\begin{align}
 \sin \theta &amp;&gt; {n_o \over n_i}\\
 \sqrt{1 - \cos^2 \theta} &amp;&gt; {n_o \over n_i}\\
-1 - \mu^2 &amp;&gt; (\n_o \over n_i)^2\\
-(\n_i \over n_o)^2 (1 - \mu^2) &amp;&gt; 1
+1 - \mu^2 &amp;&gt; (n_o \over n_i)^2\\
+(n_i \over n_o)^2 (1 - \mu^2) &amp;&gt; 1
 \end{align}\]</span></p>
 <div class="annotated-code">
 <p><span><em>«refractive-reflection»+</em></span></p>
@@ -722,7 +722,7 @@ d_n&#39; &amp;= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
 <p><span><em>«partial-reflection»=</em></span></p>
 <div class="sourceCode" id="partial-reflection"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="partial-reflection-1"><a href="#partial-reflection-1"></a><span class="kw">let</span> tdir = (ray.direction * n_eff - n_refl * (mu*n_eff + cos2t.sqrt())).normalize();</span></code></pre></div>
 </div>
-<p>Next, we need to compute the fraction of light that is reflected. The Fresnel equations describe this process, but they are very complicated and also deal with polarisation. We use Schlick’s approximation instead (see {<span class="citation" data-cites="Schlick1994">Schlick (<a href="#ref-Schlick1994" role="doc-biblioref">1994</a>)</span>}),</p>
+<p>Next, we need to compute the fraction of light that is reflected. The Fresnel equations describe this process, but they are very complicated and also deal with polarisation. We use Schlick’s approximation instead <span class="citation" data-cites="Schlick1994">(Schlick <a href="#ref-Schlick1994" role="doc-biblioref">1994</a>)</span>,</p>
 <p><span class="math display">\[R(\theta) = R_0 + (1 - R_0) (1 - \mu)^5,\]</span></p>
 <p>where</p>
 <p><span class="math display">\[R_0 = \left(\frac{n_i - n_o}{n_i + n_o}\right)^2.\]</span></p>
