@@ -644,8 +644,8 @@ We can easily compute $\mu = \cos \theta$ using the inner product, so with a lit
 $$\begin{align}
 \sin \theta &> {n_o \over n_i}\\
 \sqrt{1 - \cos^2 \theta} &> {n_o \over n_i}\\
-1 - \mu^2 &> (n_o \over n_i)^2\\
-(n_i \over n_o)^2 (1 - \mu^2) &> 1
+1 - \mu^2 &> \left({n_o \over n_i}\right)^2\\
+n_{\rm eff}^2 \left(1 - \mu^2\right) &> 1
 \end{align}$$
 
 ``` {.rust #refractive-reflection}
