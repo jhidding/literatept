@@ -16,17 +16,19 @@ use rand::Rng;
 extern crate rayon;
 
 use rayon::prelude::*;
-use std::f64::consts::PI;
 // ~\~ end
 
 // ~\~ begin <<lit/index.md|constants>>[0]
 const EPS: f64 = 1e-4;
 // ~\~ end
 // ~\~ begin <<lit/index.md|constants>>[1]
+use std::f64::consts::PI;
+// ~\~ end
+// ~\~ begin <<lit/index.md|constants>>[2]
 const N_GLASS: f64 = 1.5;
 const N_AIR: f64 = 1.0;
 // ~\~ end
-// ~\~ begin <<lit/index.md|constants>>[2]
+// ~\~ begin <<lit/index.md|constants>>[3]
 const R0: f64 =  (N_GLASS - N_AIR) * (N_GLASS - N_AIR)
               / ((N_GLASS + N_AIR) * (N_GLASS + N_AIR));
 // ~\~ end

@@ -125,7 +125,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 
 <main role="main" class="flex-fill"><div class="container my-5">
 <h1 id="literatept">LiteratePT</h1>
-<p><a href="https://www.kevinbeason.com/smallpt/">SmallPT</a> by Kevin Beason is a global illumination ray tracer in 100 lines of C++. Let’s translate it to Rust; not in a 100 lines, but extremely literate. I’ll sacrifice some of SmallPt’s compactness for better semantics.</p>
+<p><a href="https://www.kevinbeason.com/smallpt/">SmallPT</a> by Kevin Beason is a global illumination ray tracer in 100 lines of C++. This is a translation into Rust; not in a 100 lines, but extremely literate. I’ve not tried to be compact at all. All the math and equations are explained, and I’ve tried to explain some concepts in Rust.</p>
 <figure>
 <img src="img/image.png" style="width:100%" alt="" /><figcaption>4000 spp rendering</figcaption>
 </figure>
@@ -135,6 +135,19 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 <li>Traits</li>
 <li>Algebraic data types</li>
 <li>Multi-threading using Rayon</li>
+</ul>
+<p>TODO:</p>
+<ul>
+<li><input type="checkbox" disabled="" />
+Explain the sub-pixel sampling</li>
+<li><input type="checkbox" disabled="" />
+Explain use of Rayon in <code>Image::for_each</code></li>
+<li><input type="checkbox" disabled="" />
+Explain <code>RGBColour</code> structure</li>
+<li><input type="checkbox" disabled="" />
+Add command-line interface</li>
+<li><input type="checkbox" disabled="" />
+Fix performance issues with writing output</li>
 </ul>
 <div class="annotated-code">
 <p><span><em>«Cargo.toml»=</em></span></p>
@@ -153,10 +166,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-13"><a href="#cb1-13"></a><span class="kw">[</span><span class="dt">dev-dependencies</span><span class="kw">]</span></span>
 <span id="cb1-14"><a href="#cb1-14"></a><span class="er">&lt;&lt;dev-dependencies&gt;&gt;</span></span></code></pre></div>
 </div>
-<ul>
-<li><input type="checkbox" disabled="" />
-The package description can be extended using <a href="https://doc.rust-lang.org/cargo/reference/manifest.html">more keys and their definitions</a></li>
-</ul>
+<!-- > The package description can be extended using [more keys and their definitions](https://doc.rust-lang.org/cargo/reference/manifest.html) -->
 <div class="annotated-code">
 <p><span><em>«dependencies»=</em></span></p>
 <div class="sourceCode" id="dependencies"><pre class="sourceCode toml"><code class="sourceCode toml"><span id="dependencies-1"><a href="#dependencies-1"></a><span class="dt">rand</span> <span class="op">=</span> <span class="st">&quot;0.7.3&quot;</span></span>
@@ -166,8 +176,7 @@ The package description can be extended using <a href="https://doc.rust-lang.org
 <p><span><em>«imports»=</em></span></p>
 <div class="sourceCode" id="imports"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="imports-1"><a href="#imports-1"></a><span class="kw">extern</span> <span class="kw">crate</span> rayon;</span>
 <span id="imports-2"><a href="#imports-2"></a></span>
-<span id="imports-3"><a href="#imports-3"></a><span class="kw">use</span> <span class="pp">rayon::prelude::</span>*;</span>
-<span id="imports-4"><a href="#imports-4"></a><span class="kw">use</span> <span class="pp">std::</span><span class="dt">f64</span>::<span class="pp">consts::</span>PI;</span></code></pre></div>
+<span id="imports-3"><a href="#imports-3"></a><span class="kw">use</span> <span class="pp">rayon::prelude::</span>*;</span></code></pre></div>
 </div>
 <h1 id="vectors">Vectors</h1>
 <p><span class="math inline">\(\renewcommand{\vec}[1]{{\bf #1}}\)</span> The <code>Vec</code> type has three public members <span class="math inline">\(x\)</span>, <span class="math inline">\(y\)</span> and <span class="math inline">\(z\)</span>.</p>
@@ -552,6 +561,10 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 <p><span><em>«import-rand»=</em></span></p>
 <div class="sourceCode" id="import-rand"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="import-rand-1"><a href="#import-rand-1"></a><span class="kw">extern</span> <span class="kw">crate</span> rand;</span>
 <span id="import-rand-2"><a href="#import-rand-2"></a><span class="kw">use</span> <span class="pp">rand::</span>Rng;</span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«constants»+</em></span></p>
+<div class="sourceCode" id="constants"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="constants-1"><a href="#constants-1"></a><span class="kw">use</span> <span class="pp">std::</span><span class="dt">f64</span>::<span class="pp">consts::</span>PI;</span></code></pre></div>
 </div>
 <p>The <code>radiance</code> function computes how many photons are traveling at a certain position in space from a certain direction.</p>
 <div class="annotated-code">

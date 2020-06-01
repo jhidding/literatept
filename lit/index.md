@@ -8,16 +8,24 @@ link-citations: true
 
 # LiteratePT
 
-[SmallPT](https://www.kevinbeason.com/smallpt/) by Kevin Beason is a global illumination ray tracer in 100 lines of C++. Let's translate it to Rust; not in a 100 lines, but extremely literate. I'll sacrifice some of SmallPt's compactness for better semantics.
+[SmallPT](https://www.kevinbeason.com/smallpt/) by Kevin Beason is a global illumination ray tracer in 100 lines of C++. This is a translation into Rust; not in a 100 lines, but extremely literate. I've not tried to be compact at all. All the math and equations are explained, and I've tried to explain some concepts in Rust.
 
 ![4000 spp rendering](img/image.png){style='width:100%'}
 
 This uses the following programming techniques:
 
 - Property testing
-* Traits
+- Traits
 - Algebraic data types
 - Multi-threading using Rayon
+
+TODO:
+
+- [ ] Explain the sub-pixel sampling
+- [ ] Explain use of Rayon in `Image::for_each`
+- [ ] Explain `RGBColour` structure
+- [ ] Add command-line interface
+- [ ] Fix performance issues with writing output
 
 ``` {.toml file=Cargo.toml}
 [package]
@@ -36,7 +44,7 @@ opt-level = 3
 <<dev-dependencies>>
 ```
 
-- [ ] The package description can be extended using [more keys and their definitions](https://doc.rust-lang.org/cargo/reference/manifest.html)
+<!-- > The package description can be extended using [more keys and their definitions](https://doc.rust-lang.org/cargo/reference/manifest.html) -->
 
 ``` {.toml #dependencies}
 rand = "0.7.3"
@@ -47,7 +55,6 @@ rayon = "1.3.0"
 extern crate rayon;
 
 use rayon::prelude::*;
-use std::f64::consts::PI;
 ```
 
 
@@ -474,6 +481,10 @@ This is where all the physics happens. We need to generate random numbers.
 ``` {.rust #import-rand}
 extern crate rand;
 use rand::Rng;
+```
+
+``` {.rust #constants}
+use std::f64::consts::PI;
 ```
 
 The `radiance` function computes how many photons are traveling at a certain position in space from a certain direction.
