@@ -406,11 +406,13 @@ impl Image {
 
     fn size(&self) -> usize { self.width * self.height }
 
+    // ~\~ begin <<lit/index.md|print-ppm>>[0]
     fn print_ppm(&self, path: &str) -> std::io::Result<()> {
         use std::fs::File;
         use std::io::Write;
 
-        let mut out = File::create(path)?;
+        let file = File::create(path)?;
+        let mut out = std::io::BufWriter::new(file);
         write!(&mut out, "P3\n{} {}\n{}\n", self.width, self.height, 255)?;
 
         for i in 0..self.size() {
@@ -419,6 +421,7 @@ impl Image {
         }
         Ok(())
     }
+    // ~\~ end
 }
 // ~\~ end
 
@@ -467,7 +470,7 @@ fn main() -> std::io::Result<()> {
 
     let w: usize = 1024;
     let h: usize = 768;
-    let samps: usize = 5000;
+    let samps: usize = 2500;
     let cam = Ray { origin: vec(50., 52., 295.6), direction: vec(0.0, -0.045, -1.0).normalize() };
     let cx = vec(w as f64 * 0.510 / h as f64, 0., 0.);
     let cy = (cx % cam.direction).normalize() * 0.510;

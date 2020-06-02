@@ -146,7 +146,7 @@ Explain use of Rayon in <code>Image::for_each</code></li>
 Explain <code>RGBColour</code> structure</li>
 <li><input type="checkbox" disabled="" />
 Add command-line interface</li>
-<li><input type="checkbox" disabled="" />
+<li><input type="checkbox" disabled="" checked="" />
 Fix performance issues with writing output</li>
 </ul>
 <div class="annotated-code">
@@ -796,20 +796,27 @@ d_n&#39; &amp;= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
 <span id="image-24"><a href="#image-24"></a></span>
 <span id="image-25"><a href="#image-25"></a>    <span class="kw">fn</span> size(&amp;<span class="kw">self</span>) -&gt; <span class="dt">usize</span> <span class="op">{</span> <span class="kw">self</span>.width * <span class="kw">self</span>.height <span class="op">}</span></span>
 <span id="image-26"><a href="#image-26"></a></span>
-<span id="image-27"><a href="#image-27"></a>    <span class="kw">fn</span> print_ppm(&amp;<span class="kw">self</span>, path: &amp;<span class="dt">str</span>) -&gt; <span class="pp">std::io::</span><span class="dt">Result</span>&lt;()&gt; <span class="op">{</span></span>
-<span id="image-28"><a href="#image-28"></a>        <span class="kw">use</span> <span class="pp">std::fs::</span>File;</span>
-<span id="image-29"><a href="#image-29"></a>        <span class="kw">use</span> <span class="pp">std::io::</span>Write;</span>
-<span id="image-30"><a href="#image-30"></a></span>
-<span id="image-31"><a href="#image-31"></a>        <span class="kw">let</span> <span class="kw">mut</span> out = <span class="pp">File::</span>create(path)?;</span>
-<span id="image-32"><a href="#image-32"></a>        <span class="pp">write!</span>(&amp;<span class="kw">mut</span> out, <span class="st">&quot;P3</span><span class="sc">\n</span><span class="st">{} {}</span><span class="sc">\n</span><span class="st">{}</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="kw">self</span>.width, <span class="kw">self</span>.height, <span class="dv">255</span>)?;</span>
-<span id="image-33"><a href="#image-33"></a></span>
-<span id="image-34"><a href="#image-34"></a>        <span class="kw">for</span> i <span class="kw">in</span> <span class="dv">0</span>..<span class="kw">self</span>.size() <span class="op">{</span></span>
-<span id="image-35"><a href="#image-35"></a>            <span class="kw">let</span> (r, g, b) = <span class="kw">self</span>.data<span class="op">[</span>i<span class="op">]</span>.to_u24();</span>
-<span id="image-36"><a href="#image-36"></a>            <span class="pp">write!</span>(&amp;<span class="kw">mut</span> out, <span class="st">&quot;{} {} {} &quot;</span>, r, g, b)?;</span>
-<span id="image-37"><a href="#image-37"></a>        <span class="op">}</span></span>
-<span id="image-38"><a href="#image-38"></a>        <span class="cn">Ok</span>(())</span>
-<span id="image-39"><a href="#image-39"></a>    <span class="op">}</span></span>
-<span id="image-40"><a href="#image-40"></a><span class="op">}</span></span></code></pre></div>
+<span id="image-27"><a href="#image-27"></a>    &lt;&lt;print-ppm&gt;&gt;</span>
+<span id="image-28"><a href="#image-28"></a><span class="op">}</span></span></code></pre></div>
+</div>
+<h2 id="writing-to-ppm">Writing to PPM</h2>
+<p>To write output efficiently, we need a <code>BufWriter</code> instance.</p>
+<div class="annotated-code">
+<p><span><em>«print-ppm»=</em></span></p>
+<div class="sourceCode" id="print-ppm"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="print-ppm-1"><a href="#print-ppm-1"></a><span class="kw">fn</span> print_ppm(&amp;<span class="kw">self</span>, path: &amp;<span class="dt">str</span>) -&gt; <span class="pp">std::io::</span><span class="dt">Result</span>&lt;()&gt; <span class="op">{</span></span>
+<span id="print-ppm-2"><a href="#print-ppm-2"></a>    <span class="kw">use</span> <span class="pp">std::fs::</span>File;</span>
+<span id="print-ppm-3"><a href="#print-ppm-3"></a>    <span class="kw">use</span> <span class="pp">std::io::</span>Write;</span>
+<span id="print-ppm-4"><a href="#print-ppm-4"></a></span>
+<span id="print-ppm-5"><a href="#print-ppm-5"></a>    <span class="kw">let</span> file = <span class="pp">File::</span>create(path)?;</span>
+<span id="print-ppm-6"><a href="#print-ppm-6"></a>    <span class="kw">let</span> <span class="kw">mut</span> out = <span class="pp">std::io::BufWriter::</span>new(file);</span>
+<span id="print-ppm-7"><a href="#print-ppm-7"></a>    <span class="pp">write!</span>(&amp;<span class="kw">mut</span> out, <span class="st">&quot;P3</span><span class="sc">\n</span><span class="st">{} {}</span><span class="sc">\n</span><span class="st">{}</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="kw">self</span>.width, <span class="kw">self</span>.height, <span class="dv">255</span>)?;</span>
+<span id="print-ppm-8"><a href="#print-ppm-8"></a></span>
+<span id="print-ppm-9"><a href="#print-ppm-9"></a>    <span class="kw">for</span> i <span class="kw">in</span> <span class="dv">0</span>..<span class="kw">self</span>.size() <span class="op">{</span></span>
+<span id="print-ppm-10"><a href="#print-ppm-10"></a>        <span class="kw">let</span> (r, g, b) = <span class="kw">self</span>.data<span class="op">[</span>i<span class="op">]</span>.to_u24();</span>
+<span id="print-ppm-11"><a href="#print-ppm-11"></a>        <span class="pp">write!</span>(&amp;<span class="kw">mut</span> out, <span class="st">&quot;{} {} {} &quot;</span>, r, g, b)?;</span>
+<span id="print-ppm-12"><a href="#print-ppm-12"></a>    <span class="op">}</span></span>
+<span id="print-ppm-13"><a href="#print-ppm-13"></a>    <span class="cn">Ok</span>(())</span>
+<span id="print-ppm-14"><a href="#print-ppm-14"></a><span class="op">}</span></span></code></pre></div>
 </div>
 <h1 id="main">Main</h1>
 <div class="annotated-code">
@@ -841,7 +848,7 @@ d_n&#39; &amp;= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
 <span id="cb2-25"><a href="#cb2-25"></a></span>
 <span id="cb2-26"><a href="#cb2-26"></a>    <span class="kw">let</span> w: <span class="dt">usize</span> = <span class="dv">1024</span>;</span>
 <span id="cb2-27"><a href="#cb2-27"></a>    <span class="kw">let</span> h: <span class="dt">usize</span> = <span class="dv">768</span>;</span>
-<span id="cb2-28"><a href="#cb2-28"></a>    <span class="kw">let</span> samps: <span class="dt">usize</span> = <span class="dv">5000</span>;</span>
+<span id="cb2-28"><a href="#cb2-28"></a>    <span class="kw">let</span> samps: <span class="dt">usize</span> = <span class="dv">2500</span>;</span>
 <span id="cb2-29"><a href="#cb2-29"></a>    <span class="kw">let</span> cam = Ray <span class="op">{</span> origin: vec(<span class="dv">50</span>., <span class="dv">52</span>., <span class="dv">295.6</span>), direction: vec(<span class="dv">0.0</span>, -<span class="dv">0.045</span>, -<span class="dv">1.0</span>).normalize() <span class="op">}</span>;</span>
 <span id="cb2-30"><a href="#cb2-30"></a>    <span class="kw">let</span> cx = vec(w <span class="kw">as</span> <span class="dt">f64</span> * <span class="dv">0.510</span> / h <span class="kw">as</span> <span class="dt">f64</span>, <span class="dv">0</span>., <span class="dv">0</span>.);</span>
 <span id="cb2-31"><a href="#cb2-31"></a>    <span class="kw">let</span> cy = (cx % cam.direction).normalize() * <span class="dv">0.510</span>;</span>

@@ -25,7 +25,7 @@ TODO:
 - [ ] Explain use of Rayon in `Image::for_each`
 - [ ] Explain `RGBColour` structure
 - [ ] Add command-line interface
-- [ ] Fix performance issues with writing output
+- [x] Fix performance issues with writing output
 
 ``` {.toml file=Cargo.toml}
 [package]
@@ -759,19 +759,27 @@ impl Image {
 
     fn size(&self) -> usize { self.width * self.height }
 
-    fn print_ppm(&self, path: &str) -> std::io::Result<()> {
-        use std::fs::File;
-        use std::io::Write;
+    <<print-ppm>>
+}
+```
 
-        let mut out = File::create(path)?;
-        write!(&mut out, "P3\n{} {}\n{}\n", self.width, self.height, 255)?;
+## Writing to PPM
+To write output efficiently, we need a `BufWriter` instance.
 
-        for i in 0..self.size() {
-            let (r, g, b) = self.data[i].to_u24();
-            write!(&mut out, "{} {} {} ", r, g, b)?;
-        }
-        Ok(())
+``` {.rust #print-ppm}
+fn print_ppm(&self, path: &str) -> std::io::Result<()> {
+    use std::fs::File;
+    use std::io::Write;
+
+    let file = File::create(path)?;
+    let mut out = std::io::BufWriter::new(file);
+    write!(&mut out, "P3\n{} {}\n{}\n", self.width, self.height, 255)?;
+
+    for i in 0..self.size() {
+        let (r, g, b) = self.data[i].to_u24();
+        write!(&mut out, "{} {} {} ", r, g, b)?;
     }
+    Ok(())
 }
 ```
 
@@ -805,7 +813,7 @@ fn main() -> std::io::Result<()> {
 
     let w: usize = 1024;
     let h: usize = 768;
-    let samps: usize = 5000;
+    let samps: usize = 2500;
     let cam = Ray { origin: vec(50., 52., 295.6), direction: vec(0.0, -0.045, -1.0).normalize() };
     let cx = vec(w as f64 * 0.510 / h as f64, 0., 0.);
     let cy = (cx % cam.direction).normalize() * 0.510;
