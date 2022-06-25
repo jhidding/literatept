@@ -1,6 +1,6 @@
 // ~\~ language=Rust filename=src/main.rs
-// ~\~ begin <<lit/index.md|src/main.rs>>[0]
-// ~\~ begin <<lit/index.md|import-quickcheck>>[0]
+// ~\~ begin <<lit/index.md|src/main.rs>>[init]
+// ~\~ begin <<lit/index.md|import-quickcheck>>[init]
 #[cfg(test)]
 extern crate quickcheck;
 
@@ -8,17 +8,17 @@ extern crate quickcheck;
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 // ~\~ end
-// ~\~ begin <<lit/index.md|import-rand>>[0]
+// ~\~ begin <<lit/index.md|import-rand>>[init]
 extern crate rand;
 use rand::Rng;
 // ~\~ end
-// ~\~ begin <<lit/index.md|imports>>[0]
+// ~\~ begin <<lit/index.md|imports>>[init]
 extern crate rayon;
 
 use rayon::prelude::*;
 // ~\~ end
 
-// ~\~ begin <<lit/index.md|constants>>[0]
+// ~\~ begin <<lit/index.md|constants>>[init]
 const EPS: f64 = 1e-4;
 // ~\~ end
 // ~\~ begin <<lit/index.md|constants>>[1]
@@ -32,7 +32,7 @@ const N_AIR: f64 = 1.0;
 const R0: f64 =  (N_GLASS - N_AIR) * (N_GLASS - N_AIR)
               / ((N_GLASS + N_AIR) * (N_GLASS + N_AIR));
 // ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[0]
+// ~\~ begin <<lit/index.md|vector>>[init]
 #[derive(Clone,Copy,Debug)]
 struct Vec3
     { pub x: f64, pub y: f64, pub z: f64 }
@@ -108,7 +108,7 @@ impl Vec3 {
     }
 }
 // ~\~ end
-// ~\~ begin <<lit/index.md|colour>>[0]
+// ~\~ begin <<lit/index.md|colour>>[init]
 #[inline]
 fn clamp(x: f64) -> f64 { if x < 0. { 0. } else if x > 1. { 1. } else { x } }
 
@@ -180,22 +180,22 @@ impl Colour for RGBColour {
     }
 }
 // ~\~ end
-// ~\~ begin <<lit/index.md|ray>>[0]
+// ~\~ begin <<lit/index.md|ray>>[init]
 struct Ray
     { pub origin: Vec3
     , pub direction: Vec3 }
 // ~\~ end
-// ~\~ begin <<lit/index.md|material>>[0]
+// ~\~ begin <<lit/index.md|material>>[init]
 enum Reflection
     { Diffuse
     , Specular
     , Refractive }
 // ~\~ end
-// ~\~ begin <<lit/index.md|sphere>>[0]
+// ~\~ begin <<lit/index.md|sphere>>[init]
 struct Sphere
     { pub radius: f64
     , pub position: Vec3
-    // ~\~ begin <<lit/index.md|sphere-members>>[0]
+    // ~\~ begin <<lit/index.md|sphere-members>>[init]
     , pub emission: RGBColour
     , pub colour: RGBColour
     , pub reflection: Reflection
@@ -205,7 +205,7 @@ struct Sphere
 // ~\~ begin <<lit/index.md|sphere>>[1]
 impl Sphere {
     fn intersect(&self, ray: &Ray) -> Option<f64> {
-        // ~\~ begin <<lit/index.md|sphere-ray-intersect>>[0]
+        // ~\~ begin <<lit/index.md|sphere-ray-intersect>>[init]
         let q = self.position - ray.origin;
         let b = ray.direction * q;
         let r = self.radius;
@@ -229,9 +229,9 @@ impl Sphere {
     }
 }
 // ~\~ end
-// ~\~ begin <<lit/index.md|scene>>[0]
+// ~\~ begin <<lit/index.md|scene>>[init]
 const SPHERES: [Sphere;9] =
-    // ~\~ begin <<lit/index.md|scene-spheres>>[0]
+    // ~\~ begin <<lit/index.md|scene-spheres>>[init]
     [ Sphere { radius:  1e5,  position: vec(1e5+1.,   40.8, 81.6), emission: BLACK
              , colour: rgb(0.75, 0.25, 0.25), reflection: Reflection::Diffuse }
     // ~\~ end
@@ -274,15 +274,15 @@ fn intersect(ray: &Ray) -> Option<(f64, &'static Sphere)> {
     result
 }
 // ~\~ end
-// ~\~ begin <<lit/index.md|path-tracing>>[0]
+// ~\~ begin <<lit/index.md|path-tracing>>[init]
 fn radiance(ray: &Ray, mut depth: u16) -> RGBColour {
     let mut rng = rand::thread_rng();
-    // ~\~ begin <<lit/index.md|do-intersect>>[0]
+    // ~\~ begin <<lit/index.md|do-intersect>>[init]
     let hit = intersect(ray);
     if hit.is_none() { return BLACK; }
     let (distance, object) = hit.unwrap();
     // ~\~ end
-    // ~\~ begin <<lit/index.md|russian-roulette-1>>[0]
+    // ~\~ begin <<lit/index.md|russian-roulette-1>>[init]
     let mut f = object.colour;
     let p = f.max();
     depth += 1;
@@ -294,17 +294,17 @@ fn radiance(ray: &Ray, mut depth: u16) -> RGBColour {
         }
     }
     // ~\~ end
-    // ~\~ begin <<lit/index.md|compute-normal>>[0]
+    // ~\~ begin <<lit/index.md|compute-normal>>[init]
     let x = ray.origin + ray.direction * distance;
     let n = (x - object.position).normalize();
     // ~\~ end
     // ~\~ begin <<lit/index.md|compute-normal>>[1]
     let n_refl = if n * ray.direction < 0. { n } else { -n };
     // ~\~ end
-    // ~\~ begin <<lit/index.md|do-reflect>>[0]
+    // ~\~ begin <<lit/index.md|do-reflect>>[init]
     let light = match object.reflection {
         Reflection::Diffuse => {
-            // ~\~ begin <<lit/index.md|diffuse-reflection>>[0]
+            // ~\~ begin <<lit/index.md|diffuse-reflection>>[init]
             let phi = 2.*PI * rng.gen::<f64>();
             // ~\~ end
             // ~\~ begin <<lit/index.md|diffuse-reflection>>[1]
@@ -324,13 +324,13 @@ fn radiance(ray: &Ray, mut depth: u16) -> RGBColour {
             // ~\~ end
         }
         Reflection::Specular => {
-            // ~\~ begin <<lit/index.md|specular-reflection>>[0]
+            // ~\~ begin <<lit/index.md|specular-reflection>>[init]
             let d = ray.direction - n * 2.*(n*ray.direction);
             radiance(&Ray {origin: x, direction: d}, depth)
             // ~\~ end
         }
         Reflection::Refractive => {
-            // ~\~ begin <<lit/index.md|refractive-reflection>>[0]
+            // ~\~ begin <<lit/index.md|refractive-reflection>>[init]
             let d = ray.direction - n * 2.*(n*ray.direction);
             let reflected_ray = Ray { origin: x, direction: d };
             // ~\~ end
@@ -344,11 +344,11 @@ fn radiance(ray: &Ray, mut depth: u16) -> RGBColour {
             let mu = ray.direction * n_refl;
             let cos2t = 1. - n_eff*n_eff*(1. - mu*mu);
             if cos2t < 0. {
-                // ~\~ begin <<lit/index.md|total-internal-reflection>>[0]
+                // ~\~ begin <<lit/index.md|total-internal-reflection>>[init]
                 radiance(&reflected_ray, depth)
                 // ~\~ end
             } else {
-                // ~\~ begin <<lit/index.md|partial-reflection>>[0]
+                // ~\~ begin <<lit/index.md|partial-reflection>>[init]
                 let tdir = (ray.direction * n_eff - n_refl * (mu*n_eff + cos2t.sqrt())).normalize();
                 // ~\~ end
                 // ~\~ begin <<lit/index.md|partial-reflection>>[1]
@@ -379,7 +379,7 @@ fn radiance(ray: &Ray, mut depth: u16) -> RGBColour {
     object.emission + f * light
 }
 // ~\~ end
-// ~\~ begin <<lit/index.md|image>>[0]
+// ~\~ begin <<lit/index.md|image>>[init]
 struct Image
     { width: usize
     , height: usize
@@ -406,7 +406,7 @@ impl Image {
 
     fn size(&self) -> usize { self.width * self.height }
 
-    // ~\~ begin <<lit/index.md|print-ppm>>[0]
+    // ~\~ begin <<lit/index.md|print-ppm>>[init]
     fn print_ppm(&self, path: &str) -> std::io::Result<()> {
         use std::fs::File;
         use std::io::Write;
@@ -430,7 +430,7 @@ mod tests {
     use super::*;
     use quickcheck::*;
 
-    // ~\~ begin <<lit/index.md|vector-tests>>[0]
+    // ~\~ begin <<lit/index.md|vector-tests>>[init]
     impl Arbitrary for Vec3 {
         fn arbitrary<G: Gen>(g: &mut G) -> Self {
             let x = f64::arbitrary(g);

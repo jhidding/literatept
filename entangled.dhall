@@ -1,8 +1,7 @@
-let entangled = https://raw.githubusercontent.com/entangled/entangled/master/data/config-schema.dhall
-                sha256:a924fcffa514e3909459e48c45924886062ff4a77be582af0517f9c4bae7ae73
+let entangled = https://raw.githubusercontent.com/entangled/entangled/v1.2.2/data/config-schema.dhall
+                sha256:9bb4c5649869175ad0b662d292fd81a3d5d9ccb503b1c7e316d531b7856fb096
 
-in { entangled = entangled.Config :: { database = Some ".entangled/db.sqlite"
-                                     , watchList = [ "lit/*.md" ]
+in { entangled = entangled.Config :: { watchList = ["lit/*.md"] : List Text
                                      }
    }
 

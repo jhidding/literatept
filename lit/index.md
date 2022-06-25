@@ -171,8 +171,8 @@ impl Vec3 {
 We use the `quickcheck` crate to do some property testing on the `Vec` type.
 
 ``` {.toml #dev-dependencies}
-quickcheck = "0.9"
-quickcheck_macros = "0.9"
+quickcheck = "1.0.3"
+quickcheck_macros = "1.0.0"
 ```
 
 ``` {.rust #import-quickcheck}
