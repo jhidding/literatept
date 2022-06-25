@@ -47,8 +47,8 @@ opt-level = 3
 <!-- > The package description can be extended using [more keys and their definitions](https://doc.rust-lang.org/cargo/reference/manifest.html) -->
 
 ``` {.toml #dependencies}
-rand = "0.7.3"
-rayon = "1.3.0"
+rand = "0.8.5"
+rayon = "1.5.3"
 ```
 
 ``` {.rust #imports}
@@ -62,12 +62,12 @@ use rayon::prelude::*;
 $\renewcommand{\vec}[1]{{\bf #1}}$
 The `Vec` type has three public members $x$, $y$ and $z$.
 
-``` {.rust #vector}
+``` {.rust #vector file=src/vec3.rs}
 #[derive(Clone,Copy,Debug)]
-struct Vec3
+pub(crate) struct Vec3
     { pub x: f64, pub y: f64, pub z: f64 }
 
-const fn vec(x: f64, y: f64, z: f64) -> Vec3 {
+pub(crate) const fn vec(x: f64, y: f64, z: f64) -> Vec3 {
     Vec3 { x: x, y: y, z: z }
 }
 ```
@@ -157,11 +157,11 @@ Vectors can be normalized to a unit-vector.
 
 ``` {.rust #vector}
 impl Vec3 {
-    fn abs(self) -> f64 {
+    pub fn abs(self) -> f64 {
         (self * self).sqrt()
     }
 
-    fn normalize(self) -> Self {
+    pub fn normalize(self) -> Self {
         self * (1.0 / self.abs())
     }
 }
@@ -247,11 +247,11 @@ enum Reflection
 Note that the Rust `enum` types are much richer than the `enum` you may be used to from C/C++. Together with `struct`, `enum` gives the corner stones of *algebraic data types*. Where a `struct` collects different members into a *product type*, an `enum` is a *sum type*, meaning that it either contains one value or the other.
 ::::
 
-``` {.rust #colour}
+``` {.rust #colour file=src/colour.rs}
 #[inline]
-fn clamp(x: f64) -> f64 { if x < 0. { 0. } else if x > 1. { 1. } else { x } }
+pub(crate) fn clamp(x: f64) -> f64 { if x < 0. { 0. } else if x > 1. { 1. } else { x } }
 
-trait Colour: Sized
+pub trait Colour: Sized
             + std::ops::Add<Output=Self>
             + std::ops::Mul<Output=Self>
             + std::ops::Mul<f64, Output=Self> {
@@ -273,13 +273,13 @@ trait Colour: Sized
 }
 
 #[derive(Clone,Copy,Debug)]
-struct RGBColour (f64, f64, f64);
+pub(crate) struct RGBColour (f64, f64, f64);
 
-const fn rgb(r: f64, g: f64, b: f64) -> RGBColour {
+pub(crate) const fn rgb(r: f64, g: f64, b: f64) -> RGBColour {
     RGBColour (r, g, b)
 }
 
-const BLACK: RGBColour = rgb(0.0, 0.0, 0.0);
+pub(crate) const BLACK: RGBColour = rgb(0.0, 0.0, 0.0);
 
 impl std::ops::Add for RGBColour {
     type Output = Self;
@@ -790,9 +790,13 @@ fn print_ppm(&self, path: &str) -> std::io::Result<()> {
 <<import-rand>>
 <<imports>>
 
+mod vec3;
+use vec3::*;
+
+mod colour;
+use colour::*;
+
 <<constants>>
-<<vector>>
-<<colour>>
 <<ray>>
 <<material>>
 <<sphere>>

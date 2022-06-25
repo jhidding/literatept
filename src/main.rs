@@ -18,6 +18,12 @@ extern crate rayon;
 use rayon::prelude::*;
 // ~\~ end
 
+mod vec3;
+use vec3::*;
+
+mod colour;
+use colour::*;
+
 // ~\~ begin <<lit/index.md|constants>>[init]
 const EPS: f64 = 1e-4;
 // ~\~ end
@@ -31,154 +37,6 @@ const N_AIR: f64 = 1.0;
 // ~\~ begin <<lit/index.md|constants>>[3]
 const R0: f64 =  (N_GLASS - N_AIR) * (N_GLASS - N_AIR)
               / ((N_GLASS + N_AIR) * (N_GLASS + N_AIR));
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[init]
-#[derive(Clone,Copy,Debug)]
-struct Vec3
-    { pub x: f64, pub y: f64, pub z: f64 }
-
-const fn vec(x: f64, y: f64, z: f64) -> Vec3 {
-    Vec3 { x: x, y: y, z: z }
-}
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[1]
-impl std::ops::Add for Vec3 {
-    type Output = Self;
-    fn add(self, other: Self) -> Self {
-        Self { x: self.x + other.x
-             , y: self.y + other.y
-             , z: self.z + other.z }
-    }
-}
-
-impl std::ops::Sub for Vec3 {
-    type Output = Self;
-    fn sub(self, other: Self) -> Self {
-        Self { x: self.x - other.x
-             , y: self.y - other.y
-             , z: self.z - other.z }
-    }
-}
-
-impl std::ops::Neg for Vec3 {
-    type Output = Self;
-    fn neg(self) -> Self::Output {
-        Self { x: -self.x, y: -self.y, z: -self.z }
-    }
-}
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[2]
-impl std::ops::Mul<f64> for Vec3 {
-    type Output = Self;
-    fn mul(self, s: f64) -> Self {
-        Self { x: self.x * s
-             , y: self.y * s
-             , z: self.z * s }
-    }
-}
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[3]
-impl std::ops::Mul<Vec3> for Vec3 {
-    type Output = f64;
-    fn mul(self, other: Self) -> f64 {
-        self.x * other.x +
-        self.y * other.y +
-        self.z * other.z
-    }
-}
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[4]
-impl std::ops::Rem for Vec3 {
-    type Output = Self;
-    fn rem(self, other: Self) -> Self {
-        Self { x: self.y * other.z - self.z * other.y
-             , y: self.z * other.x - self.x * other.z
-             , z: self.x * other.y - self.y * other.x }
-    }
-}
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[5]
-impl Vec3 {
-    fn abs(self) -> f64 {
-        (self * self).sqrt()
-    }
-
-    fn normalize(self) -> Self {
-        self * (1.0 / self.abs())
-    }
-}
-// ~\~ end
-// ~\~ begin <<lit/index.md|colour>>[init]
-#[inline]
-fn clamp(x: f64) -> f64 { if x < 0. { 0. } else if x > 1. { 1. } else { x } }
-
-trait Colour: Sized
-            + std::ops::Add<Output=Self>
-            + std::ops::Mul<Output=Self>
-            + std::ops::Mul<f64, Output=Self> {
-    fn to_rgb(&self) -> (f64, f64, f64);
-    fn clamp(&self) -> Self;
-
-    fn max(&self) -> f64 {
-        let (r, g, b) = self.to_rgb();
-        if r > g && r > b { r }
-        else if g > b { g }
-        else { b }
-    }
-
-    fn to_u24(&self) -> (u8, u8, u8) {
-        let to_int = |x| (clamp(x).powf(1./2.2) * 255. + 0.5).floor() as u8;
-        let (r, g, b) = self.to_rgb();
-        (to_int(r), to_int(g), to_int(b))
-    }
-}
-
-#[derive(Clone,Copy,Debug)]
-struct RGBColour (f64, f64, f64);
-
-const fn rgb(r: f64, g: f64, b: f64) -> RGBColour {
-    RGBColour (r, g, b)
-}
-
-const BLACK: RGBColour = rgb(0.0, 0.0, 0.0);
-
-impl std::ops::Add for RGBColour {
-    type Output = Self;
-    fn add(self, other: Self) -> Self {
-        let RGBColour(r1,g1,b1) = self;
-        let RGBColour(r2,g2,b2) = other;
-        RGBColour(r1+r2,g1+g2,b1+b2)
-    }
-}
-
-impl std::ops::Mul for RGBColour {
-    type Output = Self;
-    fn mul(self, other: Self) -> Self {
-        let RGBColour(r1,g1,b1) = self;
-        let RGBColour(r2,g2,b2) = other;
-        RGBColour(r1*r2,g1*g2,b1*b2)
-    }
-}
-
-impl std::ops::Mul<f64> for RGBColour {
-    type Output = Self;
-    fn mul(self, s: f64) -> Self {
-        let RGBColour(r1,g1,b1) = self;
-        RGBColour(r1*s,g1*s,b1*s)
-    }
-}
-
-impl Colour for RGBColour {
-    fn to_rgb(&self) -> (f64, f64, f64) {
-        let RGBColour(r, g, b) = self;
-        (*r, *g, *b)
-    }
-
-    fn clamp(&self) -> Self {
-        let RGBColour(r, g, b) = self;
-        RGBColour(clamp(*r), clamp(*g), clamp(*b))
-    }
-}
 // ~\~ end
 // ~\~ begin <<lit/index.md|ray>>[init]
 struct Ray
