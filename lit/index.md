@@ -49,6 +49,8 @@ opt-level = 3
 ``` {.toml #dependencies}
 rand = "0.8.5"
 rayon = "1.5.3"
+indicatif = { version = "0.16.2", features = ["rayon"] }
+argh = "0.1.7"
 ```
 
 ``` {.rust #imports}
@@ -326,6 +328,9 @@ With floating-point calculations, round-off can become a problem. If we bounce a
 
 ``` {.rust #constants}
 const EPS: f64 = 1e-4;
+const SAMPLES: usize = 100;
+const WIDTH: usize = 640;
+const HEIGHT: usize = 480;
 ```
 
 We now define the `Ray` and `Sphere` types.
@@ -491,30 +496,20 @@ use std::f64::consts::PI;
 The `radiance` function computes how many photons are traveling at a certain position in space from a certain direction.
 
 ``` {.rust #path-tracing}
-struct RadianceCall {
-   ray: Ray,
-   depth: u16,
-   colour: RGBColour
-}
-
-fn radiance(ray: Ray, depth: u16) -> RGBColour {
+fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
+    // let mut current = SomeRadianceCall { ray: ray, depth: depth, colour: WHITE });
+    // let mut stack = Vec::new();
     let mut rng = rand::thread_rng();
-    let mut stack = vec![RadianceCall { ray: ray, depth: depth, colour: WHITE }];
+    let mut colour = WHITE;
     let mut output = BLACK;
 
-    let push = |stack: &mut Vec<RadianceCall>, ray: Ray, depth: u16, colour: RGBColour| {
-        stack.push(RadianceCall { ray: ray, depth: depth, colour: colour });
-    };
-
-    while let Some(RadianceCall { ray, mut depth, colour }) = stack.pop()
-    {
+    // while let Some(RadianceCall { ref mut ray, ref mut depth, ref mut colour }) = current
+    loop {
         <<do-intersect>>
         <<russian-roulette-1>>
         <<compute-normal>>
         <<do-reflect>>
-        output = output + object.emission * colour;
     }
-    return output;
 }
 ```
 
@@ -532,6 +527,7 @@ First, we need to see if the ray intersects any object in the scene; if not, we 
 let hit = intersect(&ray);
 if hit.is_none() { return BLACK; }
 let (distance, object) = hit.unwrap();
+output = output + object.emission * colour;
 ```
 
 ## Russian Roulette 1
@@ -553,8 +549,9 @@ if depth > 5 {
     if rng.gen::<f64>() < p {
         f = f * (1. / p);
     } else {
-        output = output + object.emission * colour;
-        continue;
+        return output;
+        // current = stack.pop();
+        // continue;
     }
 }
 ```
@@ -626,7 +623,9 @@ let d = (u*phi.cos()*r + v*phi.sin()*r + n_refl*(1.-r2).sqrt()).normalize();
 To compute the radiance, we need to know the radiance from the reflected ray.
 
 ``` {.rust #diffuse-reflection}
-push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
+*ray = Ray {origin: x, direction: d};
+colour = f * colour;
+// push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
 ```
 
 ### Specular
@@ -636,7 +635,9 @@ $$\vec{\hat{d}}' = \vec{\hat{d}} - 2 \vec{\hat{n}} (\vec{\hat{n}} \cdot \vec{\ha
 
 ``` {.rust #specular-reflection}
 let d = ray.direction - n * 2.*(n*ray.direction);
-push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
+*ray = Ray {origin: x, direction: d};
+colour = f * colour;
+// push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
 ```
 
 ### Refractive
@@ -697,7 +698,9 @@ if cos2t < 0. {
 In that case, we recurse with the reflected ray.
 
 ``` {.rust #total-internal-reflection}
-push(&mut stack, reflected_ray, depth, f * colour);
+*ray = reflected_ray;
+colour = f * colour;
+// push(&mut stack, reflected_ray, depth, f * colour);
 ```
 
 #### Partial reflection
@@ -745,13 +748,17 @@ let rp = re/p;
 let tp = tr/(1.-p);
 if depth > 2 {
     if rng.gen::<f64>() < p {
-        push(&mut stack, reflected_ray, depth, f * colour * rp);
+        *ray = reflected_ray;
+        colour = f * colour * rp;
     } else {
-        push(&mut stack, Ray { origin: x, direction: tdir }, depth, f * colour * tp);
+        *ray = reflected_ray;
+        colour = f * colour * tp;
     }
 } else {
-    push(&mut stack, reflected_ray, depth, f * colour * re);
-    push(&mut stack, Ray { origin: x, direction: tdir }, depth, f * colour * tr)
+    let r = radiance(&mut Ray {origin: x, direction: tdir}, depth);
+    output = output + r * f * colour * tr;
+    *ray = reflected_ray;
+    colour = f * colour * re;
 }
 ```
 
@@ -771,15 +778,22 @@ impl Image {
         }
     }
 
-    fn for_each<F: std::marker::Sync +  Fn (usize, usize, &mut RGBColour)>(&mut self, f: F) {
+    fn for_each<F>(&mut self, f: F)
+        where F: Send + Sync + Fn(usize, usize, &mut RGBColour)
+    {
+        use indicatif::ParallelProgressIterator;
+        // use rayon::iter::{ParallelIterator, IntoParallelRefIterator};
+
         let w = self.width;
-        self.data.par_iter_mut().enumerate().for_each(
-            |(i, c)| {
+        let size = self.size() as u64;
+        self.data
+            .par_iter_mut().progress_count(size)
+            .enumerate()
+            .for_each(|(i, c)| {
                 let x = i % w;
                 let y = i / w;
                 f(x, y, c);
-            }
-        );
+            });
     }
 
     fn size(&self) -> usize { self.width * self.height }
@@ -814,6 +828,9 @@ fn print_ppm(&self, path: &str) -> std::io::Result<()> {
 <<import-quickcheck>>
 <<import-rand>>
 <<imports>>
+extern crate indicatif;
+extern crate argh;
+use argh::FromArgs;
 
 mod vec3;
 use vec3::*;
@@ -837,22 +854,59 @@ mod tests {
     <<vector-tests>>
 }
 
-fn main() -> std::io::Result<()> {
-    use rayon::current_thread_index;
+#[derive(FromArgs)]
+/// Renders the Cornell box as interpreted by Kevin Beason's SmallPt
+pub struct Arghs {
+    /// optional sample size (100)
+    #[argh(option, short = 's', default = "SAMPLES")]
+    samples: usize,
 
-    let w: usize = 640;
-    let h: usize = 480;
-    let samps: usize = 500;
+    /// optional thread count
+    /// the default (0) will take the systems logical cpu count
+    #[argh(option, short = 't', default = "0")]
+    threads: usize,
+
+    /// optional stack size in MB per thread
+    #[argh(option, short = 'z', default = "8")]
+    stack: usize,
+
+    /// optional image size dimensions WxH (640x480)
+    #[argh(option, from_str_fn(into_plot_dimensions), default = "(WIDTH, HEIGHT)")]
+    wxh: (usize, usize),
+}
+
+// Helper function for parsing plot dimensions from command line arguments.
+fn into_plot_dimensions(dim: &str) -> Result<(usize, usize), String> {
+    let (w, h) = dim
+        .split_once('x')
+        .ok_or("dimensions do not parse, no delimiter?")?;
+    let w = w.parse::<usize>().map_err(|e| e.to_string())?;
+    let h = h.parse::<usize>().map_err(|e| e.to_string())?;
+    Ok((w, h))
+}
+
+fn main() -> std::io::Result<()> {
+    // use rayon::current_thread_index;
+    // rayon::ThreadPoolBuilder::new().num_threads(4).build_global().unwrap();
+    let args: Arghs = argh::from_env();
+    let (w, h) = args.wxh;
+    let samps = args.samples;
+
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(args.threads)
+        .stack_size(args.stack * 1024 * 1024)
+        .build_global()
+        .unwrap();
+
     let cam = Ray { origin: vec(50., 52., 295.6), direction: vec(0.0, -0.045, -1.0).normalize() };
     let cx = vec(w as f64 * 0.510 / h as f64, 0., 0.);
     let cy = (cx % cam.direction).normalize() * 0.510;
 
     let mut img = Image::new(w, h);
+    eprintln!("Rendering ({} spp)", samps*4);
+
     img.for_each(|x, y, c| {
         let mut rng = rand::thread_rng();
-        if current_thread_index() == Some(0) {
-            eprint!("\rRendering ({} spp) {:5.2}%", samps*4, 100.*(y as f64 / (h-1) as f64));
-        }
         for sy in 0..2 {
             for sx in 0..2 {
                 let mut r = BLACK.clone();
@@ -864,7 +918,7 @@ fn main() -> std::io::Result<()> {
                     let d = cx*( ( (sx as f64 + 0.5 + dx) / 2. + x as f64) / w as f64 - 0.5 )
                           + cy*( ( (sy as f64 + 0.5 + dy) / 2. + (h - y - 1) as f64) / h as f64 - 0.5 )
                           + cam.direction;
-                    r = r + radiance(Ray {origin: cam.origin + d*140., direction: d.normalize()}, 0) * (1./samps as f64);
+                    r = r + radiance(&mut Ray {origin: cam.origin + d*140., direction: d.normalize()}, 0) * (1./samps as f64);
                 }
                 *c = *c + r.clamp() * 0.25;
             }

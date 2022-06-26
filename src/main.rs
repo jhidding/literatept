@@ -17,6 +17,9 @@ extern crate rayon;
 
 use rayon::prelude::*;
 // ~\~ end
+extern crate indicatif;
+extern crate argh;
+use argh::FromArgs;
 
 mod vec3;
 use vec3::*;
@@ -26,6 +29,9 @@ use colour::*;
 
 // ~\~ begin <<lit/index.md|constants>>[init]
 const EPS: f64 = 1e-4;
+const SAMPLES: usize = 100;
+const WIDTH: usize = 640;
+const HEIGHT: usize = 480;
 // ~\~ end
 // ~\~ begin <<lit/index.md|constants>>[1]
 use std::f64::consts::PI;
@@ -133,27 +139,20 @@ fn intersect(ray: &Ray) -> Option<(f64, &'static Sphere)> {
 }
 // ~\~ end
 // ~\~ begin <<lit/index.md|path-tracing>>[init]
-struct RadianceCall {
-   ray: Ray,
-   depth: u16,
-   colour: RGBColour
-}
-
-fn radiance(ray: Ray, depth: u16) -> RGBColour {
+fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
+    // let mut current = SomeRadianceCall { ray: ray, depth: depth, colour: WHITE });
+    // let mut stack = Vec::new();
     let mut rng = rand::thread_rng();
-    let mut stack = vec![RadianceCall { ray: ray, depth: depth, colour: WHITE }];
+    let mut colour = WHITE;
     let mut output = BLACK;
 
-    let push = |stack: &mut Vec<RadianceCall>, ray: Ray, depth: u16, colour: RGBColour| {
-        stack.push(RadianceCall { ray: ray, depth: depth, colour: colour });
-    };
-
-    while let Some(RadianceCall { ray, mut depth, colour }) = stack.pop()
-    {
+    // while let Some(RadianceCall { ref mut ray, ref mut depth, ref mut colour }) = current
+    loop {
         // ~\~ begin <<lit/index.md|do-intersect>>[init]
         let hit = intersect(&ray);
         if hit.is_none() { return BLACK; }
         let (distance, object) = hit.unwrap();
+        output = output + object.emission * colour;
         // ~\~ end
         // ~\~ begin <<lit/index.md|russian-roulette-1>>[init]
         let mut f = object.colour;
@@ -163,8 +162,9 @@ fn radiance(ray: Ray, depth: u16) -> RGBColour {
             if rng.gen::<f64>() < p {
                 f = f * (1. / p);
             } else {
-                output = output + object.emission * colour;
-                continue;
+                return output;
+                // current = stack.pop();
+                // continue;
             }
         }
         // ~\~ end
@@ -194,13 +194,17 @@ fn radiance(ray: Ray, depth: u16) -> RGBColour {
                 let d = (u*phi.cos()*r + v*phi.sin()*r + n_refl*(1.-r2).sqrt()).normalize();
                 // ~\~ end
                 // ~\~ begin <<lit/index.md|diffuse-reflection>>[4]
-                push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
+                *ray = Ray {origin: x, direction: d};
+                colour = f * colour;
+                // push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
                 // ~\~ end
             }
             Reflection::Specular => {
                 // ~\~ begin <<lit/index.md|specular-reflection>>[init]
                 let d = ray.direction - n * 2.*(n*ray.direction);
-                push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
+                *ray = Ray {origin: x, direction: d};
+                colour = f * colour;
+                // push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
                 // ~\~ end
             }
             Reflection::Refractive => {
@@ -219,7 +223,9 @@ fn radiance(ray: Ray, depth: u16) -> RGBColour {
                 let cos2t = 1. - n_eff*n_eff*(1. - mu*mu);
                 if cos2t < 0. {
                     // ~\~ begin <<lit/index.md|total-internal-reflection>>[init]
-                    push(&mut stack, reflected_ray, depth, f * colour);
+                    *ray = reflected_ray;
+                    colour = f * colour;
+                    // push(&mut stack, reflected_ray, depth, f * colour);
                     // ~\~ end
                 } else {
                     // ~\~ begin <<lit/index.md|partial-reflection>>[init]
@@ -236,13 +242,17 @@ fn radiance(ray: Ray, depth: u16) -> RGBColour {
                     let tp = tr/(1.-p);
                     if depth > 2 {
                         if rng.gen::<f64>() < p {
-                            push(&mut stack, reflected_ray, depth, f * colour * rp);
+                            *ray = reflected_ray;
+                            colour = f * colour * rp;
                         } else {
-                            push(&mut stack, Ray { origin: x, direction: tdir }, depth, f * colour * tp);
+                            *ray = reflected_ray;
+                            colour = f * colour * tp;
                         }
                     } else {
-                        push(&mut stack, reflected_ray, depth, f * colour * re);
-                        push(&mut stack, Ray { origin: x, direction: tdir }, depth, f * colour * tr)
+                        let r = radiance(&mut Ray {origin: x, direction: tdir}, depth);
+                        output = output + r * f * colour * tr;
+                        *ray = reflected_ray;
+                        colour = f * colour * re;
                     }
                     // ~\~ end
                 }
@@ -250,9 +260,7 @@ fn radiance(ray: Ray, depth: u16) -> RGBColour {
             }
         };
         // ~\~ end
-        output = output + object.emission * colour;
     }
-    return output;
 }
 // ~\~ end
 // ~\~ begin <<lit/index.md|image>>[init]
@@ -269,15 +277,22 @@ impl Image {
         }
     }
 
-    fn for_each<F: std::marker::Sync +  Fn (usize, usize, &mut RGBColour)>(&mut self, f: F) {
+    fn for_each<F>(&mut self, f: F)
+        where F: Send + Sync + Fn(usize, usize, &mut RGBColour)
+    {
+        use indicatif::ParallelProgressIterator;
+        // use rayon::iter::{ParallelIterator, IntoParallelRefIterator};
+
         let w = self.width;
-        self.data.par_iter_mut().enumerate().for_each(
-            |(i, c)| {
+        let size = self.size() as u64;
+        self.data
+            .par_iter_mut().progress_count(size)
+            .enumerate()
+            .for_each(|(i, c)| {
                 let x = i % w;
                 let y = i / w;
                 f(x, y, c);
-            }
-        );
+            });
     }
 
     fn size(&self) -> usize { self.width * self.height }
@@ -341,22 +356,59 @@ mod tests {
     // ~\~ end
 }
 
-fn main() -> std::io::Result<()> {
-    use rayon::current_thread_index;
+#[derive(FromArgs)]
+/// Renders the Cornell box as interpreted by Kevin Beason's SmallPt
+pub struct Arghs {
+    /// optional sample size (100)
+    #[argh(option, short = 's', default = "SAMPLES")]
+    samples: usize,
 
-    let w: usize = 640;
-    let h: usize = 480;
-    let samps: usize = 500;
+    /// optional thread count
+    /// the default (0) will take the systems logical cpu count
+    #[argh(option, short = 't', default = "0")]
+    threads: usize,
+
+    /// optional stack size in MB per thread
+    #[argh(option, short = 'z', default = "8")]
+    stack: usize,
+
+    /// optional image size dimensions WxH (640x480)
+    #[argh(option, from_str_fn(into_plot_dimensions), default = "(WIDTH, HEIGHT)")]
+    wxh: (usize, usize),
+}
+
+// Helper function for parsing plot dimensions from command line arguments.
+fn into_plot_dimensions(dim: &str) -> Result<(usize, usize), String> {
+    let (w, h) = dim
+        .split_once('x')
+        .ok_or("dimensions do not parse, no delimiter?")?;
+    let w = w.parse::<usize>().map_err(|e| e.to_string())?;
+    let h = h.parse::<usize>().map_err(|e| e.to_string())?;
+    Ok((w, h))
+}
+
+fn main() -> std::io::Result<()> {
+    // use rayon::current_thread_index;
+    // rayon::ThreadPoolBuilder::new().num_threads(4).build_global().unwrap();
+    let args: Arghs = argh::from_env();
+    let (w, h) = args.wxh;
+    let samps = args.samples;
+
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(args.threads)
+        .stack_size(args.stack * 1024 * 1024)
+        .build_global()
+        .unwrap();
+
     let cam = Ray { origin: vec(50., 52., 295.6), direction: vec(0.0, -0.045, -1.0).normalize() };
     let cx = vec(w as f64 * 0.510 / h as f64, 0., 0.);
     let cy = (cx % cam.direction).normalize() * 0.510;
 
     let mut img = Image::new(w, h);
+    eprintln!("Rendering ({} spp)", samps*4);
+
     img.for_each(|x, y, c| {
         let mut rng = rand::thread_rng();
-        if current_thread_index() == Some(0) {
-            eprint!("\rRendering ({} spp) {:5.2}%", samps*4, 100.*(y as f64 / (h-1) as f64));
-        }
         for sy in 0..2 {
             for sx in 0..2 {
                 let mut r = BLACK.clone();
@@ -368,7 +420,7 @@ fn main() -> std::io::Result<()> {
                     let d = cx*( ( (sx as f64 + 0.5 + dx) / 2. + x as f64) / w as f64 - 0.5 )
                           + cy*( ( (sy as f64 + 0.5 + dy) / 2. + (h - y - 1) as f64) / h as f64 - 0.5 )
                           + cam.direction;
-                    r = r + radiance(Ray {origin: cam.origin + d*140., direction: d.normalize()}, 0) * (1./samps as f64);
+                    r = r + radiance(&mut Ray {origin: cam.origin + d*140., direction: d.normalize()}, 0) * (1./samps as f64);
                 }
                 *c = *c + r.clamp() * 0.25;
             }
