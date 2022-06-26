@@ -300,8 +300,8 @@ impl Image {
         let mut out = std::io::BufWriter::new(file);
         write!(&mut out, "P3\n{} {}\n{}\n", self.width, self.height, 255)?;
 
-        for i in 0..self.size() {
-            let (r, g, b) = self.data[i].to_u24();
+        for rgb in &self.data {
+            let (r, g, b) = rgb.to_u24();
             write!(&mut out, "{} {} {} ", r, g, b)?;
         }
         Ok(())
