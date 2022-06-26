@@ -140,13 +140,10 @@ fn intersect(ray: &Ray) -> Option<(f64, &'static Sphere)> {
 // ~\~ end
 // ~\~ begin <<lit/index.md|path-tracing>>[init]
 fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
-    // let mut current = SomeRadianceCall { ray: ray, depth: depth, colour: WHITE });
-    // let mut stack = Vec::new();
     let mut rng = rand::thread_rng();
     let mut colour = WHITE;
     let mut output = BLACK;
 
-    // while let Some(RadianceCall { ref mut ray, ref mut depth, ref mut colour }) = current
     loop {
         // ~\~ begin <<lit/index.md|do-intersect>>[init]
         let hit = intersect(&ray);
@@ -196,7 +193,6 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
                 // ~\~ begin <<lit/index.md|diffuse-reflection>>[4]
                 *ray = Ray {origin: x, direction: d};
                 colour = f * colour;
-                // push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
                 // ~\~ end
             }
             Reflection::Specular => {
@@ -204,7 +200,6 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
                 let d = ray.direction - n * 2.*(n*ray.direction);
                 *ray = Ray {origin: x, direction: d};
                 colour = f * colour;
-                // push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
                 // ~\~ end
             }
             Reflection::Refractive => {
@@ -225,7 +220,6 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
                     // ~\~ begin <<lit/index.md|total-internal-reflection>>[init]
                     *ray = reflected_ray;
                     colour = f * colour;
-                    // push(&mut stack, reflected_ray, depth, f * colour);
                     // ~\~ end
                 } else {
                     // ~\~ begin <<lit/index.md|partial-reflection>>[init]
@@ -245,7 +239,7 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
                             *ray = reflected_ray;
                             colour = f * colour * rp;
                         } else {
-                            *ray = reflected_ray;
+                            *ray = Ray { origin: x, direction: tdir };
                             colour = f * colour * tp;
                         }
                     } else {

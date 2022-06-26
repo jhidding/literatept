@@ -497,13 +497,10 @@ The `radiance` function computes how many photons are traveling at a certain pos
 
 ``` {.rust #path-tracing}
 fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
-    // let mut current = SomeRadianceCall { ray: ray, depth: depth, colour: WHITE });
-    // let mut stack = Vec::new();
     let mut rng = rand::thread_rng();
     let mut colour = WHITE;
     let mut output = BLACK;
 
-    // while let Some(RadianceCall { ref mut ray, ref mut depth, ref mut colour }) = current
     loop {
         <<do-intersect>>
         <<russian-roulette-1>>
@@ -625,7 +622,6 @@ To compute the radiance, we need to know the radiance from the reflected ray.
 ``` {.rust #diffuse-reflection}
 *ray = Ray {origin: x, direction: d};
 colour = f * colour;
-// push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
 ```
 
 ### Specular
@@ -637,7 +633,6 @@ $$\vec{\hat{d}}' = \vec{\hat{d}} - 2 \vec{\hat{n}} (\vec{\hat{n}} \cdot \vec{\ha
 let d = ray.direction - n * 2.*(n*ray.direction);
 *ray = Ray {origin: x, direction: d};
 colour = f * colour;
-// push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
 ```
 
 ### Refractive
@@ -700,7 +695,6 @@ In that case, we recurse with the reflected ray.
 ``` {.rust #total-internal-reflection}
 *ray = reflected_ray;
 colour = f * colour;
-// push(&mut stack, reflected_ray, depth, f * colour);
 ```
 
 #### Partial reflection
@@ -751,7 +745,7 @@ if depth > 2 {
         *ray = reflected_ray;
         colour = f * colour * rp;
     } else {
-        *ray = reflected_ray;
+        *ray = Ray { origin: x, direction: tdir };
         colour = f * colour * tp;
     }
 } else {
