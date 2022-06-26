@@ -32,6 +32,7 @@ pub(crate) const fn rgb(r: f64, g: f64, b: f64) -> RGBColour {
 }
 
 pub(crate) const BLACK: RGBColour = rgb(0.0, 0.0, 0.0);
+pub(crate) const WHITE: RGBColour = rgb(1.0, 1.0, 1.0);
 
 impl std::ops::Add for RGBColour {
     type Output = Self;

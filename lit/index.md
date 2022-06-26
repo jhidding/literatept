@@ -280,6 +280,7 @@ pub(crate) const fn rgb(r: f64, g: f64, b: f64) -> RGBColour {
 }
 
 pub(crate) const BLACK: RGBColour = rgb(0.0, 0.0, 0.0);
+pub(crate) const WHITE: RGBColour = rgb(1.0, 1.0, 1.0);
 
 impl std::ops::Add for RGBColour {
     type Output = Self;
@@ -490,22 +491,45 @@ use std::f64::consts::PI;
 The `radiance` function computes how many photons are traveling at a certain position in space from a certain direction.
 
 ``` {.rust #path-tracing}
-fn radiance(ray: &Ray, mut depth: u16) -> RGBColour {
+struct RadianceCall {
+   ray: Ray,
+   depth: u16,
+   colour: RGBColour
+}
+
+fn radiance(ray: Ray, depth: u16) -> RGBColour {
     let mut rng = rand::thread_rng();
-    <<do-intersect>>
-    <<russian-roulette-1>>
-    <<compute-normal>>
-    <<do-reflect>>
-    object.emission + f * light
+    let mut stack = vec![RadianceCall { ray: ray, depth: depth, colour: WHITE }];
+    let mut output = BLACK;
+
+    let push = |stack: &mut Vec<RadianceCall>, ray: Ray, depth: u16, colour: RGBColour| {
+        stack.push(RadianceCall { ray: ray, depth: depth, colour: colour });
+    };
+
+    while let Some(RadianceCall { ray, mut depth, colour }) = stack.pop()
+    {
+        <<do-intersect>>
+        <<russian-roulette-1>>
+        <<compute-normal>>
+        <<do-reflect>>
+        output = output + object.emission * colour;
+    }
+    return output;
 }
 ```
 
 The second argument keeps track of how deep we are tracing. It is used as a control to switch between sampling methods. One method is to reduce the brightness of the ray at every reflection off a diffuse object until we hit a light source. The second method, also known as *Russion Roulette*, is to keep the brightness of the ray constant, but only reflect with a probability given by the colour of the object. The first method will always give a nice smooth image but may take a long time wasted on very dim rays. The Russian Roulette wastes less time per sample, but produces grainy images at low sample rates. That is why SmallPt switches sampling methods if we are deeper than $n$ reflections.
 
+> One major change with respect to the original SmallPT is the recursion. SmallPT uses true recursion to compute the radiance of a ray. In Rust, this has led to some instances where a stack overflow was triggered. We may use a stack based implementation to prevent this from happening. The result of each recursive radiance computation goes into an affine transformation ($ax + b$). We may compose two transformations
+>
+> $$(x \to ax + b) \circ (y \to cy + d) = (y \to a(cy + d) + b = acy + ad + b,$$
+>
+> meaning that if we express an affine transformation as a pair $(a, b)$ and a second $(c, d)$, we have $(a, b) \circ (c, d) = (ac, ad + b)$. This means we have a compact way to codify the contribution of each scattered ray.
+
 First, we need to see if the ray intersects any object in the scene; if not, we return the colour `BLACK`.
 
 ``` {.rust #do-intersect}
-let hit = intersect(ray);
+let hit = intersect(&ray);
 if hit.is_none() { return BLACK; }
 let (distance, object) = hit.unwrap();
 ```
@@ -529,7 +553,8 @@ if depth > 5 {
     if rng.gen::<f64>() < p {
         f = f * (1. / p);
     } else {
-        return object.emission;
+        output = output + object.emission * colour;
+        continue;
     }
 }
 ```
@@ -552,7 +577,7 @@ let n_refl = if n * ray.direction < 0. { n } else { -n };
 We're at the point that we need to compute how much light is reflected. Of course, this depends on the type of material that the object is made of. SmallPt has three material types, *diffuse*, *specular*, and *refractive*, that each have their own physics.
 
 ``` {.rust #do-reflect}
-let light = match object.reflection {
+match object.reflection {
     Reflection::Diffuse => {
         <<diffuse-reflection>>
     }
@@ -601,7 +626,7 @@ let d = (u*phi.cos()*r + v*phi.sin()*r + n_refl*(1.-r2).sqrt()).normalize();
 To compute the radiance, we need to know the radiance from the reflected ray.
 
 ``` {.rust #diffuse-reflection}
-radiance(&Ray {origin: x, direction: d}, depth)
+push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
 ```
 
 ### Specular
@@ -611,7 +636,7 @@ $$\vec{\hat{d}}' = \vec{\hat{d}} - 2 \vec{\hat{n}} (\vec{\hat{n}} \cdot \vec{\ha
 
 ``` {.rust #specular-reflection}
 let d = ray.direction - n * 2.*(n*ray.direction);
-radiance(&Ray {origin: x, direction: d}, depth)
+push(&mut stack, Ray {origin: x, direction: d}, depth, f * colour);
 ```
 
 ### Refractive
@@ -672,7 +697,7 @@ if cos2t < 0. {
 In that case, we recurse with the reflected ray.
 
 ``` {.rust #total-internal-reflection}
-radiance(&reflected_ray, depth)
+push(&mut stack, reflected_ray, depth, f * colour);
 ```
 
 #### Partial reflection
@@ -720,13 +745,13 @@ let rp = re/p;
 let tp = tr/(1.-p);
 if depth > 2 {
     if rng.gen::<f64>() < p {
-        radiance(&reflected_ray, depth) * rp
+        push(&mut stack, reflected_ray, depth, f * colour * rp);
     } else {
-        radiance(&Ray { origin: x, direction: tdir }, depth) * tp
+        push(&mut stack, Ray { origin: x, direction: tdir }, depth, f * colour * tp);
     }
 } else {
-    radiance(&reflected_ray, depth) * re
-    + radiance(&Ray { origin: x, direction: tdir }, depth) * tr
+    push(&mut stack, reflected_ray, depth, f * colour * re);
+    push(&mut stack, Ray { origin: x, direction: tdir }, depth, f * colour * tr)
 }
 ```
 
@@ -815,9 +840,9 @@ mod tests {
 fn main() -> std::io::Result<()> {
     use rayon::current_thread_index;
 
-    let w: usize = 1024;
-    let h: usize = 768;
-    let samps: usize = 2500;
+    let w: usize = 640;
+    let h: usize = 480;
+    let samps: usize = 500;
     let cam = Ray { origin: vec(50., 52., 295.6), direction: vec(0.0, -0.045, -1.0).normalize() };
     let cx = vec(w as f64 * 0.510 / h as f64, 0., 0.);
     let cy = (cx % cam.direction).normalize() * 0.510;
@@ -839,7 +864,7 @@ fn main() -> std::io::Result<()> {
                     let d = cx*( ( (sx as f64 + 0.5 + dx) / 2. + x as f64) / w as f64 - 0.5 )
                           + cy*( ( (sy as f64 + 0.5 + dy) / 2. + (h - y - 1) as f64) / h as f64 - 0.5 )
                           + cam.direction;
-                    r = r + radiance(&Ray {origin: cam.origin + d*140., direction: d.normalize()}, 0) * (1./samps as f64);
+                    r = r + radiance(Ray {origin: cam.origin + d*140., direction: d.normalize()}, 0) * (1./samps as f64);
                 }
                 *c = *c + r.clamp() * 0.25;
             }
