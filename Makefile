@@ -69,7 +69,7 @@ watch:
 
 watch-pandoc:
 	@while true; do \
-		inotifywait -e close_write -r .entangled Makefile README.md ; \
+		inotifywait -e close_write -r .entangled Makefile README.md lit ; \
 		make site; \
 	done
 

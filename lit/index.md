@@ -38,6 +38,10 @@ edition = "2018"
 
 [profile.release]
 opt-level = 3
+debug = 0
+strip = "debuginfo"
+# arch = "native"
+# lto = true
 
 [dependencies]
 <<dependencies>>
