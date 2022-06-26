@@ -386,7 +386,7 @@ fn main() -> std::io::Result<()> {
     // rayon::ThreadPoolBuilder::new().num_threads(4).build_global().unwrap();
     let args: Arghs = argh::from_env();
     let (w, h) = args.wxh;
-    let samps = args.samples;
+    let samps = args.samples / 4;
 
     rayon::ThreadPoolBuilder::new()
         .num_threads(args.threads)
