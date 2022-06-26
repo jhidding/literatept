@@ -24,8 +24,10 @@ TODO:
 - [ ] Explain the sub-pixel sampling
 - [ ] Explain use of Rayon in `Image::for_each`
 - [ ] Explain `RGBColour` structure
-- [ ] Add command-line interface
+- [x] Add command-line interface
 - [x] Fix performance issues with writing output
+- [x] Add proper progress bar
+- [x] Simplify recursion pattern
 
 ``` {.toml file=Cargo.toml}
 [package]
@@ -522,7 +524,7 @@ First, we need to see if the ray intersects any object in the scene; if not, we 
 
 ``` {.rust #do-intersect}
 let hit = intersect(&ray);
-if hit.is_none() { return BLACK; }
+if hit.is_none() { return output; }
 let (distance, object) = hit.unwrap();
 output = output + object.emission * colour;
 ```

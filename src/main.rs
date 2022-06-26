@@ -147,7 +147,7 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
     loop {
         // ~\~ begin <<lit/index.md|do-intersect>>[init]
         let hit = intersect(&ray);
-        if hit.is_none() { return BLACK; }
+        if hit.is_none() { return output; }
         let (distance, object) = hit.unwrap();
         output = output + object.emission * colour;
         // ~\~ end

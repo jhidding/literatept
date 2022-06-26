@@ -117,10 +117,14 @@ Explain the sub-pixel sampling</li>
 Explain use of Rayon in <code>Image::for_each</code></li>
 <li><input type="checkbox" disabled="" />
 Explain <code>RGBColour</code> structure</li>
-<li><input type="checkbox" disabled="" />
+<li><input type="checkbox" disabled="" checked="" />
 Add command-line interface</li>
 <li><input type="checkbox" disabled="" checked="" />
 Fix performance issues with writing output</li>
+<li><input type="checkbox" disabled="" checked="" />
+Add proper progress bar</li>
+<li><input type="checkbox" disabled="" checked="" />
+Simplify recursion pattern</li>
 </ul>
 <div class="named-code-block">
 <p>file:Cargo.toml</p>
@@ -143,7 +147,9 @@ Fix performance issues with writing output</li>
 <div class="named-code-block">
 <p>«dependencies»</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode toml"><code class="sourceCode toml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">rand</span> <span class="op">=</span> <span class="st">&quot;0.8.5&quot;</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">rayon</span> <span class="op">=</span> <span class="st">&quot;1.5.3&quot;</span></span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">rayon</span> <span class="op">=</span> <span class="st">&quot;1.5.3&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">indicatif</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">version</span><span class="op"> =</span> <span class="st">&quot;0.16.2&quot;</span><span class="op">, </span><span class="dt">features</span><span class="op"> =</span> <span class="op">[</span><span class="st">&quot;rayon&quot;</span><span class="op">]</span> <span class="op">}</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">argh</span> <span class="op">=</span> <span class="st">&quot;0.1.7&quot;</span></span></code></pre></div>
 </div>
 <div class="named-code-block">
 <p>«imports»</p>
@@ -156,12 +162,12 @@ Fix performance issues with writing output</li>
 <h1>Vectors</h1>
 <p><span class="math inline">\(\renewcommand{\vec}[1]{{\bf #1}}\)</span> The <code>Vec</code> type has three public members <span class="math inline">\(x\)</span>, <span class="math inline">\(y\)</span> and <span class="math inline">\(z\)</span>.</p>
 <div class="named-code-block">
-<p>«vector»</p>
+<p>file:src/vec3.rs</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span><span class="bu">Copy</span><span class="op">,</span><span class="bu">Debug</span><span class="at">)]</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Vec3</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> Vec3</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="kw">pub</span> x<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> <span class="kw">pub</span> y<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> <span class="kw">pub</span> z<span class="op">:</span> <span class="dt">f64</span> <span class="op">}</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="kw">fn</span> vec(x<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> z<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> Vec3 <span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="kw">fn</span> vec(x<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> z<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> Vec3 <span class="op">{</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    Vec3 <span class="op">{</span> x<span class="op">:</span> x<span class="op">,</span> y<span class="op">:</span> y<span class="op">,</span> z<span class="op">:</span> z <span class="op">}</span></span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </div>
@@ -243,11 +249,11 @@ b_x &amp; b_y &amp; b_z
 <div class="named-code-block">
 <p>«vector»</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Vec3 <span class="op">{</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> abs(<span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> abs(<span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">self</span> <span class="op">*</span> <span class="kw">self</span>)<span class="op">.</span>sqrt()</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> normalize(<span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> normalize(<span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span> <span class="op">*</span> (<span class="dv">1.0</span> <span class="op">/</span> <span class="kw">self</span><span class="op">.</span>abs())</span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
@@ -329,11 +335,11 @@ b_x &amp; b_y &amp; b_z
 <p>Note that the Rust <code>enum</code> types are much richer than the <code>enum</code> you may be used to from C/C++. Together with <code>struct</code>, <code>enum</code> gives the corner stones of <em>algebraic data types</em>. Where a <code>struct</code> collects different members into a <em>product type</em>, an <code>enum</code> is a <em>sum type</em>, meaning that it either contains one value or the other.</p>
 </div>
 <div class="named-code-block">
-<p>«colour»</p>
+<p>file:src/colour.rs</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>inline<span class="at">]</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> clamp(x<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span> <span class="kw">if</span> x <span class="op">&lt;</span> <span class="dv">0</span><span class="op">.</span> <span class="op">{</span> <span class="dv">0</span><span class="op">.</span> <span class="op">}</span> <span class="kw">else</span> <span class="kw">if</span> x <span class="op">&gt;</span> <span class="dv">1</span><span class="op">.</span> <span class="op">{</span> <span class="dv">1</span><span class="op">.</span> <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> x <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> clamp(x<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span> <span class="kw">if</span> x <span class="op">&lt;</span> <span class="dv">0</span><span class="op">.</span> <span class="op">{</span> <span class="dv">0</span><span class="op">.</span> <span class="op">}</span> <span class="kw">else</span> <span class="kw">if</span> x <span class="op">&gt;</span> <span class="dv">1</span><span class="op">.</span> <span class="op">{</span> <span class="dv">1</span><span class="op">.</span> <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> x <span class="op">}</span> <span class="op">}</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Colour<span class="op">:</span> <span class="bu">Sized</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">trait</span> Colour<span class="op">:</span> <span class="bu">Sized</span></span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>            <span class="op">+</span> <span class="pp">std::ops::</span><span class="bu">Add</span><span class="op">&lt;</span>Output<span class="op">=</span><span class="dt">Self</span><span class="op">&gt;</span></span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>            <span class="op">+</span> <span class="pp">std::ops::</span><span class="bu">Mul</span><span class="op">&lt;</span>Output<span class="op">=</span><span class="dt">Self</span><span class="op">&gt;</span></span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>            <span class="op">+</span> <span class="pp">std::ops::</span><span class="bu">Mul</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">,</span> Output<span class="op">=</span><span class="dt">Self</span><span class="op">&gt;</span> <span class="op">{</span></span>
@@ -355,51 +361,52 @@ b_x &amp; b_y &amp; b_z
 <span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span><span class="bu">Copy</span><span class="op">,</span><span class="bu">Debug</span><span class="at">)]</span></span>
-<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> RGBColour (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>)<span class="op">;</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> RGBColour (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>)<span class="op">;</span></span>
 <span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="kw">fn</span> rgb(r<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> g<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> RGBColour <span class="op">{</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="kw">fn</span> rgb(r<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> g<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> RGBColour <span class="op">{</span></span>
 <span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>    RGBColour (r<span class="op">,</span> g<span class="op">,</span> b)</span>
 <span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> BLACK<span class="op">:</span> RGBColour <span class="op">=</span> rgb(<span class="dv">0.0</span><span class="op">,</span> <span class="dv">0.0</span><span class="op">,</span> <span class="dv">0.0</span>)<span class="op">;</span></span>
-<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="pp">std::ops::</span><span class="bu">Add</span> <span class="kw">for</span> RGBColour <span class="op">{</span></span>
-<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Output <span class="op">=</span> <span class="dt">Self</span><span class="op">;</span></span>
-<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> add(<span class="kw">self</span><span class="op">,</span> other<span class="op">:</span> <span class="dt">Self</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
-<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r1<span class="op">,</span>g1<span class="op">,</span>b1) <span class="op">=</span> <span class="kw">self</span><span class="op">;</span></span>
-<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r2<span class="op">,</span>g2<span class="op">,</span>b2) <span class="op">=</span> other<span class="op">;</span></span>
-<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a>        RGBColour(r1<span class="op">+</span>r2<span class="op">,</span>g1<span class="op">+</span>g2<span class="op">,</span>b1<span class="op">+</span>b2)</span>
-<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb17-42"><a href="#cb17-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-43"><a href="#cb17-43" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="pp">std::ops::</span><span class="bu">Mul</span> <span class="kw">for</span> RGBColour <span class="op">{</span></span>
-<span id="cb17-44"><a href="#cb17-44" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Output <span class="op">=</span> <span class="dt">Self</span><span class="op">;</span></span>
-<span id="cb17-45"><a href="#cb17-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> mul(<span class="kw">self</span><span class="op">,</span> other<span class="op">:</span> <span class="dt">Self</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
-<span id="cb17-46"><a href="#cb17-46" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r1<span class="op">,</span>g1<span class="op">,</span>b1) <span class="op">=</span> <span class="kw">self</span><span class="op">;</span></span>
-<span id="cb17-47"><a href="#cb17-47" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r2<span class="op">,</span>g2<span class="op">,</span>b2) <span class="op">=</span> other<span class="op">;</span></span>
-<span id="cb17-48"><a href="#cb17-48" aria-hidden="true" tabindex="-1"></a>        RGBColour(r1<span class="op">*</span>r2<span class="op">,</span>g1<span class="op">*</span>g2<span class="op">,</span>b1<span class="op">*</span>b2)</span>
-<span id="cb17-49"><a href="#cb17-49" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb17-50"><a href="#cb17-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb17-51"><a href="#cb17-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-52"><a href="#cb17-52" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="pp">std::ops::</span><span class="bu">Mul</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span> <span class="kw">for</span> RGBColour <span class="op">{</span></span>
-<span id="cb17-53"><a href="#cb17-53" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Output <span class="op">=</span> <span class="dt">Self</span><span class="op">;</span></span>
-<span id="cb17-54"><a href="#cb17-54" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> mul(<span class="kw">self</span><span class="op">,</span> s<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
-<span id="cb17-55"><a href="#cb17-55" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r1<span class="op">,</span>g1<span class="op">,</span>b1) <span class="op">=</span> <span class="kw">self</span><span class="op">;</span></span>
-<span id="cb17-56"><a href="#cb17-56" aria-hidden="true" tabindex="-1"></a>        RGBColour(r1<span class="op">*</span>s<span class="op">,</span>g1<span class="op">*</span>s<span class="op">,</span>b1<span class="op">*</span>s)</span>
-<span id="cb17-57"><a href="#cb17-57" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb17-58"><a href="#cb17-58" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb17-59"><a href="#cb17-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-60"><a href="#cb17-60" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Colour <span class="kw">for</span> RGBColour <span class="op">{</span></span>
-<span id="cb17-61"><a href="#cb17-61" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> to_rgb(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>) <span class="op">{</span></span>
-<span id="cb17-62"><a href="#cb17-62" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r<span class="op">,</span> g<span class="op">,</span> b) <span class="op">=</span> <span class="kw">self</span><span class="op">;</span></span>
-<span id="cb17-63"><a href="#cb17-63" aria-hidden="true" tabindex="-1"></a>        (<span class="op">*</span>r<span class="op">,</span> <span class="op">*</span>g<span class="op">,</span> <span class="op">*</span>b)</span>
-<span id="cb17-64"><a href="#cb17-64" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb17-65"><a href="#cb17-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-66"><a href="#cb17-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> clamp(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
-<span id="cb17-67"><a href="#cb17-67" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r<span class="op">,</span> g<span class="op">,</span> b) <span class="op">=</span> <span class="kw">self</span><span class="op">;</span></span>
-<span id="cb17-68"><a href="#cb17-68" aria-hidden="true" tabindex="-1"></a>        RGBColour(clamp(<span class="op">*</span>r)<span class="op">,</span> clamp(<span class="op">*</span>g)<span class="op">,</span> clamp(<span class="op">*</span>b))</span>
-<span id="cb17-69"><a href="#cb17-69" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb17-70"><a href="#cb17-70" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> BLACK<span class="op">:</span> RGBColour <span class="op">=</span> rgb(<span class="dv">0.0</span><span class="op">,</span> <span class="dv">0.0</span><span class="op">,</span> <span class="dv">0.0</span>)<span class="op">;</span></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> WHITE<span class="op">:</span> RGBColour <span class="op">=</span> rgb(<span class="dv">1.0</span><span class="op">,</span> <span class="dv">1.0</span><span class="op">,</span> <span class="dv">1.0</span>)<span class="op">;</span></span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="pp">std::ops::</span><span class="bu">Add</span> <span class="kw">for</span> RGBColour <span class="op">{</span></span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Output <span class="op">=</span> <span class="dt">Self</span><span class="op">;</span></span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> add(<span class="kw">self</span><span class="op">,</span> other<span class="op">:</span> <span class="dt">Self</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r1<span class="op">,</span>g1<span class="op">,</span>b1) <span class="op">=</span> <span class="kw">self</span><span class="op">;</span></span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r2<span class="op">,</span>g2<span class="op">,</span>b2) <span class="op">=</span> other<span class="op">;</span></span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a>        RGBColour(r1<span class="op">+</span>r2<span class="op">,</span>g1<span class="op">+</span>g2<span class="op">,</span>b1<span class="op">+</span>b2)</span>
+<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-42"><a href="#cb17-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-43"><a href="#cb17-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-44"><a href="#cb17-44" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="pp">std::ops::</span><span class="bu">Mul</span> <span class="kw">for</span> RGBColour <span class="op">{</span></span>
+<span id="cb17-45"><a href="#cb17-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Output <span class="op">=</span> <span class="dt">Self</span><span class="op">;</span></span>
+<span id="cb17-46"><a href="#cb17-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> mul(<span class="kw">self</span><span class="op">,</span> other<span class="op">:</span> <span class="dt">Self</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb17-47"><a href="#cb17-47" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r1<span class="op">,</span>g1<span class="op">,</span>b1) <span class="op">=</span> <span class="kw">self</span><span class="op">;</span></span>
+<span id="cb17-48"><a href="#cb17-48" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r2<span class="op">,</span>g2<span class="op">,</span>b2) <span class="op">=</span> other<span class="op">;</span></span>
+<span id="cb17-49"><a href="#cb17-49" aria-hidden="true" tabindex="-1"></a>        RGBColour(r1<span class="op">*</span>r2<span class="op">,</span>g1<span class="op">*</span>g2<span class="op">,</span>b1<span class="op">*</span>b2)</span>
+<span id="cb17-50"><a href="#cb17-50" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-51"><a href="#cb17-51" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-52"><a href="#cb17-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-53"><a href="#cb17-53" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="pp">std::ops::</span><span class="bu">Mul</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span> <span class="kw">for</span> RGBColour <span class="op">{</span></span>
+<span id="cb17-54"><a href="#cb17-54" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Output <span class="op">=</span> <span class="dt">Self</span><span class="op">;</span></span>
+<span id="cb17-55"><a href="#cb17-55" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> mul(<span class="kw">self</span><span class="op">,</span> s<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb17-56"><a href="#cb17-56" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r1<span class="op">,</span>g1<span class="op">,</span>b1) <span class="op">=</span> <span class="kw">self</span><span class="op">;</span></span>
+<span id="cb17-57"><a href="#cb17-57" aria-hidden="true" tabindex="-1"></a>        RGBColour(r1<span class="op">*</span>s<span class="op">,</span>g1<span class="op">*</span>s<span class="op">,</span>b1<span class="op">*</span>s)</span>
+<span id="cb17-58"><a href="#cb17-58" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-59"><a href="#cb17-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-60"><a href="#cb17-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-61"><a href="#cb17-61" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Colour <span class="kw">for</span> RGBColour <span class="op">{</span></span>
+<span id="cb17-62"><a href="#cb17-62" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> to_rgb(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>) <span class="op">{</span></span>
+<span id="cb17-63"><a href="#cb17-63" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r<span class="op">,</span> g<span class="op">,</span> b) <span class="op">=</span> <span class="kw">self</span><span class="op">;</span></span>
+<span id="cb17-64"><a href="#cb17-64" aria-hidden="true" tabindex="-1"></a>        (<span class="op">*</span>r<span class="op">,</span> <span class="op">*</span>g<span class="op">,</span> <span class="op">*</span>b)</span>
+<span id="cb17-65"><a href="#cb17-65" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-66"><a href="#cb17-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-67"><a href="#cb17-67" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> clamp(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb17-68"><a href="#cb17-68" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> RGBColour(r<span class="op">,</span> g<span class="op">,</span> b) <span class="op">=</span> <span class="kw">self</span><span class="op">;</span></span>
+<span id="cb17-69"><a href="#cb17-69" aria-hidden="true" tabindex="-1"></a>        RGBColour(clamp(<span class="op">*</span>r)<span class="op">,</span> clamp(<span class="op">*</span>g)<span class="op">,</span> clamp(<span class="op">*</span>b))</span>
+<span id="cb17-70"><a href="#cb17-70" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-71"><a href="#cb17-71" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </div>
 </section>
 <section id="geometry" class="level1">
@@ -407,7 +414,10 @@ b_x &amp; b_y &amp; b_z
 <p>With floating-point calculations, round-off can become a problem. If we bounce a ray off a sphere, how do we make sure that we don’t detect another intersection with the same sphere? One way is to make sure that every ray travels a mininum distance before bouncing off anything. We’ll call this distance <code>EPS</code>, short for <em>epsilon</em>, being the greek letter <span class="math inline">\(\epsilon\)</span>, generally denoting small quantities.</p>
 <div class="named-code-block">
 <p>«constants»</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> EPS<span class="op">:</span> <span class="dt">f64</span> <span class="op">=</span> <span class="dv">1e-4</span><span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> EPS<span class="op">:</span> <span class="dt">f64</span> <span class="op">=</span> <span class="dv">1e-4</span><span class="op">;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> SAMPLES<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> WIDTH<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">640</span><span class="op">;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> HEIGHT<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">480</span><span class="op">;</span></span></code></pre></div>
 </div>
 <p>We now define the <code>Ray</code> and <code>Sphere</code> types.</p>
 <div class="named-code-block">
@@ -556,22 +566,32 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 <p>The <code>radiance</code> function computes how many photons are traveling at a certain position in space from a certain direction.</p>
 <div class="named-code-block">
 <p>«path-tracing»</p>
-<div class="sourceCode" id="cb35"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> radiance(ray<span class="op">:</span> <span class="op">&amp;</span>Ray<span class="op">,</span> <span class="kw">mut</span> depth<span class="op">:</span> <span class="dt">u16</span>) <span class="op">-&gt;</span> RGBColour <span class="op">{</span></span>
+<div class="sourceCode" id="cb35"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> radiance(ray<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> Ray<span class="op">,</span> <span class="kw">mut</span> depth<span class="op">:</span> <span class="dt">u16</span>) <span class="op">-&gt;</span> RGBColour <span class="op">{</span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> rng <span class="op">=</span> <span class="pp">rand::</span>thread_rng()<span class="op">;</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span><span class="kw">do</span><span class="op">-</span>intersect<span class="op">&gt;&gt;</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>russian<span class="op">-</span>roulette<span class="op">-</span><span class="dv">1</span><span class="op">&gt;&gt;</span></span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>compute<span class="op">-</span>normal<span class="op">&gt;&gt;</span></span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span><span class="kw">do</span><span class="op">-</span>reflect<span class="op">&gt;&gt;</span></span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    object<span class="op">.</span>emission <span class="op">+</span> f <span class="op">*</span> light</span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> colour <span class="op">=</span> WHITE<span class="op">;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> output <span class="op">=</span> BLACK<span class="op">;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">loop</span> <span class="op">{</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">&lt;&lt;</span><span class="kw">do</span><span class="op">-</span>intersect<span class="op">&gt;&gt;</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">&lt;&lt;</span>russian<span class="op">-</span>roulette<span class="op">-</span><span class="dv">1</span><span class="op">&gt;&gt;</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">&lt;&lt;</span>compute<span class="op">-</span>normal<span class="op">&gt;&gt;</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">&lt;&lt;</span><span class="kw">do</span><span class="op">-</span>reflect<span class="op">&gt;&gt;</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </div>
 <p>The second argument keeps track of how deep we are tracing. It is used as a control to switch between sampling methods. One method is to reduce the brightness of the ray at every reflection off a diffuse object until we hit a light source. The second method, also known as <em>Russion Roulette</em>, is to keep the brightness of the ray constant, but only reflect with a probability given by the colour of the object. The first method will always give a nice smooth image but may take a long time wasted on very dim rays. The Russian Roulette wastes less time per sample, but produces grainy images at low sample rates. That is why SmallPt switches sampling methods if we are deeper than <span class="math inline">\(n\)</span> reflections.</p>
+<blockquote>
+<p>One major change with respect to the original SmallPT is the recursion. SmallPT uses true recursion to compute the radiance of a ray. In Rust, this has led to some instances where a stack overflow was triggered. We may use a stack based implementation to prevent this from happening. The result of each recursive radiance computation goes into an affine transformation (<span class="math inline">\(ax + b\)</span>). We may compose two transformations</p>
+<p><span class="math display">\[(x \to ax + b) \circ (y \to cy + d) = (y \to a(cy + d) + b = acy + ad + b,\]</span></p>
+<p>meaning that if we express an affine transformation as a pair <span class="math inline">\((a, b)\)</span> and a second <span class="math inline">\((c, d)\)</span>, we have <span class="math inline">\((a, b) \circ (c, d) = (ac, ad + b)\)</span>. This means we have a compact way to codify the contribution of each scattered ray.</p>
+</blockquote>
 <p>First, we need to see if the ray intersects any object in the scene; if not, we return the colour <code>BLACK</code>.</p>
 <div class="named-code-block">
 <p>«do-intersect»</p>
-<div class="sourceCode" id="cb36"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> hit <span class="op">=</span> intersect(ray)<span class="op">;</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">if</span> hit<span class="op">.</span>is_none() <span class="op">{</span> <span class="kw">return</span> BLACK<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (distance<span class="op">,</span> object) <span class="op">=</span> hit<span class="op">.</span>unwrap()<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> hit <span class="op">=</span> intersect(<span class="op">&amp;</span>ray)<span class="op">;</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">if</span> hit<span class="op">.</span>is_none() <span class="op">{</span> <span class="kw">return</span> output<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (distance<span class="op">,</span> object) <span class="op">=</span> hit<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> output <span class="op">+</span> object<span class="op">.</span>emission <span class="op">*</span> colour<span class="op">;</span></span></code></pre></div>
 </div>
 <section id="russian-roulette-1" class="level2">
 <h2>Russian Roulette 1</h2>
@@ -589,9 +609,11 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 <span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> rng<span class="op">.</span><span class="pp">gen::</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span>() <span class="op">&lt;</span> p <span class="op">{</span></span>
 <span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>        f <span class="op">=</span> f <span class="op">*</span> (<span class="dv">1</span><span class="op">.</span> <span class="op">/</span> p)<span class="op">;</span></span>
 <span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">return</span> object<span class="op">.</span>emission<span class="op">;</span></span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">return</span> output<span class="op">;</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// current = stack.pop();</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// continue;</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </div>
 </section>
 <section id="normals" class="level2">
@@ -613,7 +635,7 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 <p>We’re at the point that we need to compute how much light is reflected. Of course, this depends on the type of material that the object is made of. SmallPt has three material types, <em>diffuse</em>, <em>specular</em>, and <em>refractive</em>, that each have their own physics.</p>
 <div class="named-code-block">
 <p>«do-reflect»</p>
-<div class="sourceCode" id="cb40"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> light <span class="op">=</span> <span class="kw">match</span> object<span class="op">.</span>reflection <span class="op">{</span></span>
+<div class="sourceCode" id="cb40"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">match</span> object<span class="op">.</span>reflection <span class="op">{</span></span>
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Reflection::</span>Diffuse <span class="op">=&gt;</span> <span class="op">{</span></span>
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>        <span class="op">&lt;&lt;</span>diffuse<span class="op">-</span>reflection<span class="op">&gt;&gt;</span></span>
 <span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
@@ -655,7 +677,8 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 <p>To compute the radiance, we need to know the radiance from the reflected ray.</p>
 <div class="named-code-block">
 <p>«diffuse-reflection»</p>
-<div class="sourceCode" id="cb45"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>radiance(<span class="op">&amp;</span>Ray <span class="op">{</span>origin<span class="op">:</span> x<span class="op">,</span> direction<span class="op">:</span> d<span class="op">},</span> depth)</span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>ray <span class="op">=</span> Ray <span class="op">{</span>origin<span class="op">:</span> x<span class="op">,</span> direction<span class="op">:</span> d<span class="op">};</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>colour <span class="op">=</span> f <span class="op">*</span> colour<span class="op">;</span></span></code></pre></div>
 </div>
 </section>
 <section id="specular" class="level3">
@@ -665,7 +688,8 @@ S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 <div class="named-code-block">
 <p>«specular-reflection»</p>
 <div class="sourceCode" id="cb46"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> d <span class="op">=</span> ray<span class="op">.</span>direction <span class="op">-</span> n <span class="op">*</span> <span class="dv">2</span><span class="op">.*</span>(n<span class="op">*</span>ray<span class="op">.</span>direction)<span class="op">;</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>radiance(<span class="op">&amp;</span>Ray <span class="op">{</span>origin<span class="op">:</span> x<span class="op">,</span> direction<span class="op">:</span> d<span class="op">},</span> depth)</span></code></pre></div>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>ray <span class="op">=</span> Ray <span class="op">{</span>origin<span class="op">:</span> x<span class="op">,</span> direction<span class="op">:</span> d<span class="op">};</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>colour <span class="op">=</span> f <span class="op">*</span> colour<span class="op">;</span></span></code></pre></div>
 </div>
 </section>
 <section id="refractive" class="level3">
@@ -720,7 +744,8 @@ n_{\rm eff}^2 \left(1 - \mu^2\right) &amp;&gt; 1
 <p>In that case, we recurse with the reflected ray.</p>
 <div class="named-code-block">
 <p>«total-internal-reflection»</p>
-<div class="sourceCode" id="cb52"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>radiance(<span class="op">&amp;</span>reflected_ray<span class="op">,</span> depth)</span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>ray <span class="op">=</span> reflected_ray<span class="op">;</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>colour <span class="op">=</span> f <span class="op">*</span> colour<span class="op">;</span></span></code></pre></div>
 </div>
 </section>
 <section id="partial-reflection" class="level4">
@@ -762,14 +787,18 @@ d_n&#39; &amp;= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
 <span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> tp <span class="op">=</span> tr<span class="op">/</span>(<span class="dv">1</span><span class="op">.-</span>p)<span class="op">;</span></span>
 <span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="kw">if</span> depth <span class="op">&gt;</span> <span class="dv">2</span> <span class="op">{</span></span>
 <span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> rng<span class="op">.</span><span class="pp">gen::</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span>() <span class="op">&lt;</span> p <span class="op">{</span></span>
-<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>        radiance(<span class="op">&amp;</span>reflected_ray<span class="op">,</span> depth) <span class="op">*</span> rp</span>
-<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>        radiance(<span class="op">&amp;</span>Ray <span class="op">{</span> origin<span class="op">:</span> x<span class="op">,</span> direction<span class="op">:</span> tdir <span class="op">},</span> depth) <span class="op">*</span> tp</span>
-<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>    radiance(<span class="op">&amp;</span>reflected_ray<span class="op">,</span> depth) <span class="op">*</span> re</span>
-<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> radiance(<span class="op">&amp;</span>Ray <span class="op">{</span> origin<span class="op">:</span> x<span class="op">,</span> direction<span class="op">:</span> tdir <span class="op">},</span> depth) <span class="op">*</span> tr</span>
-<span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>ray <span class="op">=</span> reflected_ray<span class="op">;</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>        colour <span class="op">=</span> f <span class="op">*</span> colour <span class="op">*</span> rp<span class="op">;</span></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>ray <span class="op">=</span> Ray <span class="op">{</span> origin<span class="op">:</span> x<span class="op">,</span> direction<span class="op">:</span> tdir <span class="op">};</span></span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>        colour <span class="op">=</span> f <span class="op">*</span> colour <span class="op">*</span> tp<span class="op">;</span></span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> r <span class="op">=</span> radiance(<span class="op">&amp;</span><span class="kw">mut</span> Ray <span class="op">{</span>origin<span class="op">:</span> x<span class="op">,</span> direction<span class="op">:</span> tdir<span class="op">},</span> depth)<span class="op">;</span></span>
+<span id="cb56-14"><a href="#cb56-14" aria-hidden="true" tabindex="-1"></a>    output <span class="op">=</span> output <span class="op">+</span> r <span class="op">*</span> f <span class="op">*</span> colour <span class="op">*</span> tr<span class="op">;</span></span>
+<span id="cb56-15"><a href="#cb56-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>ray <span class="op">=</span> reflected_ray<span class="op">;</span></span>
+<span id="cb56-16"><a href="#cb56-16" aria-hidden="true" tabindex="-1"></a>    colour <span class="op">=</span> f <span class="op">*</span> colour <span class="op">*</span> re<span class="op">;</span></span>
+<span id="cb56-17"><a href="#cb56-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </div>
 </section>
 </section>
@@ -792,21 +821,28 @@ d_n&#39; &amp;= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
 <span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> for_each<span class="op">&lt;</span>F<span class="op">:</span> <span class="pp">std::marker::</span><span class="bu">Sync</span> <span class="op">+</span>  <span class="bu">Fn</span> (<span class="dt">usize</span><span class="op">,</span> <span class="dt">usize</span><span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> RGBColour)<span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> f<span class="op">:</span> F) <span class="op">{</span></span>
-<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> w <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>width<span class="op">;</span></span>
-<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>data<span class="op">.</span>par_iter_mut()<span class="op">.</span>enumerate()<span class="op">.</span>for_each(</span>
-<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a>            <span class="op">|</span>(i<span class="op">,</span> c)<span class="op">|</span> <span class="op">{</span></span>
-<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> x <span class="op">=</span> i <span class="op">%</span> w<span class="op">;</span></span>
-<span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> y <span class="op">=</span> i <span class="op">/</span> w<span class="op">;</span></span>
-<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a>                f(x<span class="op">,</span> y<span class="op">,</span> c)<span class="op">;</span></span>
-<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb57-22"><a href="#cb57-22" aria-hidden="true" tabindex="-1"></a>        )<span class="op">;</span></span>
-<span id="cb57-23"><a href="#cb57-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb57-24"><a href="#cb57-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb57-25"><a href="#cb57-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> size(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>width <span class="op">*</span> <span class="kw">self</span><span class="op">.</span>height <span class="op">}</span></span>
-<span id="cb57-26"><a href="#cb57-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb57-27"><a href="#cb57-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>print<span class="op">-</span>ppm<span class="op">&gt;&gt;</span></span>
-<span id="cb57-28"><a href="#cb57-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> for_each<span class="op">&lt;</span>F<span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> f<span class="op">:</span> F)</span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">where</span> F<span class="op">:</span> <span class="bu">Send</span> <span class="op">+</span> <span class="bu">Sync</span> <span class="op">+</span> <span class="bu">Fn</span>(<span class="dt">usize</span><span class="op">,</span> <span class="dt">usize</span><span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> RGBColour)</span>
+<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">use</span> <span class="pp">indicatif::</span>ParallelProgressIterator<span class="op">;</span></span>
+<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a>        <span class="co">// use rayon::iter::{ParallelIterator, IntoParallelRefIterator};</span></span>
+<span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> w <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>width<span class="op">;</span></span>
+<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> size <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>size() <span class="kw">as</span> <span class="dt">u64</span><span class="op">;</span></span>
+<span id="cb57-22"><a href="#cb57-22" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>data</span>
+<span id="cb57-23"><a href="#cb57-23" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>par_iter_mut()<span class="op">.</span>progress_count(size)</span>
+<span id="cb57-24"><a href="#cb57-24" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>enumerate()</span>
+<span id="cb57-25"><a href="#cb57-25" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>for_each(<span class="op">|</span>(i<span class="op">,</span> c)<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb57-26"><a href="#cb57-26" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> x <span class="op">=</span> i <span class="op">%</span> w<span class="op">;</span></span>
+<span id="cb57-27"><a href="#cb57-27" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> y <span class="op">=</span> i <span class="op">/</span> w<span class="op">;</span></span>
+<span id="cb57-28"><a href="#cb57-28" aria-hidden="true" tabindex="-1"></a>                f(x<span class="op">,</span> y<span class="op">,</span> c)<span class="op">;</span></span>
+<span id="cb57-29"><a href="#cb57-29" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb57-30"><a href="#cb57-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb57-31"><a href="#cb57-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-32"><a href="#cb57-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> size(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>width <span class="op">*</span> <span class="kw">self</span><span class="op">.</span>height <span class="op">}</span></span>
+<span id="cb57-33"><a href="#cb57-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-34"><a href="#cb57-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>print<span class="op">-</span>ppm<span class="op">&gt;&gt;</span></span>
+<span id="cb57-35"><a href="#cb57-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </div>
 <section id="writing-to-ppm" class="level2">
 <h2>Writing to PPM</h2>
@@ -837,62 +873,106 @@ d_n&#39; &amp;= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
 <div class="sourceCode" id="cb59"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>import<span class="op">-</span>quickcheck<span class="op">&gt;&gt;</span></span>
 <span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>import<span class="op">-</span>rand<span class="op">&gt;&gt;</span></span>
 <span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>imports<span class="op">&gt;&gt;</span></span>
-<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>constants<span class="op">&gt;&gt;</span></span>
-<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>vector<span class="op">&gt;&gt;</span></span>
-<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>colour<span class="op">&gt;&gt;</span></span>
-<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>ray<span class="op">&gt;&gt;</span></span>
-<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>material<span class="op">&gt;&gt;</span></span>
-<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>sphere<span class="op">&gt;&gt;</span></span>
-<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>scene<span class="op">&gt;&gt;</span></span>
-<span id="cb59-12"><a href="#cb59-12" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>path<span class="op">-</span>tracing<span class="op">&gt;&gt;</span></span>
-<span id="cb59-13"><a href="#cb59-13" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>image<span class="op">&gt;&gt;</span></span>
-<span id="cb59-14"><a href="#cb59-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-15"><a href="#cb59-15" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>test<span class="at">)]</span></span>
-<span id="cb59-16"><a href="#cb59-16" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> tests <span class="op">{</span></span>
-<span id="cb59-17"><a href="#cb59-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="kw">super</span><span class="pp">::</span><span class="op">*;</span></span>
-<span id="cb59-18"><a href="#cb59-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="pp">quickcheck::</span><span class="op">*;</span></span>
-<span id="cb59-19"><a href="#cb59-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-20"><a href="#cb59-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>vector<span class="op">-</span>tests<span class="op">&gt;&gt;</span></span>
-<span id="cb59-21"><a href="#cb59-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb59-22"><a href="#cb59-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-23"><a href="#cb59-23" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">-&gt;</span> <span class="pp">std::io::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="op">{</span></span>
-<span id="cb59-24"><a href="#cb59-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="pp">rayon::</span>current_thread_index<span class="op">;</span></span>
-<span id="cb59-25"><a href="#cb59-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-26"><a href="#cb59-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> w<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">1024</span><span class="op">;</span></span>
-<span id="cb59-27"><a href="#cb59-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> h<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">768</span><span class="op">;</span></span>
-<span id="cb59-28"><a href="#cb59-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> samps<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">2500</span><span class="op">;</span></span>
-<span id="cb59-29"><a href="#cb59-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> cam <span class="op">=</span> Ray <span class="op">{</span> origin<span class="op">:</span> vec(<span class="dv">50</span><span class="op">.,</span> <span class="dv">52</span><span class="op">.,</span> <span class="dv">295.6</span>)<span class="op">,</span> direction<span class="op">:</span> vec(<span class="dv">0.0</span><span class="op">,</span> <span class="op">-</span><span class="dv">0.045</span><span class="op">,</span> <span class="op">-</span><span class="dv">1.0</span>)<span class="op">.</span>normalize() <span class="op">};</span></span>
-<span id="cb59-30"><a href="#cb59-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> cx <span class="op">=</span> vec(w <span class="kw">as</span> <span class="dt">f64</span> <span class="op">*</span> <span class="dv">0.510</span> <span class="op">/</span> h <span class="kw">as</span> <span class="dt">f64</span><span class="op">,</span> <span class="dv">0</span><span class="op">.,</span> <span class="dv">0</span><span class="op">.</span>)<span class="op">;</span></span>
-<span id="cb59-31"><a href="#cb59-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> cy <span class="op">=</span> (cx <span class="op">%</span> cam<span class="op">.</span>direction)<span class="op">.</span>normalize() <span class="op">*</span> <span class="dv">0.510</span><span class="op">;</span></span>
-<span id="cb59-32"><a href="#cb59-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-33"><a href="#cb59-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> img <span class="op">=</span> <span class="pp">Image::</span>new(w<span class="op">,</span> h)<span class="op">;</span></span>
-<span id="cb59-34"><a href="#cb59-34" aria-hidden="true" tabindex="-1"></a>    img<span class="op">.</span>for_each(<span class="op">|</span>x<span class="op">,</span> y<span class="op">,</span> c<span class="op">|</span> <span class="op">{</span></span>
-<span id="cb59-35"><a href="#cb59-35" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> rng <span class="op">=</span> <span class="pp">rand::</span>thread_rng()<span class="op">;</span></span>
-<span id="cb59-36"><a href="#cb59-36" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> current_thread_index() <span class="op">==</span> <span class="cn">Some</span>(<span class="dv">0</span>) <span class="op">{</span></span>
-<span id="cb59-37"><a href="#cb59-37" aria-hidden="true" tabindex="-1"></a>            <span class="pp">eprint!</span>(<span class="st">&quot;</span><span class="sc">\r</span><span class="st">Rendering ({} spp) {:5.2}%&quot;</span><span class="op">,</span> samps<span class="op">*</span><span class="dv">4</span><span class="op">,</span> <span class="dv">100</span><span class="op">.*</span>(y <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> (h<span class="op">-</span><span class="dv">1</span>) <span class="kw">as</span> <span class="dt">f64</span>))<span class="op">;</span></span>
-<span id="cb59-38"><a href="#cb59-38" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb59-39"><a href="#cb59-39" aria-hidden="true" tabindex="-1"></a>        <span class="kw">for</span> sy <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">2</span> <span class="op">{</span></span>
-<span id="cb59-40"><a href="#cb59-40" aria-hidden="true" tabindex="-1"></a>            <span class="kw">for</span> sx <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">2</span> <span class="op">{</span></span>
-<span id="cb59-41"><a href="#cb59-41" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> <span class="kw">mut</span> r <span class="op">=</span> BLACK<span class="op">.</span>clone()<span class="op">;</span></span>
-<span id="cb59-42"><a href="#cb59-42" aria-hidden="true" tabindex="-1"></a>                <span class="kw">for</span> _ <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span>samps <span class="op">{</span></span>
-<span id="cb59-43"><a href="#cb59-43" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> r1 <span class="op">=</span> <span class="dv">2</span><span class="op">.</span> <span class="op">*</span> rng<span class="op">.</span><span class="pp">gen::</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span>()<span class="op">;</span></span>
-<span id="cb59-44"><a href="#cb59-44" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> dx <span class="op">=</span> <span class="kw">if</span> r1 <span class="op">&lt;</span> <span class="dv">1</span><span class="op">.</span> <span class="op">{</span> r1<span class="op">.</span>sqrt() <span class="op">-</span> <span class="dv">1</span><span class="op">.</span> <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> <span class="dv">1</span><span class="op">.</span> <span class="op">-</span> (<span class="dv">2</span><span class="op">.</span> <span class="op">-</span> r1)<span class="op">.</span>sqrt() <span class="op">};</span></span>
-<span id="cb59-45"><a href="#cb59-45" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> r2 <span class="op">=</span> <span class="dv">2</span><span class="op">.</span> <span class="op">*</span> rng<span class="op">.</span><span class="pp">gen::</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span>()<span class="op">;</span></span>
-<span id="cb59-46"><a href="#cb59-46" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> dy <span class="op">=</span> <span class="kw">if</span> r2 <span class="op">&lt;</span> <span class="dv">1</span><span class="op">.</span> <span class="op">{</span> r2<span class="op">.</span>sqrt() <span class="op">-</span> <span class="dv">1</span><span class="op">.</span> <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> <span class="dv">1</span><span class="op">.</span> <span class="op">-</span> (<span class="dv">2</span><span class="op">.</span> <span class="op">-</span> r2)<span class="op">.</span>sqrt() <span class="op">};</span></span>
-<span id="cb59-47"><a href="#cb59-47" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> d <span class="op">=</span> cx<span class="op">*</span>( ( (sx <span class="kw">as</span> <span class="dt">f64</span> <span class="op">+</span> <span class="dv">0.5</span> <span class="op">+</span> dx) <span class="op">/</span> <span class="dv">2</span><span class="op">.</span> <span class="op">+</span> x <span class="kw">as</span> <span class="dt">f64</span>) <span class="op">/</span> w <span class="kw">as</span> <span class="dt">f64</span> <span class="op">-</span> <span class="dv">0.5</span> )</span>
-<span id="cb59-48"><a href="#cb59-48" aria-hidden="true" tabindex="-1"></a>                          <span class="op">+</span> cy<span class="op">*</span>( ( (sy <span class="kw">as</span> <span class="dt">f64</span> <span class="op">+</span> <span class="dv">0.5</span> <span class="op">+</span> dy) <span class="op">/</span> <span class="dv">2</span><span class="op">.</span> <span class="op">+</span> (h <span class="op">-</span> y <span class="op">-</span> <span class="dv">1</span>) <span class="kw">as</span> <span class="dt">f64</span>) <span class="op">/</span> h <span class="kw">as</span> <span class="dt">f64</span> <span class="op">-</span> <span class="dv">0.5</span> )</span>
-<span id="cb59-49"><a href="#cb59-49" aria-hidden="true" tabindex="-1"></a>                          <span class="op">+</span> cam<span class="op">.</span>direction<span class="op">;</span></span>
-<span id="cb59-50"><a href="#cb59-50" aria-hidden="true" tabindex="-1"></a>                    r <span class="op">=</span> r <span class="op">+</span> radiance(<span class="op">&amp;</span>Ray <span class="op">{</span>origin<span class="op">:</span> cam<span class="op">.</span>origin <span class="op">+</span> d<span class="op">*</span><span class="dv">140</span><span class="op">.,</span> direction<span class="op">:</span> d<span class="op">.</span>normalize()<span class="op">},</span> <span class="dv">0</span>) <span class="op">*</span> (<span class="dv">1</span><span class="op">./</span>samps <span class="kw">as</span> <span class="dt">f64</span>)<span class="op">;</span></span>
-<span id="cb59-51"><a href="#cb59-51" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb59-52"><a href="#cb59-52" aria-hidden="true" tabindex="-1"></a>                <span class="op">*</span>c <span class="op">=</span> <span class="op">*</span>c <span class="op">+</span> r<span class="op">.</span>clamp() <span class="op">*</span> <span class="dv">0.25</span><span class="op">;</span></span>
-<span id="cb59-53"><a href="#cb59-53" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb59-54"><a href="#cb59-54" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb59-55"><a href="#cb59-55" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
-<span id="cb59-56"><a href="#cb59-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-57"><a href="#cb59-57" aria-hidden="true" tabindex="-1"></a>    <span class="pp">eprintln!</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Writing image.&quot;</span>)<span class="op">;</span></span>
-<span id="cb59-58"><a href="#cb59-58" aria-hidden="true" tabindex="-1"></a>    img<span class="op">.</span>print_ppm(<span class="st">&quot;image_rust.ppm&quot;</span>)</span>
-<span id="cb59-59"><a href="#cb59-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="kw">crate</span> indicatif<span class="op">;</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="kw">crate</span> argh<span class="op">;</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">argh::</span>FromArgs<span class="op">;</span></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> vec3<span class="op">;</span></span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">vec3::</span><span class="op">*;</span></span>
+<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> colour<span class="op">;</span></span>
+<span id="cb59-12"><a href="#cb59-12" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">colour::</span><span class="op">*;</span></span>
+<span id="cb59-13"><a href="#cb59-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-14"><a href="#cb59-14" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>constants<span class="op">&gt;&gt;</span></span>
+<span id="cb59-15"><a href="#cb59-15" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>ray<span class="op">&gt;&gt;</span></span>
+<span id="cb59-16"><a href="#cb59-16" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>material<span class="op">&gt;&gt;</span></span>
+<span id="cb59-17"><a href="#cb59-17" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>sphere<span class="op">&gt;&gt;</span></span>
+<span id="cb59-18"><a href="#cb59-18" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>scene<span class="op">&gt;&gt;</span></span>
+<span id="cb59-19"><a href="#cb59-19" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>path<span class="op">-</span>tracing<span class="op">&gt;&gt;</span></span>
+<span id="cb59-20"><a href="#cb59-20" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>image<span class="op">&gt;&gt;</span></span>
+<span id="cb59-21"><a href="#cb59-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-22"><a href="#cb59-22" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>test<span class="at">)]</span></span>
+<span id="cb59-23"><a href="#cb59-23" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> tests <span class="op">{</span></span>
+<span id="cb59-24"><a href="#cb59-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="kw">super</span><span class="pp">::</span><span class="op">*;</span></span>
+<span id="cb59-25"><a href="#cb59-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="pp">quickcheck::</span><span class="op">*;</span></span>
+<span id="cb59-26"><a href="#cb59-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-27"><a href="#cb59-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>vector<span class="op">-</span>tests<span class="op">&gt;&gt;</span></span>
+<span id="cb59-28"><a href="#cb59-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb59-29"><a href="#cb59-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-30"><a href="#cb59-30" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span>FromArgs<span class="at">)]</span></span>
+<span id="cb59-31"><a href="#cb59-31" aria-hidden="true" tabindex="-1"></a><span class="co">/// Renders the Cornell box as interpreted by Kevin Beason&#39;s SmallPt</span></span>
+<span id="cb59-32"><a href="#cb59-32" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> Arghs <span class="op">{</span></span>
+<span id="cb59-33"><a href="#cb59-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// optional sample size (100)</span></span>
+<span id="cb59-34"><a href="#cb59-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>argh<span class="at">(</span>option<span class="op">,</span> short <span class="op">=</span> <span class="ch">&#39;s&#39;</span><span class="op">,</span> <span class="kw">default</span> <span class="op">=</span> <span class="st">&quot;SAMPLES&quot;</span><span class="at">)]</span></span>
+<span id="cb59-35"><a href="#cb59-35" aria-hidden="true" tabindex="-1"></a>    samples<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span></span>
+<span id="cb59-36"><a href="#cb59-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-37"><a href="#cb59-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// optional thread count</span></span>
+<span id="cb59-38"><a href="#cb59-38" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// the default (0) will take the systems logical cpu count</span></span>
+<span id="cb59-39"><a href="#cb59-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>argh<span class="at">(</span>option<span class="op">,</span> short <span class="op">=</span> <span class="ch">&#39;t&#39;</span><span class="op">,</span> <span class="kw">default</span> <span class="op">=</span> <span class="st">&quot;0&quot;</span><span class="at">)]</span></span>
+<span id="cb59-40"><a href="#cb59-40" aria-hidden="true" tabindex="-1"></a>    threads<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span></span>
+<span id="cb59-41"><a href="#cb59-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-42"><a href="#cb59-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// optional stack size in MB per thread</span></span>
+<span id="cb59-43"><a href="#cb59-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>argh<span class="at">(</span>option<span class="op">,</span> short <span class="op">=</span> <span class="ch">&#39;z&#39;</span><span class="op">,</span> <span class="kw">default</span> <span class="op">=</span> <span class="st">&quot;8&quot;</span><span class="at">)]</span></span>
+<span id="cb59-44"><a href="#cb59-44" aria-hidden="true" tabindex="-1"></a>    stack<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span></span>
+<span id="cb59-45"><a href="#cb59-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-46"><a href="#cb59-46" aria-hidden="true" tabindex="-1"></a>    <span class="co">/// optional image size dimensions WxH (640x480)</span></span>
+<span id="cb59-47"><a href="#cb59-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>argh<span class="at">(</span>option<span class="op">,</span> from_str_fn<span class="at">(</span>into_plot_dimensions<span class="at">)</span><span class="op">,</span> <span class="kw">default</span> <span class="op">=</span> <span class="st">&quot;(WIDTH, HEIGHT)&quot;</span><span class="at">)]</span></span>
+<span id="cb59-48"><a href="#cb59-48" aria-hidden="true" tabindex="-1"></a>    wxh<span class="op">:</span> (<span class="dt">usize</span><span class="op">,</span> <span class="dt">usize</span>)<span class="op">,</span></span>
+<span id="cb59-49"><a href="#cb59-49" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb59-50"><a href="#cb59-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-51"><a href="#cb59-51" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper function for parsing plot dimensions from command line arguments.</span></span>
+<span id="cb59-52"><a href="#cb59-52" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> into_plot_dimensions(dim<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>(<span class="dt">usize</span><span class="op">,</span> <span class="dt">usize</span>)<span class="op">,</span> <span class="dt">String</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb59-53"><a href="#cb59-53" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (w<span class="op">,</span> h) <span class="op">=</span> dim</span>
+<span id="cb59-54"><a href="#cb59-54" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>split_once(<span class="ch">&#39;x&#39;</span>)</span>
+<span id="cb59-55"><a href="#cb59-55" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>ok_or(<span class="st">&quot;dimensions do not parse, no delimiter?&quot;</span>)<span class="op">?;</span></span>
+<span id="cb59-56"><a href="#cb59-56" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> w <span class="op">=</span> w<span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;</span>()<span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> e<span class="op">.</span>to_string())<span class="op">?;</span></span>
+<span id="cb59-57"><a href="#cb59-57" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> h <span class="op">=</span> h<span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;</span>()<span class="op">.</span>map_err(<span class="op">|</span>e<span class="op">|</span> e<span class="op">.</span>to_string())<span class="op">?;</span></span>
+<span id="cb59-58"><a href="#cb59-58" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>((w<span class="op">,</span> h))</span>
+<span id="cb59-59"><a href="#cb59-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb59-60"><a href="#cb59-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-61"><a href="#cb59-61" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">-&gt;</span> <span class="pp">std::io::</span><span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb59-62"><a href="#cb59-62" aria-hidden="true" tabindex="-1"></a>    <span class="co">// use rayon::current_thread_index;</span></span>
+<span id="cb59-63"><a href="#cb59-63" aria-hidden="true" tabindex="-1"></a>    <span class="co">// rayon::ThreadPoolBuilder::new().num_threads(4).build_global().unwrap();</span></span>
+<span id="cb59-64"><a href="#cb59-64" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> args<span class="op">:</span> Arghs <span class="op">=</span> <span class="pp">argh::</span>from_env()<span class="op">;</span></span>
+<span id="cb59-65"><a href="#cb59-65" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (w<span class="op">,</span> h) <span class="op">=</span> args<span class="op">.</span>wxh<span class="op">;</span></span>
+<span id="cb59-66"><a href="#cb59-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> samps <span class="op">=</span> args<span class="op">.</span>samples <span class="op">/</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb59-67"><a href="#cb59-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-68"><a href="#cb59-68" aria-hidden="true" tabindex="-1"></a>    <span class="pp">rayon::ThreadPoolBuilder::</span>new()</span>
+<span id="cb59-69"><a href="#cb59-69" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>num_threads(args<span class="op">.</span>threads)</span>
+<span id="cb59-70"><a href="#cb59-70" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>stack_size(args<span class="op">.</span>stack <span class="op">*</span> <span class="dv">1024</span> <span class="op">*</span> <span class="dv">1024</span>)</span>
+<span id="cb59-71"><a href="#cb59-71" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>build_global()</span>
+<span id="cb59-72"><a href="#cb59-72" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb59-73"><a href="#cb59-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-74"><a href="#cb59-74" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> cam <span class="op">=</span> Ray <span class="op">{</span> origin<span class="op">:</span> vec(<span class="dv">50</span><span class="op">.,</span> <span class="dv">52</span><span class="op">.,</span> <span class="dv">295.6</span>)<span class="op">,</span> direction<span class="op">:</span> vec(<span class="dv">0.0</span><span class="op">,</span> <span class="op">-</span><span class="dv">0.045</span><span class="op">,</span> <span class="op">-</span><span class="dv">1.0</span>)<span class="op">.</span>normalize() <span class="op">};</span></span>
+<span id="cb59-75"><a href="#cb59-75" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> cx <span class="op">=</span> vec(w <span class="kw">as</span> <span class="dt">f64</span> <span class="op">*</span> <span class="dv">0.510</span> <span class="op">/</span> h <span class="kw">as</span> <span class="dt">f64</span><span class="op">,</span> <span class="dv">0</span><span class="op">.,</span> <span class="dv">0</span><span class="op">.</span>)<span class="op">;</span></span>
+<span id="cb59-76"><a href="#cb59-76" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> cy <span class="op">=</span> (cx <span class="op">%</span> cam<span class="op">.</span>direction)<span class="op">.</span>normalize() <span class="op">*</span> <span class="dv">0.510</span><span class="op">;</span></span>
+<span id="cb59-77"><a href="#cb59-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-78"><a href="#cb59-78" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> img <span class="op">=</span> <span class="pp">Image::</span>new(w<span class="op">,</span> h)<span class="op">;</span></span>
+<span id="cb59-79"><a href="#cb59-79" aria-hidden="true" tabindex="-1"></a>    <span class="pp">eprintln!</span>(<span class="st">&quot;Rendering ({} spp)&quot;</span><span class="op">,</span> samps<span class="op">*</span><span class="dv">4</span>)<span class="op">;</span></span>
+<span id="cb59-80"><a href="#cb59-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-81"><a href="#cb59-81" aria-hidden="true" tabindex="-1"></a>    img<span class="op">.</span>for_each(<span class="op">|</span>x<span class="op">,</span> y<span class="op">,</span> c<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb59-82"><a href="#cb59-82" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> rng <span class="op">=</span> <span class="pp">rand::</span>thread_rng()<span class="op">;</span></span>
+<span id="cb59-83"><a href="#cb59-83" aria-hidden="true" tabindex="-1"></a>        <span class="kw">for</span> sy <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">2</span> <span class="op">{</span></span>
+<span id="cb59-84"><a href="#cb59-84" aria-hidden="true" tabindex="-1"></a>            <span class="kw">for</span> sx <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">2</span> <span class="op">{</span></span>
+<span id="cb59-85"><a href="#cb59-85" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> <span class="kw">mut</span> r <span class="op">=</span> BLACK<span class="op">.</span>clone()<span class="op">;</span></span>
+<span id="cb59-86"><a href="#cb59-86" aria-hidden="true" tabindex="-1"></a>                <span class="kw">for</span> _ <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span>samps <span class="op">{</span></span>
+<span id="cb59-87"><a href="#cb59-87" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> r1 <span class="op">=</span> <span class="dv">2</span><span class="op">.</span> <span class="op">*</span> rng<span class="op">.</span><span class="pp">gen::</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb59-88"><a href="#cb59-88" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> dx <span class="op">=</span> <span class="kw">if</span> r1 <span class="op">&lt;</span> <span class="dv">1</span><span class="op">.</span> <span class="op">{</span> r1<span class="op">.</span>sqrt() <span class="op">-</span> <span class="dv">1</span><span class="op">.</span> <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> <span class="dv">1</span><span class="op">.</span> <span class="op">-</span> (<span class="dv">2</span><span class="op">.</span> <span class="op">-</span> r1)<span class="op">.</span>sqrt() <span class="op">};</span></span>
+<span id="cb59-89"><a href="#cb59-89" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> r2 <span class="op">=</span> <span class="dv">2</span><span class="op">.</span> <span class="op">*</span> rng<span class="op">.</span><span class="pp">gen::</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb59-90"><a href="#cb59-90" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> dy <span class="op">=</span> <span class="kw">if</span> r2 <span class="op">&lt;</span> <span class="dv">1</span><span class="op">.</span> <span class="op">{</span> r2<span class="op">.</span>sqrt() <span class="op">-</span> <span class="dv">1</span><span class="op">.</span> <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> <span class="dv">1</span><span class="op">.</span> <span class="op">-</span> (<span class="dv">2</span><span class="op">.</span> <span class="op">-</span> r2)<span class="op">.</span>sqrt() <span class="op">};</span></span>
+<span id="cb59-91"><a href="#cb59-91" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> d <span class="op">=</span> cx<span class="op">*</span>( ( (sx <span class="kw">as</span> <span class="dt">f64</span> <span class="op">+</span> <span class="dv">0.5</span> <span class="op">+</span> dx) <span class="op">/</span> <span class="dv">2</span><span class="op">.</span> <span class="op">+</span> x <span class="kw">as</span> <span class="dt">f64</span>) <span class="op">/</span> w <span class="kw">as</span> <span class="dt">f64</span> <span class="op">-</span> <span class="dv">0.5</span> )</span>
+<span id="cb59-92"><a href="#cb59-92" aria-hidden="true" tabindex="-1"></a>                          <span class="op">+</span> cy<span class="op">*</span>( ( (sy <span class="kw">as</span> <span class="dt">f64</span> <span class="op">+</span> <span class="dv">0.5</span> <span class="op">+</span> dy) <span class="op">/</span> <span class="dv">2</span><span class="op">.</span> <span class="op">+</span> (h <span class="op">-</span> y <span class="op">-</span> <span class="dv">1</span>) <span class="kw">as</span> <span class="dt">f64</span>) <span class="op">/</span> h <span class="kw">as</span> <span class="dt">f64</span> <span class="op">-</span> <span class="dv">0.5</span> )</span>
+<span id="cb59-93"><a href="#cb59-93" aria-hidden="true" tabindex="-1"></a>                          <span class="op">+</span> cam<span class="op">.</span>direction<span class="op">;</span></span>
+<span id="cb59-94"><a href="#cb59-94" aria-hidden="true" tabindex="-1"></a>                    r <span class="op">=</span> r <span class="op">+</span> radiance(<span class="op">&amp;</span><span class="kw">mut</span> Ray <span class="op">{</span>origin<span class="op">:</span> cam<span class="op">.</span>origin <span class="op">+</span> d<span class="op">*</span><span class="dv">140</span><span class="op">.,</span> direction<span class="op">:</span> d<span class="op">.</span>normalize()<span class="op">},</span> <span class="dv">0</span>) <span class="op">*</span> (<span class="dv">1</span><span class="op">./</span>samps <span class="kw">as</span> <span class="dt">f64</span>)<span class="op">;</span></span>
+<span id="cb59-95"><a href="#cb59-95" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb59-96"><a href="#cb59-96" aria-hidden="true" tabindex="-1"></a>                <span class="op">*</span>c <span class="op">=</span> <span class="op">*</span>c <span class="op">+</span> r<span class="op">.</span>clamp() <span class="op">*</span> <span class="dv">0.25</span><span class="op">;</span></span>
+<span id="cb59-97"><a href="#cb59-97" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb59-98"><a href="#cb59-98" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb59-99"><a href="#cb59-99" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb59-100"><a href="#cb59-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-101"><a href="#cb59-101" aria-hidden="true" tabindex="-1"></a>    <span class="pp">eprintln!</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Writing image.&quot;</span>)<span class="op">;</span></span>
+<span id="cb59-102"><a href="#cb59-102" aria-hidden="true" tabindex="-1"></a>    img<span class="op">.</span>print_ppm(<span class="st">&quot;image_rust.ppm&quot;</span>)</span>
+<span id="cb59-103"><a href="#cb59-103" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </div>
 </section>
         </div>
