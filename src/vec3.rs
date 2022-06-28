@@ -1,8 +1,12 @@
 // ~\~ language=Rust filename=src/vec3.rs
-// ~\~ begin <<lit/index.md|vector>>[init]
+// ~\~ begin <<lit/index.md|src/vec3.rs>>[0]
+// ~\~ begin <<lit/index.md|vector>>[0]
 #[derive(Clone,Copy,Debug)]
-pub(crate) struct Vec3
-    { pub x: f64, pub y: f64, pub z: f64 }
+pub(crate) struct Vec3 {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64
+}
 
 pub(crate) const fn vec(x: f64, y: f64, z: f64) -> Vec3 {
     Vec3 { x: x, y: y, z: z }
@@ -73,5 +77,46 @@ impl Vec3 {
     pub fn normalize(self) -> Self {
         self * (1.0 / self.abs())
     }
+}
+// ~\~ end
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use quickcheck::*;
+
+    // ~\~ begin <<lit/index.md|vector-tests>>[0]
+    impl Arbitrary for Vec3 {
+        fn arbitrary<G: Gen>(g: &mut G) -> Self {
+            let x = f64::arbitrary(g);
+            let y = f64::arbitrary(g);
+            let z = f64::arbitrary(g);
+            vec(x, y, z)
+        }
+    }
+    // ~\~ end
+    // ~\~ begin <<lit/index.md|vector-tests>>[1]
+    #[quickcheck]
+    fn outer_product_orthogonal(a: Vec3, b: Vec3) -> bool {
+        let c = a % b;
+        (a * c).abs() < 1e-6 && (b * c).abs() < 1e-6
+    }
+    // ~\~ end
+    // ~\~ begin <<lit/index.md|vector-tests>>[2]
+    #[quickcheck]
+    fn normalized_vec_length(a: Vec3) -> bool {
+        if (a * a) == 0.0 { return true; }
+        let b = a.normalize();
+        (1.0 - b * b).abs() < 1e-6
+    }
+    // ~\~ end
+    // ~\~ begin <<lit/index.md|vector-tests>>[3]
+    #[quickcheck]
+    fn outer_product_anti_symmetry(a: Vec3, b: Vec3) -> bool {
+        let c = a % b;
+        let d = b % a;
+        (c + d).abs() < 1e-6
+    }
+    // ~\~ end
 }
 // ~\~ end

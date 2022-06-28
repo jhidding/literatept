@@ -1,8 +1,8 @@
 # ~\~ language=TOML filename=Cargo.toml
-# ~\~ begin <<lit/index.md|Cargo.toml>>[init]
+# ~\~ begin <<lit/index.md|Cargo.toml>>[0]
 [package]
 name = "literatept"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Johan Hidding <j.hidding@esciencecenter.nl>"]
 edition = "2018"
 
@@ -10,19 +10,19 @@ edition = "2018"
 opt-level = 3
 debug = 0
 strip = "debuginfo"
-# arch = "native"
-# lto = true
 
 [dependencies]
-# ~\~ begin <<lit/index.md|dependencies>>[init]
+# ~\~ begin <<lit/index.md|dependencies>>[0]
 rand = "0.8.5"
+# ~\~ end
+# ~\~ begin <<lit/index.md|dependencies>>[1]
 rayon = "1.5.3"
 indicatif = { version = "0.16.2", features = ["rayon"] }
 argh = "0.1.7"
 # ~\~ end
 
 [dev-dependencies]
-# ~\~ begin <<lit/index.md|dev-dependencies>>[init]
+# ~\~ begin <<lit/index.md|dev-dependencies>>[0]
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
 # ~\~ end
