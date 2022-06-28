@@ -87,35 +87,50 @@ mod tests {
 
     // ~\~ begin <<lit/index.md|vector-tests>>[0]
     impl Arbitrary for Vec3 {
-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        fn arbitrary(g: &mut Gen) -> Self {
             let x = f64::arbitrary(g);
             let y = f64::arbitrary(g);
             let z = f64::arbitrary(g);
             vec(x, y, z)
         }
     }
+
+    impl Vec3 {
+        fn is_finite(&self) -> bool {
+            self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
+        }
+
+        fn reasonable(&self) -> bool {
+            self.is_finite() &&
+                self.x.log2().abs() < 16.0 &&
+                self.y.log2().abs() < 16.0 &&
+                self.z.log2().abs() < 16.0
+        }
+    }
     // ~\~ end
     // ~\~ begin <<lit/index.md|vector-tests>>[1]
     #[quickcheck]
-    fn outer_product_orthogonal(a: Vec3, b: Vec3) -> bool {
+    fn outer_product_orthogonal(a: Vec3, b: Vec3) -> TestResult {
+        if !(a.reasonable() && b.reasonable()) { return TestResult::discard(); }
         let c = a % b;
-        (a * c).abs() < 1e-6 && (b * c).abs() < 1e-6
+        TestResult::from_bool((a * c).abs() < 1e-6 && (b * c).abs() < 1e-6)
     }
     // ~\~ end
     // ~\~ begin <<lit/index.md|vector-tests>>[2]
     #[quickcheck]
-    fn normalized_vec_length(a: Vec3) -> bool {
-        if (a * a) == 0.0 { return true; }
+    fn normalized_vec_length(a: Vec3) -> TestResult {
+        if !a.reasonable() || (a * a) <= 0.0 { return TestResult::discard(); }
         let b = a.normalize();
-        (1.0 - b * b).abs() < 1e-6
+        TestResult::from_bool((1.0 - b * b).abs() < 1e-6)
     }
     // ~\~ end
     // ~\~ begin <<lit/index.md|vector-tests>>[3]
     #[quickcheck]
-    fn outer_product_anti_symmetry(a: Vec3, b: Vec3) -> bool {
+    fn outer_product_anti_symmetry(a: Vec3, b: Vec3) -> TestResult {
+        if !(a.reasonable() && b.reasonable()) { return TestResult::discard(); }
         let c = a % b;
         let d = b % a;
-        (c + d).abs() < 1e-6
+        TestResult::from_bool((c + d).abs() < 1e-6)
     }
     // ~\~ end
 }
