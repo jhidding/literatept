@@ -1,6 +1,6 @@
 // ~\~ language=Rust filename=src/vec3.rs
-// ~\~ begin <<lit/index.md|src/vec3.rs>>[0]
-// ~\~ begin <<lit/index.md|vector>>[0]
+// ~\~ begin <<lit/index.md|src/vec3.rs>>[init]
+// ~\~ begin <<lit/index.md|vector>>[init]
 #[derive(Clone,Copy,Debug)]
 pub(crate) struct Vec3 {
     pub x: f64,
@@ -85,7 +85,7 @@ mod tests {
     use super::*;
     use quickcheck::*;
 
-    // ~\~ begin <<lit/index.md|vector-tests>>[0]
+    // ~\~ begin <<lit/index.md|vector-tests>>[init]
     impl Arbitrary for Vec3 {
         fn arbitrary(g: &mut Gen) -> Self {
             let x = f64::arbitrary(g);

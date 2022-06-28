@@ -2,6 +2,7 @@
 
 :root {
         --primary-support: #66AACC;
+        --secondary-support: #CCAA66;
         --highlight: #CC44CC;
 }
 
@@ -178,47 +179,6 @@ header {
         background: #eee;
 }
 
-/* Dark-mode toggle */
-        /* Light Mode Button Styles
-        --------------------------- */ 
-/*        .dark-mode-button {
-            background:0;
-            border: 0;
-            box-sizing: border-box;
-            cursor: pointer;
-            height: 20px;
-            width: 40px;
-            position: relative;
-            top: -5pt;
-            border: 1px solid rgba(255,255,255,0);
-        }
-        .dark-mode-button:focus {
-            outline:none;
-        }
-        .dark-mode-button span:nth-child(1) {
-            position: absolute;
-            top:0;
-            left:0;
-            width: 40px;
-            height:20px;
-            border-radius: 20px;
-            background-color: #d6d7db;
-            box-shadow: inset 1px 1px 3px 0 rgb(0 0 0 / 40%);
-            transition: .3s;
-        }
-        .dark-mode-button span:nth-child(2) {
-            position: absolute;
-            top:2.5px;
-            left:2.5px;
-            width: 15px;
-            height: 15px;
-            background-color: #fff;
-            border-radius: 50%;
-            box-shadow: 1px 1px 2px 0 rgb(0 0 0 / 40%);
-            transition: .3s;
-        }
-*/
-
 /* Responsive design from w3schools */
 * {
   box-sizing: border-box;
@@ -240,20 +200,62 @@ header {
   padding: 15px;
 }
 
-.menu ul {
+/** Menu *****************************/
+nav ul {
   list-style-type: none;
-  margin: 0;
+}
+
+nav#TOC > ul {
+  margin: 10pt 10pt 0 0;
   padding: 0;
 }
 
-.menu li {
-  padding: 8px;
-  margin-bottom: 7px;
-  color: #ffffff;
+.menu {
   text-align: right;
+  font-size: 14pt;
+}
+
+nav > ul > li {
+        margin-bottom: 20pt;
 }
 
 .menu li:hover {
+}
+
+.menu ul li ul li {
+        font-size: smaller;
+}
+
+.menu ul li ul li::after {
+        color: gray;
+        margin-left: 0.5em;
+        content: " · · · ";
+}
+
+/** Section.alert **************************/
+section.alert {
+        margin: 0 2em 0 5em;
+        padding: 0 0 5pt 0;
+        border-radius: 5pt;
+        background: #eee;
+}
+
+section.alert h3:before {
+        content: "☞";
+        margin-right: 10pt;
+}
+
+section.alert h3 {
+        font-size: 14pt;
+        padding: 5pt 0 1pt 10pt;
+        margin: 0;
+        color: white;
+        border-radius: 5pt 5pt 0 0;
+        background: var(--secondary-support);
+}
+
+section.alert p {
+        padding: 0 1em 0 1em;
 }
 
 .aside {

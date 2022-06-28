@@ -1,5 +1,5 @@
 # ~\~ language=TOML filename=Cargo.toml
-# ~\~ begin <<lit/index.md|Cargo.toml>>[0]
+# ~\~ begin <<lit/index.md|Cargo.toml>>[init]
 [package]
 name = "literatept"
 version = "0.2.0"
@@ -12,7 +12,7 @@ debug = 0
 strip = "debuginfo"
 
 [dependencies]
-# ~\~ begin <<lit/index.md|dependencies>>[0]
+# ~\~ begin <<lit/index.md|dependencies>>[init]
 rand = "0.8.5"
 # ~\~ end
 # ~\~ begin <<lit/index.md|dependencies>>[1]
@@ -22,7 +22,7 @@ argh = "0.1.7"
 # ~\~ end
 
 [dev-dependencies]
-# ~\~ begin <<lit/index.md|dev-dependencies>>[0]
+# ~\~ begin <<lit/index.md|dev-dependencies>>[init]
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
 # ~\~ end

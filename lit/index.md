@@ -11,7 +11,7 @@ One of my favourite compute science books is ["Physically Based Rendering" by Ma
 
 Over time, there have been developed some ray-tracers of truly miniscule size. It is amazing how much you can do in little code. For me the most clear example is [SmallPT](https://www.kevinbeason.com/smallpt/) by Kevin Beason. SmallPT is a global illumination ray tracer in 100 lines of C++.
 
-![4000 spp rendering](img/image.png){style='width:100%'}
+![10000 spp rendering](img/image.png){style='width:100%'}
 
 This is a translation into Rust; not in a 100 lines, but like PBRT, extremely literate. The entirety of this implementation is contained in a single Markdown file. To extract the source code, you may use [Entangled](https://entangled.github.io/), or to render the published version, use [Pandoc](https://pandoc.org/). All the math and equations are explained, and I've tried to explain some concepts in Rust.
 
@@ -19,7 +19,7 @@ This is a translation into Rust; not in a 100 lines, but like PBRT, extremely li
 
 - [ ] Explain the sub-pixel sampling
 - [ ] Explain use of Rayon in `Image::for_each`
-- [ ] Explain `RGBColour` structure
+- [x] Explain `RGBColour` structure
 - [x] Add command-line interface
 - [x] Fix performance issues with writing output
 - [x] Add proper progress bar
@@ -106,8 +106,10 @@ pub(crate) const fn vec(x: f64, y: f64, z: f64) -> Vec3 {
 
 We derive the `Clone`, `Copy`, and `Debug` traits, meaning that we can print debug statements involving `Vec3` instances, and that we can clone instances usinge the `.clone()` method. The `Copy` trait means that the `Vec3` can be copied implicitly, creating call-by-value semantics on this type.
 
-> ### Why not a class?
-> Rust doesn't have classes. Instead, you define a `struct` with the data elements, and then implement one or more `trait`s on top of that. Data hiding, access patterns, inheritance and what-have-you-not in object-oriented styles of programming can still be achieved using `trait`s. For more information, see [The Rust Book, chapter 17](https://doc.rust-lang.org/book/ch17-00-oop.html).
+:::: {.alert .alert-info}
+### Why not a class?
+Rust doesn't have classes. Instead, you define a `struct` with the data elements, and then implement one or more `trait`s on top of that. Data hiding, access patterns, inheritance and what-have-you-not in object-oriented styles of programming can still be achieved using `trait`s. For more information, see [The Rust Book, chapter 17](https://doc.rust-lang.org/book/ch17-00-oop.html).
+::::
 
 ## Operators
 Each of the overloaded operators only occupy a single line of code in SmallPt, but this is probably better. Rust has a trait for every standard operator in the language. These operators are syntactic sugar for the relevant function calls in each trait. Here we define `+`, and `-` (both unary and binary forms).
@@ -203,7 +205,7 @@ impl Vec3 {
 ```
 
 ## Tests
-We use the `quickcheck` crate to do some property testing on the `Vec` type. The idea of property testing is that you define some properties (duh!) on a type that should always hold. Then, if you have a way to generate arbitrary elements of your type, you can see if these properties do indeed hold. In many cases where mathematics or physics is involved, these test are expressed in much cleaner code than the usual unit tests.
+We use the `quickcheck` crate to do some property testing on the `Vec3` type. The idea of property testing is that you define some properties (duh!) on a type that should always hold. Then, if you have a way to generate arbitrary elements of your type, you can see if these properties do indeed hold. In many cases where mathematics or physics is involved, these test are expressed in much cleaner code than the usual unit tests.
 
 ``` {.toml #dev-dependencies}
 quickcheck = "1.0.3"
@@ -219,15 +221,28 @@ extern crate quickcheck;
 extern crate quickcheck_macros;
 ```
 
-We need to be able to generate `Arbitrary` instances of `Vec`. I'm not sure if this will ever yield a zero-vector, or a sequence of vectors that lie in the same plane.
+We need to be able to generate `Arbitrary` instances of `Vec`. I'm not sure if this will ever yield a zero-vector, or a sequence of vectors that lie in the same plane. We do want to check our properties on reasonable numbers though.
 
 ``` {.rust #vector-tests}
 impl Arbitrary for Vec3 {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         let x = f64::arbitrary(g);
         let y = f64::arbitrary(g);
         let z = f64::arbitrary(g);
         vec(x, y, z)
+    }
+}
+
+impl Vec3 {
+    fn is_finite(&self) -> bool {
+        self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
+    }
+
+    fn reasonable(&self) -> bool {
+        self.is_finite() &&
+            self.x.log2().abs() < 16.0 &&
+            self.y.log2().abs() < 16.0 &&
+            self.z.log2().abs() < 16.0
     }
 }
 ```
@@ -238,9 +253,10 @@ $$(\vec{a} \wedge \vec{b}) \cdot \vec{a} = 0,$$
 
 ``` {.rust #vector-tests}
 #[quickcheck]
-fn outer_product_orthogonal(a: Vec3, b: Vec3) -> bool {
+fn outer_product_orthogonal(a: Vec3, b: Vec3) -> TestResult {
+    if !(a.reasonable() && b.reasonable()) { return TestResult::discard(); }
     let c = a % b;
-    (a * c).abs() < 1e-6 && (b * c).abs() < 1e-6
+    TestResult::from_bool((a * c).abs() < 1e-6 && (b * c).abs() < 1e-6)
 }
 ```
 
@@ -248,10 +264,10 @@ that any normalized vector has length 1,
 
 ``` {.rust #vector-tests}
 #[quickcheck]
-fn normalized_vec_length(a: Vec3) -> bool {
-    if (a * a) == 0.0 { return true; }
+fn normalized_vec_length(a: Vec3) -> TestResult {
+    if !a.reasonable() || (a * a) <= 0.0 { return TestResult::discard(); }
     let b = a.normalize();
-    (1.0 - b * b).abs() < 1e-6
+    TestResult::from_bool((1.0 - b * b).abs() < 1e-6)
 }
 ```
 
@@ -261,30 +277,23 @@ $$\vec{a} \wedge \vec{b} = - \vec{b} \wedge \vec{a}.$$
 
 ``` {.rust #vector-tests}
 #[quickcheck]
-fn outer_product_anti_symmetry(a: Vec3, b: Vec3) -> bool {
+fn outer_product_anti_symmetry(a: Vec3, b: Vec3) -> TestResult {
+    if !(a.reasonable() && b.reasonable()) { return TestResult::discard(); }
     let c = a % b;
     let d = b % a;
-    (c + d).abs() < 1e-6
+    TestResult::from_bool((c + d).abs() < 1e-6)
 }
 ```
 
 # Colours
-A sphere has material properties. We can choose between *diffuse*, *specular* and *refractive* type.
-
-``` {.rust #material}
-enum Reflection
-    { Diffuse
-    , Specular
-    , Refractive }
-```
-
-:::: {.alert .alert-info}
-Note that the Rust `enum` types are much richer than the `enum` you may be used to from C/C++. Together with `struct`, `enum` gives the corner stones of *algebraic data types*. Where a `struct` collects different members into a *product type*, an `enum` is a *sum type*, meaning that it either contains one value or the other.
-::::
+A colour on a computer is described by three numbers: red, green and blue intensity. There is a lot more interesting things to say about colour profiles, gamuts, CMYX, CIELAB or plain RGB encoding, but what it boils down to is the following: in the end we want RGB to store. So we may define a colour to be anything that converts to RGB.
 
 ``` {.rust #colour file=src/colour.rs}
 #[inline]
-pub(crate) fn clamp(x: f64) -> f64 { if x < 0. { 0. } else if x > 1. { 1. } else { x } }
+pub(crate) fn clamp(x: f64) -> f64
+{ 
+    if x < 0. { 0. } else if x > 1. { 1. } else { x }
+}
 
 pub trait Colour: Sized
             + std::ops::Add<Output=Self>
@@ -306,7 +315,11 @@ pub trait Colour: Sized
         (to_int(r), to_int(g), to_int(b))
     }
 }
+```
 
+We can (and will) have a simple implementation in terms of a three-tuple of `f64`.
+
+``` {.rust #colour}
 #[derive(Clone,Copy,Debug)]
 pub(crate) struct RGBColour (f64, f64, f64);
 
@@ -314,9 +327,31 @@ pub(crate) const fn rgb(r: f64, g: f64, b: f64) -> RGBColour {
     RGBColour (r, g, b)
 }
 
+impl Colour for RGBColour {
+    fn to_rgb(&self) -> (f64, f64, f64) {
+        let RGBColour(r, g, b) = self;
+        (*r, *g, *b)
+    }
+
+    fn clamp(&self) -> Self {
+        let RGBColour(r, g, b) = self;
+        RGBColour(clamp(*r), clamp(*g), clamp(*b))
+    }
+}
+```
+
+## Constants
+The two most important colours are black and white:
+
+``` {.rust #colour}
 pub(crate) const BLACK: RGBColour = rgb(0.0, 0.0, 0.0);
 pub(crate) const WHITE: RGBColour = rgb(1.0, 1.0, 1.0);
+```
 
+## Operators
+Furthermore, we need to add subtract and multiply colours. For colours it makes most sense to have point-wise multiplication.
+
+``` {.rust #colour}
 impl std::ops::Add for RGBColour {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -342,18 +377,6 @@ impl std::ops::Mul<f64> for RGBColour {
         RGBColour(r1*s,g1*s,b1*s)
     }
 }
-
-impl Colour for RGBColour {
-    fn to_rgb(&self) -> (f64, f64, f64) {
-        let RGBColour(r, g, b) = self;
-        (*r, *g, *b)
-    }
-
-    fn clamp(&self) -> Self {
-        let RGBColour(r, g, b) = self;
-        RGBColour(clamp(*r), clamp(*g), clamp(*b))
-    }
-}
 ```
 
 # Geometry
@@ -361,12 +384,10 @@ With floating-point calculations, round-off can become a problem. If we bounce a
 
 ``` {.rust #constants}
 const EPS: f64 = 1e-4;
-const SAMPLES: usize = 100;
-const WIDTH: usize = 640;
-const HEIGHT: usize = 480;
 ```
 
-We now define the `Ray` and `Sphere` types.
+## Objects
+The only objects in our scene are spheres. When we do path tracing, we also need rays.
 
 ``` {.rust #ray}
 struct Ray
@@ -382,6 +403,7 @@ struct Sphere
     }
 ```
 
+## Intersections
 The `Shpere` has a method to detect intersection with a `Ray`.
 
 ``` {.rust #sphere}
@@ -438,14 +460,29 @@ if b - rdet > EPS {
 }
 ```
 
-# Scene
-The scene in SmallPt is an adaptation of the Cornell box.
+## Properties
+A sphere has material properties. We can choose between *diffuse*, *specular* and *refractive* type.
+
+``` {.rust #material}
+enum Reflection
+    { Diffuse
+    , Specular
+    , Refractive }
+```
+
+:::: {.alert .alert-info}
+### Sum types
+Note that the Rust `enum` types are much richer than the `enum` you may be used to from C/C++. Together with `struct`, `enum` gives the corner stones of *algebraic data types*. Where a `struct` collects different members into a *product type*, an `enum` is a *sum type*, meaning that it either contains one value or the other.
+::::
 
 ``` {.rust #sphere-members}
 , pub emission: RGBColour
 , pub colour: RGBColour
 , pub reflection: Reflection
 ```
+
+# Scene
+The scene in SmallPt is an adaptation of the Cornell box.
 
 ``` {.rust #scene}
 const SPHERES: [Sphere;9] =
@@ -517,7 +554,7 @@ It feel like we've done a lot of work here, but we've only arrived at line 48 of
 # Path tracing
 This is where all the physics happens. We need to generate random numbers.
 
-``` {.rust #import-rand}
+``` {.rust #imports}
 extern crate rand;
 use rand::Rng;
 ```
@@ -527,6 +564,17 @@ use std::f64::consts::PI;
 ```
 
 The `radiance` function computes how many photons are traveling at a certain position in space from a certain direction.
+
+:::: {.alert}
+### Recursion
+One major change with respect to the original SmallPT is the recursion. SmallPT uses true recursion to compute the radiance of a ray. In Rust, this has led to some instances where a stack overflow was triggered. We may use a stack based implementation to prevent this from happening, but this has proven to be quite a bit slower. I ended up using a `loop`, modifying the traced path in place. Only in the case of partial reflection do we recursively call the `radiance` function.
+
+The result of each recursive radiance computation goes into an affine transformation ($ax + b$). We may compose two transformations
+
+$$(x \to ax + b) \circ (y \to cy + d) = y \to a(cy + d) + b = y \to acy + ad + b,$$
+
+meaning that if we express an affine transformation as a pair $(a, b)$ and a second $(c, d)$, we have $(a, b) \circ (c, d) = (ac, ad + b)$. This means we have a compact way to codify the contribution of each scattered ray.
+::::
 
 ``` {.rust #path-tracing}
 fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
@@ -544,12 +592,6 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
 ```
 
 The second argument keeps track of how deep we are tracing. It is used as a control to switch between sampling methods. One method is to reduce the brightness of the ray at every reflection off a diffuse object until we hit a light source. The second method, also known as *Russion Roulette*, is to keep the brightness of the ray constant, but only reflect with a probability given by the colour of the object. The first method will always give a nice smooth image but may take a long time wasted on very dim rays. The Russian Roulette wastes less time per sample, but produces grainy images at low sample rates. That is why SmallPt switches sampling methods if we are deeper than $n$ reflections.
-
-> One major change with respect to the original SmallPT is the recursion. SmallPT uses true recursion to compute the radiance of a ray. In Rust, this has led to some instances where a stack overflow was triggered. We may use a stack based implementation to prevent this from happening. The result of each recursive radiance computation goes into an affine transformation ($ax + b$). We may compose two transformations
->
-> $$(x \to ax + b) \circ (y \to cy + d) = (y \to a(cy + d) + b = acy + ad + b,$$
->
-> meaning that if we express an affine transformation as a pair $(a, b)$ and a second $(c, d)$, we have $(a, b) \circ (c, d) = (ac, ad + b)$. This means we have a compact way to codify the contribution of each scattered ray.
 
 First, we need to see if the ray intersects any object in the scene; if not, we return the colour `BLACK`.
 
@@ -617,7 +659,7 @@ match object.reflection {
 };
 ```
 
-### Diffuse
+### Diffuse reflection
 There are many types of diffuse reflection. You could imagine a surface where rays have equal probability of reflecting to any direction. This would mean sampling vectors on a hemisphere. We have a uniform probability over longitude:
 
 ``` {.rust #diffuse-reflection}
@@ -657,7 +699,7 @@ To compute the radiance, we need to know the radiance from the reflected ray.
 colour = f * colour;
 ```
 
-### Specular
+### Specular reflection
 Specular reflection means we have to mirror the incident ray with respect to the normal. This means that only the $\vec{n}$ component of the direction flips,
 
 $$\vec{\hat{d}}' = \vec{\hat{d}} - 2 \vec{\hat{n}} (\vec{\hat{n}} \cdot \vec{\hat{d}})$$.
@@ -668,7 +710,7 @@ let d = ray.direction - n * 2.*(n*ray.direction);
 colour = f * colour;
 ```
 
-### Refractive
+### Refraction
 Now some real optics! Discarding polarisation, there are several ways a photon may go at the boundary between two transparent media: *total internal reflection*, *refraction*, or *partial reflection*.
 
 There is always a reflective component,
@@ -684,7 +726,7 @@ We need to know if we're moving into or out of the object.
 let into = n * n_refl > 0.;
 ```
 
-#### Refractive index
+### Refractive index
 The refractive index of glass can vary, but $n = 1.5$ seems reasonable.
 
 ``` {.rust #constants}
@@ -699,7 +741,7 @@ $n_{\rm air} / n_{\rm glass}$ or $n_{\rm glass} / n_{\rm air}$.
 let n_eff = if into { N_AIR / N_GLASS } else { N_GLASS / N_AIR };
 ```
 
-#### Total internal reflection
+### Total internal reflection
 Total internal reflection happens if the angle of incidence is larger than some critical angle $\theta_c$, given by
 
 $$\theta_c = \arcsin \frac{n_{\rm outside}}{n_{\rm inside}}.$${#eq:tir-critical-angle}
@@ -730,7 +772,7 @@ In that case, we recurse with the reflected ray.
 colour = f * colour;
 ```
 
-#### Partial reflection
+### Partial reflection
 In the case of partial reflection, we need to compute also the angle of the refracted ray. We have Snell's law,
 
 $${\sin \theta_i \over \sin \theta_o} = {n_o \over n_i} = {1 \over n_{\rm eff}}.$${#eq:snellius}
@@ -767,7 +809,7 @@ let re = R0 + (1. - R0) * c.powf(5.0);
 let tr = 1. - re;
 ```
 
-#### Russian Roulette 2
+### Russian Roulette 2
 
 ``` {.rust #partial-reflection}
 let p = 0.25 + 0.5*re;
@@ -851,28 +893,20 @@ fn print_ppm(&self, path: &str) -> std::io::Result<()> {
 
 # Main
 
-``` {.rust file=src/main.rs}
-<<import-quickcheck>>
-<<import-rand>>
-<<imports>>
-extern crate indicatif;
+## Argument parsing
+
+``` {.rust #imports}
 extern crate argh;
 use argh::FromArgs;
+```
 
-mod vec3;
-use vec3::*;
+``` {.rust #constants}
+const SAMPLES: usize = 100;
+const WIDTH: usize = 640;
+const HEIGHT: usize = 480;
+```
 
-mod colour;
-use colour::*;
-
-<<constants>>
-<<ray>>
-<<material>>
-<<sphere>>
-<<scene>>
-<<path-tracing>>
-<<image>>
-
+``` {.rust #arghs}
 #[derive(FromArgs)]
 /// Renders the Cornell box as interpreted by Kevin Beason's SmallPt
 pub struct Arghs {
@@ -903,6 +937,28 @@ fn into_plot_dimensions(dim: &str) -> Result<(usize, usize), String> {
     let h = h.parse::<usize>().map_err(|e| e.to_string())?;
     Ok((w, h))
 }
+```
+
+## The main file
+``` {.rust file=src/main.rs}
+<<import-quickcheck>>
+<<imports>>
+extern crate indicatif;
+mod vec3;
+use vec3::*;
+
+mod colour;
+use colour::*;
+
+<<constants>>
+<<ray>>
+<<material>>
+<<sphere>>
+<<scene>>
+<<path-tracing>>
+<<image>>
+<<arghs>>
+
 
 fn main() -> std::io::Result<()> {
     // use rayon::current_thread_index;

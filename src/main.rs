@@ -1,6 +1,6 @@
 // ~\~ language=Rust filename=src/main.rs
-// ~\~ begin <<lit/index.md|src/main.rs>>[0]
-// ~\~ begin <<lit/index.md|import-quickcheck>>[0]
+// ~\~ begin <<lit/index.md|src/main.rs>>[init]
+// ~\~ begin <<lit/index.md|import-quickcheck>>[init]
 #[cfg(test)]
 extern crate quickcheck;
 
@@ -8,30 +8,28 @@ extern crate quickcheck;
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 // ~\~ end
-// ~\~ begin <<lit/index.md|import-rand>>[0]
-extern crate rand;
-use rand::Rng;
-// ~\~ end
-// ~\~ begin <<lit/index.md|imports>>[0]
+// ~\~ begin <<lit/index.md|imports>>[init]
 extern crate rayon;
 
 use rayon::prelude::*;
 // ~\~ end
-extern crate indicatif;
+// ~\~ begin <<lit/index.md|imports>>[1]
+extern crate rand;
+use rand::Rng;
+// ~\~ end
+// ~\~ begin <<lit/index.md|imports>>[2]
 extern crate argh;
 use argh::FromArgs;
-
+// ~\~ end
+extern crate indicatif;
 mod vec3;
 use vec3::*;
 
 mod colour;
 use colour::*;
 
-// ~\~ begin <<lit/index.md|constants>>[0]
+// ~\~ begin <<lit/index.md|constants>>[init]
 const EPS: f64 = 1e-4;
-const SAMPLES: usize = 100;
-const WIDTH: usize = 640;
-const HEIGHT: usize = 480;
 // ~\~ end
 // ~\~ begin <<lit/index.md|constants>>[1]
 use std::f64::consts::PI;
@@ -44,22 +42,27 @@ const N_AIR: f64 = 1.0;
 const R0: f64 =  (N_GLASS - N_AIR) * (N_GLASS - N_AIR)
               / ((N_GLASS + N_AIR) * (N_GLASS + N_AIR));
 // ~\~ end
-// ~\~ begin <<lit/index.md|ray>>[0]
+// ~\~ begin <<lit/index.md|constants>>[4]
+const SAMPLES: usize = 100;
+const WIDTH: usize = 640;
+const HEIGHT: usize = 480;
+// ~\~ end
+// ~\~ begin <<lit/index.md|ray>>[init]
 struct Ray
     { pub origin: Vec3
     , pub direction: Vec3 }
 // ~\~ end
-// ~\~ begin <<lit/index.md|material>>[0]
+// ~\~ begin <<lit/index.md|material>>[init]
 enum Reflection
     { Diffuse
     , Specular
     , Refractive }
 // ~\~ end
-// ~\~ begin <<lit/index.md|sphere>>[0]
+// ~\~ begin <<lit/index.md|sphere>>[init]
 struct Sphere
     { pub radius: f64
     , pub position: Vec3
-    // ~\~ begin <<lit/index.md|sphere-members>>[0]
+    // ~\~ begin <<lit/index.md|sphere-members>>[init]
     , pub emission: RGBColour
     , pub colour: RGBColour
     , pub reflection: Reflection
@@ -69,7 +72,7 @@ struct Sphere
 // ~\~ begin <<lit/index.md|sphere>>[1]
 impl Sphere {
     fn intersect(&self, ray: &Ray) -> Option<f64> {
-        // ~\~ begin <<lit/index.md|sphere-ray-intersect>>[0]
+        // ~\~ begin <<lit/index.md|sphere-ray-intersect>>[init]
         let q = self.position - ray.origin;
         let b = ray.direction * q;
         let r = self.radius;
@@ -93,9 +96,9 @@ impl Sphere {
     }
 }
 // ~\~ end
-// ~\~ begin <<lit/index.md|scene>>[0]
+// ~\~ begin <<lit/index.md|scene>>[init]
 const SPHERES: [Sphere;9] =
-    // ~\~ begin <<lit/index.md|scene-spheres>>[0]
+    // ~\~ begin <<lit/index.md|scene-spheres>>[init]
     [ Sphere { radius:  1e5,  position: vec(1e5+1.,   40.8, 81.6), emission: BLACK
              , colour: rgb(0.75, 0.25, 0.25), reflection: Reflection::Diffuse }
     // ~\~ end
@@ -138,20 +141,20 @@ fn intersect(ray: &Ray) -> Option<(f64, &'static Sphere)> {
     result
 }
 // ~\~ end
-// ~\~ begin <<lit/index.md|path-tracing>>[0]
+// ~\~ begin <<lit/index.md|path-tracing>>[init]
 fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
     let mut rng = rand::thread_rng();
     let mut colour = WHITE;
     let mut output = BLACK;
 
     loop {
-        // ~\~ begin <<lit/index.md|do-intersect>>[0]
+        // ~\~ begin <<lit/index.md|do-intersect>>[init]
         let hit = intersect(&ray);
         if hit.is_none() { return output; }
         let (distance, object) = hit.unwrap();
         output = output + object.emission * colour;
         // ~\~ end
-        // ~\~ begin <<lit/index.md|russian-roulette-1>>[0]
+        // ~\~ begin <<lit/index.md|russian-roulette-1>>[init]
         let mut f = object.colour;
         let p = f.max();
         depth += 1;
@@ -165,17 +168,17 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
             }
         }
         // ~\~ end
-        // ~\~ begin <<lit/index.md|compute-normal>>[0]
+        // ~\~ begin <<lit/index.md|compute-normal>>[init]
         let x = ray.origin + ray.direction * distance;
         let n = (x - object.position).normalize();
         // ~\~ end
         // ~\~ begin <<lit/index.md|compute-normal>>[1]
         let n_refl = if n * ray.direction < 0. { n } else { -n };
         // ~\~ end
-        // ~\~ begin <<lit/index.md|do-reflect>>[0]
+        // ~\~ begin <<lit/index.md|do-reflect>>[init]
         match object.reflection {
             Reflection::Diffuse => {
-                // ~\~ begin <<lit/index.md|diffuse-reflection>>[0]
+                // ~\~ begin <<lit/index.md|diffuse-reflection>>[init]
                 let phi = 2.*PI * rng.gen::<f64>();
                 // ~\~ end
                 // ~\~ begin <<lit/index.md|diffuse-reflection>>[1]
@@ -196,14 +199,14 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
                 // ~\~ end
             }
             Reflection::Specular => {
-                // ~\~ begin <<lit/index.md|specular-reflection>>[0]
+                // ~\~ begin <<lit/index.md|specular-reflection>>[init]
                 let d = ray.direction - n * 2.*(n*ray.direction);
                 *ray = Ray {origin: x, direction: d};
                 colour = f * colour;
                 // ~\~ end
             }
             Reflection::Refractive => {
-                // ~\~ begin <<lit/index.md|refractive-reflection>>[0]
+                // ~\~ begin <<lit/index.md|refractive-reflection>>[init]
                 let d = ray.direction - n * 2.*(n*ray.direction);
                 let reflected_ray = Ray { origin: x, direction: d };
                 // ~\~ end
@@ -217,12 +220,12 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
                 let mu = ray.direction * n_refl;
                 let cos2t = 1. - n_eff*n_eff*(1. - mu*mu);
                 if cos2t < 0. {
-                    // ~\~ begin <<lit/index.md|total-internal-reflection>>[0]
+                    // ~\~ begin <<lit/index.md|total-internal-reflection>>[init]
                     *ray = reflected_ray;
                     colour = f * colour;
                     // ~\~ end
                 } else {
-                    // ~\~ begin <<lit/index.md|partial-reflection>>[0]
+                    // ~\~ begin <<lit/index.md|partial-reflection>>[init]
                     let tdir = (ray.direction * n_eff - n_refl * (mu*n_eff + cos2t.sqrt())).normalize();
                     // ~\~ end
                     // ~\~ begin <<lit/index.md|partial-reflection>>[1]
@@ -257,7 +260,7 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
     }
 }
 // ~\~ end
-// ~\~ begin <<lit/index.md|image>>[0]
+// ~\~ begin <<lit/index.md|image>>[init]
 struct Image
     { width: usize
     , height: usize
@@ -291,7 +294,7 @@ impl Image {
 
     fn size(&self) -> usize { self.width * self.height }
 
-    // ~\~ begin <<lit/index.md|print-ppm>>[0]
+    // ~\~ begin <<lit/index.md|print-ppm>>[init]
     fn print_ppm(&self, path: &str) -> std::io::Result<()> {
         use std::fs::File;
         use std::io::Write;
@@ -309,7 +312,7 @@ impl Image {
     // ~\~ end
 }
 // ~\~ end
-
+// ~\~ begin <<lit/index.md|arghs>>[init]
 #[derive(FromArgs)]
 /// Renders the Cornell box as interpreted by Kevin Beason's SmallPt
 pub struct Arghs {
@@ -340,6 +343,8 @@ fn into_plot_dimensions(dim: &str) -> Result<(usize, usize), String> {
     let h = h.parse::<usize>().map_err(|e| e.to_string())?;
     Ok((w, h))
 }
+// ~\~ end
+
 
 fn main() -> std::io::Result<()> {
     // use rayon::current_thread_index;

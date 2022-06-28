@@ -26,6 +26,7 @@ pandoc_args += -s -t html5 -f markdown+fenced_code_attributes --toc --toc-depth 
 pandoc_args += --template $(theme_dir)/template.html
 pandoc_args += --css theme.css
 pandoc_args += --mathjax
+pandoc_args += --filter pandoc-eqnos --citeproc
 # pandoc_args += --syntax-definition .entangled/syntax/dhall.xml
 # pandoc_args += --highlight-style $(theme_dir)/syntax.theme
 pandoc_args += --section-divs
