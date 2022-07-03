@@ -10,15 +10,17 @@ edition = "2018"
 opt-level = 3
 debug = 0
 strip = "debuginfo"
-# arch = "native"
-# lto = true
+
 
 [dependencies]
 # ~\~ begin <<lit/index.md|dependencies>>[init]
 rand = "0.8.5"
 rayon = "1.5.3"
 indicatif = { version = "0.16.2", features = ["rayon"] }
-argh = "0.1.7"
+argh = "0.1.8"
+eframe = "0.18.0"
+egui_extras = { version = "0.18.0", features = ["image"] }
+image = { version = "0.24.2", default-features = false, features = ["jpeg", "pnm"] }
 # ~\~ end
 
 [dev-dependencies]

@@ -1,62 +1,83 @@
 // ~\~ language=Rust filename=src/colour.rs
 // ~\~ begin <<lit/index.md|colour>>[init]
 #[inline]
-pub(crate) fn clamp(x: f64) -> f64 { if x < 0. { 0. } else if x > 1. { 1. } else { x } }
+pub(crate) fn clamp(x: f64) -> f64 {
+    if x < 0. {
+        0.
+    } else if x > 1. {
+        1.
+    } else {
+        x
+    }
+}
 
-pub trait Colour: Sized
-            + std::ops::Add<Output=Self>
-            + std::ops::Mul<Output=Self>
-            + std::ops::Mul<f64, Output=Self> {
+pub trait Colour:
+    Sized
+    + std::ops::Add<Output = Self>
+    + std::ops::Mul<Output = Self>
+    + std::ops::Mul<f64, Output = Self>
+{
     fn to_rgb(&self) -> (f64, f64, f64);
     fn clamp(&self) -> Self;
 
+    #[inline]
     fn max(&self) -> f64 {
         let (r, g, b) = self.to_rgb();
-        if r > g && r > b { r }
-        else if g > b { g }
-        else { b }
+        if r > g && r > b {
+            r
+        } else if g > b {
+            g
+        } else {
+            b
+        }
     }
 
+    #[inline]
     fn to_u24(&self) -> (u8, u8, u8) {
-        let to_int = |x| (clamp(x).powf(1./2.2) * 255. + 0.5).floor() as u8;
+        let to_int = |x| (clamp(x).powf(1. / 2.2) * 255. + 0.5).floor() as u8;
         let (r, g, b) = self.to_rgb();
         (to_int(r), to_int(g), to_int(b))
     }
 }
 
-#[derive(Clone,Copy,Debug)]
-pub(crate) struct RGBColour (f64, f64, f64);
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct RGBColour(pub(crate) f64, pub(crate) f64, pub(crate) f64);
 
+#[inline]
 pub(crate) const fn rgb(r: f64, g: f64, b: f64) -> RGBColour {
-    RGBColour (r, g, b)
+    RGBColour(r, g, b)
 }
 
 pub(crate) const BLACK: RGBColour = rgb(0.0, 0.0, 0.0);
+pub(crate) const GREY: RGBColour = rgb(0.67, 0.67, 0.67);
 pub(crate) const WHITE: RGBColour = rgb(1.0, 1.0, 1.0);
 
 impl std::ops::Add for RGBColour {
     type Output = Self;
+    #[inline]
     fn add(self, other: Self) -> Self {
-        let RGBColour(r1,g1,b1) = self;
-        let RGBColour(r2,g2,b2) = other;
-        RGBColour(r1+r2,g1+g2,b1+b2)
+        let RGBColour(r1, g1, b1) = self;
+        let RGBColour(r2, g2, b2) = other;
+        RGBColour(r1 + r2, g1 + g2, b1 + b2)
     }
 }
 
 impl std::ops::Mul for RGBColour {
     type Output = Self;
+    #[inline]
     fn mul(self, other: Self) -> Self {
-        let RGBColour(r1,g1,b1) = self;
-        let RGBColour(r2,g2,b2) = other;
-        RGBColour(r1*r2,g1*g2,b1*b2)
+        let RGBColour(r1, g1, b1) = self;
+        let RGBColour(r2, g2, b2) = other;
+        RGBColour(r1 * r2, g1 * g2, b1 * b2)
     }
 }
 
 impl std::ops::Mul<f64> for RGBColour {
     type Output = Self;
+    #[inline]
     fn mul(self, s: f64) -> Self {
-        let RGBColour(r1,g1,b1) = self;
-        RGBColour(r1*s,g1*s,b1*s)
+        let RGBColour(r1, g1, b1) = self;
+        RGBColour(r1 * s, g1 * s, b1 * s)
     }
 }
 
