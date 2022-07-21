@@ -1,0 +1,982 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>First chapter - Raytracing in Rust</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="Kevin Beason&#x27;s SmallPT, translated in to literate Rust">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="spacer"></li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> README</a></li><li class="chapter-item expanded "><a href="index.html" class="active"><strong aria-hidden="true">2.</strong> First chapter</a></li><li class="chapter-item expanded "><a href="full_source.html"><strong aria-hidden="true">3.</strong> Undocumented source code</a></li><li class="chapter-item expanded affix "><a href="bibliography.html">Bibliography</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Raytracing in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="literatept"><a class="header" href="#literatept">LiteratePT</a></h1>
+<p>One of my favourite compute science books is <a href="https://pbrt.org/">&quot;Physically Based Rendering&quot; by Matt Pharr, Wenzel Jakob and Greg Humphreys (PBRT)</a>. For me, this book put the concept of Literate Programming on the map, as well as giving an awesome overview of the technologies that go into graphics rendering. Now PBRT is more than 1200 pages, so I thought what better than to create a tribute of some smaller size?</p>
+<p>Over time, there have been developed some ray-tracers of truly miniscule size. It is amazing how much you can do in little code. For me the most clear example is <a href="https://www.kevinbeason.com/smallpt/">SmallPT</a> by Kevin Beason. SmallPT is a global illumination ray tracer in 100 lines of C++.</p>
+<p><img src="img/image.png" alt="10000 spp rendering" />{style='width:100%'}</p>
+<p>This is a translation into Rust; not in a 100 lines, but like PBRT, extremely literate. The entirety of this implementation is contained in a single Markdown file. To extract the source code, you may use <a href="https://entangled.github.io/">Entangled</a>, or to render the published version, use <a href="https://pandoc.org/">Pandoc</a>. All the math and equations are explained, and I've tried to explain some concepts in Rust.</p>
+<h2 id="todo"><a class="header" href="#todo">TODO</a></h2>
+<ul>
+<li><input disabled="" type="checkbox"/>
+Explain the sub-pixel sampling</li>
+<li><input disabled="" type="checkbox"/>
+Explain use of Rayon in <code>Image::for_each</code></li>
+<li><input disabled="" type="checkbox" checked=""/>
+Explain <code>RGBColour</code> structure</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Add command-line interface</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Fix performance issues with writing output</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Add proper progress bar</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Simplify recursion pattern</li>
+</ul>
+<h2 id="getting-started-with-rust"><a class="header" href="#getting-started-with-rust">Getting started with Rust</a></h2>
+<p>The easiest way to install the Rust compiler is through the <a href="https://rustup.rs/"><code>rustup</code> command</a>. This will install both the Rust compiler <code>rustc</code> and its accompanying package manager <code>cargo</code>. You'd normally start a new project by running <code>cargo init</code>. This command creates the skeleton structure of a Rust project: a <code>Cargo.toml</code> and a &quot;Hello World&quot; program in <code>src/main.rs</code>. Since my goal is to have everything in a single Markdown file, I include the <code>Cargo.toml</code> here:</p>
+<pre><code class="language-toml file=Cargo.toml">[package]
+name = &quot;literatept&quot;
+version = &quot;0.2.0&quot;
+authors = [&quot;Johan Hidding &lt;j.hidding@esciencecenter.nl&gt;&quot;]
+edition = &quot;2018&quot;
+
+[profile.release]
+opt-level = 3
+debug = 0
+strip = &quot;debuginfo&quot;
+
+[dependencies]
+&lt;&lt;dependencies&gt;&gt;
+
+[dev-dependencies]
+&lt;&lt;dev-dependencies&gt;&gt;
+</code></pre>
+<p>Now, if I want to introduce some features to this program that require external packages (called <em>crates</em> in Rust), I can do so by extending on the <code>&lt;&lt;dependencies&gt;&gt;</code> section. For example, I will need a random number generator. This is most commonly available in the <code>rand</code> crate:</p>
+<!-- > The package description can be extended using [more keys and their definitions](https://doc.rust-lang.org/cargo/reference/manifest.html) -->
+<pre><code class="language-toml #dependencies">rand = &quot;0.8.5&quot;
+</code></pre>
+<h2 id="outline"><a class="header" href="#outline">Outline</a></h2>
+<p>Everything about graphics rendering happens in a three-dimensional world, so I will need to explain some of the <a href="#vectors">vector mathematics</a> that we're using. In SmallPT, the <code>vec3</code> type is then doubling up as a type for <a href="#colours">colours</a>. Since we're not trying to be minimal here, I will treat colours entirely separately from vector algebra. After this ground work, we need to implement some <a href="#geometry">geometry primitives</a>: spheres, rays and how they intersect. When we have that, we can describe a <a href="#scene">scene</a>. The SmallPT scene is a modification of the Cornell box, that consists solely of spheres, some so large that they appear as a nearly flat surface.</p>
+<p>This all leads up to the core of the matter: <a href="#path-tracing">path tracing</a>. How do we model every possible path that a beam of light can take to arrive in our camera?</p>
+<p>The program is not complete before we write a <a href="#main">main function</a>, including code to write the image to a PPM file, and some user interaction: command-line arguments and a friendly progress bar.</p>
+<pre><code class="language-toml #dependencies">rayon = &quot;1.5.3&quot;
+indicatif = { version = &quot;0.16.2&quot;, features = [&quot;rayon&quot;] }
+argh = &quot;0.1.7&quot;
+</code></pre>
+<pre><code class="language-rust #imports">extern crate rayon;
+
+use rayon::prelude::*;
+</code></pre>
+<p>$$\renewcommand{\vec}[1]{{\bf #1}}$$</p>
+<h1 id="vectors"><a class="header" href="#vectors">Vectors</a></h1>
+<p>The use of three-component vectors is ubiquitous in this little program.</p>
+<pre><code class="language-rust file=src/vec3.rs">&lt;&lt;vector&gt;&gt;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use quickcheck::*;
+
+    &lt;&lt;vector-tests&gt;&gt;
+}
+</code></pre>
+<p>The <code>Vec3</code> type has three public members \(x\), \(y\) and \(z\). We define the <code>struct</code> and a short-hand helper function <code>vec</code>.</p>
+<pre><code class="language-rust #vector">#[derive(Clone,Copy,Debug)]
+pub(crate) struct Vec3 {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64
+}
+
+pub(crate) const fn vec(x: f64, y: f64, z: f64) -&gt; Vec3 {
+    Vec3 { x: x, y: y, z: z }
+}
+</code></pre>
+<p>We derive the <code>Clone</code>, <code>Copy</code>, and <code>Debug</code> traits, meaning that we can print debug statements involving <code>Vec3</code> instances, and that we can clone instances usinge the <code>.clone()</code> method. The <code>Copy</code> trait means that the <code>Vec3</code> can be copied implicitly, creating call-by-value semantics on this type.</p>
+<p>:::: {.alert .alert-info}</p>
+<h3 id="why-not-a-class"><a class="header" href="#why-not-a-class">Why not a class?</a></h3>
+<p>Rust doesn't have classes. Instead, you define a <code>struct</code> with the data elements, and then implement one or more <code>trait</code>s on top of that. Data hiding, access patterns, inheritance and what-have-you-not in object-oriented styles of programming can still be achieved using <code>trait</code>s. For more information, see <a href="https://doc.rust-lang.org/book/ch17-00-oop.html">The Rust Book, chapter 17</a>.
+::::</p>
+<h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
+<p>Each of the overloaded operators only occupy a single line of code in SmallPt, but this is probably better. Rust has a trait for every standard operator in the language. These operators are syntactic sugar for the relevant function calls in each trait. Here we define <code>+</code>, and <code>-</code> (both unary and binary forms).</p>
+<pre><code class="language-rust #vector">impl std::ops::Add for Vec3 {
+    type Output = Self;
+    fn add(self, other: Self) -&gt; Self {
+        Self { x: self.x + other.x
+             , y: self.y + other.y
+             , z: self.z + other.z }
+    }
+}
+
+impl std::ops::Sub for Vec3 {
+    type Output = Self;
+    fn sub(self, other: Self) -&gt; Self {
+        Self { x: self.x - other.x
+             , y: self.y - other.y
+             , z: self.z - other.z }
+    }
+}
+
+impl std::ops::Neg for Vec3 {
+    type Output = Self;
+    fn neg(self) -&gt; Self::Output {
+        Self { x: -self.x, y: -self.y, z: -self.z }
+    }
+}
+</code></pre>
+<p>SmallPt defines four kinds of multiplication: scaling, point-wise multiplication, dot product and outer product. The point-wise multiplication is only used to manipulate colors, for which we'll use separate structures.</p>
+<p>Here's scaling,</p>
+<pre><code class="language-rust #vector">impl std::ops::Mul&lt;f64&gt; for Vec3 {
+    type Output = Self;
+    fn mul(self, s: f64) -&gt; Self {
+        Self { x: self.x * s
+             , y: self.y * s
+             , z: self.z * s }
+    }
+}
+</code></pre>
+<p>the dot-product,</p>
+<p>$$\vec{a} \cdot \vec{b} = a_x b_x + a_y b_y + a_z b_z$$</p>
+<pre><code class="language-rust #vector">impl std::ops::Mul&lt;Vec3&gt; for Vec3 {
+    type Output = f64;
+    fn mul(self, other: Self) -&gt; f64 {
+        self.x * other.x +
+        self.y * other.y +
+        self.z * other.z
+    }
+}
+</code></pre>
+<p>and outer product for which we abuse the <code>%</code> operator,</p>
+<p>$$\vec{a} \wedge \vec{b} = \det \begin{pmatrix}
+\hat{x} &amp; \hat{y} &amp; \hat{z}\
+a_x &amp; a_y &amp; a_z \
+b_x &amp; b_y &amp; b_z
+\end{pmatrix}$$</p>
+<pre><code class="language-rust #vector">impl std::ops::Rem for Vec3 {
+    type Output = Self;
+    fn rem(self, other: Self) -&gt; Self {
+        Self { x: self.y * other.z - self.z * other.y
+             , y: self.z * other.x - self.x * other.z
+             , z: self.x * other.y - self.y * other.x }
+    }
+}
+</code></pre>
+<p>Vectors can be normalized to a unit-vector.</p>
+<pre><code class="language-rust #vector">impl Vec3 {
+    pub fn abs(self) -&gt; f64 {
+        (self * self).sqrt()
+    }
+
+    pub fn normalize(self) -&gt; Self {
+        self * (1.0 / self.abs())
+    }
+}
+</code></pre>
+<h2 id="tests"><a class="header" href="#tests">Tests</a></h2>
+<p>We use the <code>quickcheck</code> crate to do some property testing on the <code>Vec3</code> type. The idea of property testing is that you define some properties (duh!) on a type that should always hold. Then, if you have a way to generate arbitrary elements of your type, you can see if these properties do indeed hold. In many cases where mathematics or physics is involved, these test are expressed in much cleaner code than the usual unit tests.</p>
+<pre><code class="language-toml #dev-dependencies">quickcheck = &quot;1.0.3&quot;
+quickcheck_macros = &quot;1.0.0&quot;
+</code></pre>
+<pre><code class="language-rust #import-quickcheck">#[cfg(test)]
+extern crate quickcheck;
+
+#[cfg(test)]
+#[macro_use(quickcheck)]
+extern crate quickcheck_macros;
+</code></pre>
+<p>We need to be able to generate <code>Arbitrary</code> instances of <code>Vec</code>. I'm not sure if this will ever yield a zero-vector, or a sequence of vectors that lie in the same plane. We do want to check our properties on reasonable numbers though.</p>
+<pre><code class="language-rust #vector-tests">impl Arbitrary for Vec3 {
+    fn arbitrary(g: &amp;mut Gen) -&gt; Self {
+        let x = f64::arbitrary(g);
+        let y = f64::arbitrary(g);
+        let z = f64::arbitrary(g);
+        vec(x, y, z)
+    }
+}
+
+impl Vec3 {
+    fn is_finite(&amp;self) -&gt; bool {
+        self.x.is_finite() &amp;&amp; self.y.is_finite() &amp;&amp; self.z.is_finite()
+    }
+
+    fn reasonable(&amp;self) -&gt; bool {
+        self.is_finite() &amp;&amp;
+            self.x.log2().abs() &lt; 16.0 &amp;&amp;
+            self.y.log2().abs() &lt; 16.0 &amp;&amp;
+            self.z.log2().abs() &lt; 16.0
+    }
+}
+</code></pre>
+<p>Now we can check that for any vectors \(\vec{a}\) and \(\vec{b}\), we have,</p>
+<p>$$(\vec{a} \wedge \vec{b}) \cdot \vec{a} = 0,$$</p>
+<pre><code class="language-rust #vector-tests">#[quickcheck]
+fn outer_product_orthogonal(a: Vec3, b: Vec3) -&gt; TestResult {
+    if !(a.reasonable() &amp;&amp; b.reasonable()) { return TestResult::discard(); }
+    let c = a % b;
+    TestResult::from_bool((a * c).abs() &lt; 1e-6 &amp;&amp; (b * c).abs() &lt; 1e-6)
+}
+</code></pre>
+<p>that any normalized vector has length 1,</p>
+<pre><code class="language-rust #vector-tests">#[quickcheck]
+fn normalized_vec_length(a: Vec3) -&gt; TestResult {
+    if !a.reasonable() || (a * a) &lt;= 0.0 { return TestResult::discard(); }
+    let b = a.normalize();
+    TestResult::from_bool((1.0 - b * b).abs() &lt; 1e-6)
+}
+</code></pre>
+<p>and that the outer product upholds anti-symmetry,</p>
+<p>$$\vec{a} \wedge \vec{b} = - \vec{b} \wedge \vec{a}.$$</p>
+<pre><code class="language-rust #vector-tests">#[quickcheck]
+fn outer_product_anti_symmetry(a: Vec3, b: Vec3) -&gt; TestResult {
+    if !(a.reasonable() &amp;&amp; b.reasonable()) { return TestResult::discard(); }
+    let c = a % b;
+    let d = b % a;
+    TestResult::from_bool((c + d).abs() &lt; 1e-6)
+}
+</code></pre>
+<h1 id="colours"><a class="header" href="#colours">Colours</a></h1>
+<p>A colour on a computer is described by three numbers: red, green and blue intensity. There is a lot more interesting things to say about colour profiles, gamuts, CMYX, CIELAB or plain RGB encoding, but what it boils down to is the following: in the end we want RGB to store. So we may define a colour to be anything that converts to RGB.</p>
+<pre><code class="language-rust #colour file=src/colour.rs">#[inline]
+pub(crate) fn clamp(x: f64) -&gt; f64
+{ 
+    if x &lt; 0. { 0. } else if x &gt; 1. { 1. } else { x }
+}
+
+pub trait Colour: Sized
+            + std::ops::Add&lt;Output=Self&gt;
+            + std::ops::Mul&lt;Output=Self&gt;
+            + std::ops::Mul&lt;f64, Output=Self&gt; {
+    fn to_rgb(&amp;self) -&gt; (f64, f64, f64);
+    fn clamp(&amp;self) -&gt; Self;
+
+    fn max(&amp;self) -&gt; f64 {
+        let (r, g, b) = self.to_rgb();
+        if r &gt; g &amp;&amp; r &gt; b { r }
+        else if g &gt; b { g }
+        else { b }
+    }
+
+    fn to_u24(&amp;self) -&gt; (u8, u8, u8) {
+        let to_int = |x| (clamp(x).powf(1./2.2) * 255. + 0.5).floor() as u8;
+        let (r, g, b) = self.to_rgb();
+        (to_int(r), to_int(g), to_int(b))
+    }
+}
+</code></pre>
+<p>We can (and will) have a simple implementation in terms of a three-tuple of <code>f64</code>.</p>
+<pre><code class="language-rust #colour">#[derive(Clone,Copy,Debug)]
+pub(crate) struct RGBColour (f64, f64, f64);
+
+pub(crate) const fn rgb(r: f64, g: f64, b: f64) -&gt; RGBColour {
+    RGBColour (r, g, b)
+}
+
+impl Colour for RGBColour {
+    fn to_rgb(&amp;self) -&gt; (f64, f64, f64) {
+        let RGBColour(r, g, b) = self;
+        (*r, *g, *b)
+    }
+
+    fn clamp(&amp;self) -&gt; Self {
+        let RGBColour(r, g, b) = self;
+        RGBColour(clamp(*r), clamp(*g), clamp(*b))
+    }
+}
+</code></pre>
+<h2 id="constants"><a class="header" href="#constants">Constants</a></h2>
+<p>The two most important colours are black and white:</p>
+<pre><code class="language-rust #colour">pub(crate) const BLACK: RGBColour = rgb(0.0, 0.0, 0.0);
+pub(crate) const WHITE: RGBColour = rgb(1.0, 1.0, 1.0);
+</code></pre>
+<h2 id="operators-1"><a class="header" href="#operators-1">Operators</a></h2>
+<p>Furthermore, we need to add subtract and multiply colours. For colours it makes most sense to have point-wise multiplication.</p>
+<pre><code class="language-rust #colour">impl std::ops::Add for RGBColour {
+    type Output = Self;
+    fn add(self, other: Self) -&gt; Self {
+        let RGBColour(r1,g1,b1) = self;
+        let RGBColour(r2,g2,b2) = other;
+        RGBColour(r1+r2,g1+g2,b1+b2)
+    }
+}
+
+impl std::ops::Mul for RGBColour {
+    type Output = Self;
+    fn mul(self, other: Self) -&gt; Self {
+        let RGBColour(r1,g1,b1) = self;
+        let RGBColour(r2,g2,b2) = other;
+        RGBColour(r1*r2,g1*g2,b1*b2)
+    }
+}
+
+impl std::ops::Mul&lt;f64&gt; for RGBColour {
+    type Output = Self;
+    fn mul(self, s: f64) -&gt; Self {
+        let RGBColour(r1,g1,b1) = self;
+        RGBColour(r1*s,g1*s,b1*s)
+    }
+}
+</code></pre>
+<h1 id="geometry"><a class="header" href="#geometry">Geometry</a></h1>
+<p>With floating-point calculations, round-off can become a problem. If we bounce a ray off a sphere, how do we make sure that we don't detect another intersection with the same sphere? One way is to make sure that every ray travels a mininum distance before bouncing off anything. We'll call this distance <code>EPS</code>, short for <em>epsilon</em>, being the greek letter \(\epsilon\), generally denoting small quantities.</p>
+<pre><code class="language-rust #constants">const EPS: f64 = 1e-4;
+</code></pre>
+<h2 id="objects"><a class="header" href="#objects">Objects</a></h2>
+<p>The only objects in our scene are spheres. When we do path tracing, we also need rays.</p>
+<pre><code class="language-rust #ray">struct Ray
+    { pub origin: Vec3
+    , pub direction: Vec3 }
+</code></pre>
+<pre><code class="language-rust #sphere">struct Sphere
+    { pub radius: f64
+    , pub position: Vec3
+    &lt;&lt;sphere-members&gt;&gt;
+    }
+</code></pre>
+<h2 id="intersections"><a class="header" href="#intersections">Intersections</a></h2>
+<p>The <code>Shpere</code> has a method to detect intersection with a <code>Ray</code>.</p>
+<pre><code class="language-rust #sphere">impl Sphere {
+    fn intersect(&amp;self, ray: &amp;Ray) -&gt; Option&lt;f64&gt; {
+        &lt;&lt;sphere-ray-intersect&gt;&gt;
+    }
+}
+</code></pre>
+<p>The equation for the surface of a sphere at position $\vec{p}$ and radius $r$ is,</p>
+<p>$$S:\ (\vec{p} - \vec{x})^2 = r^2,$${#eq:sphere}</p>
+<p>and a ray from origin $\vec{o}$ and direction $\vec{\hat{d}}$ describes the half-line,</p>
+<p>$$L:\ \vec{x} = \vec{o} + t\vec{\hat{d}}.$${#eq:ray}</p>
+<p>Equating these gives a quadratic equation for $t$, taking $\vec{q} = \vec{p} - \vec{o}$,</p>
+<p>$$\begin{align}
+S \cap L:\ &amp;(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\
+&amp;t^2 - 2t\vec{\hat{d}}\vec{q} + \vec{q}^2 - r^2 = 0\
+&amp;t = \vec{\hat{d}}\vec{q} \pm \sqrt{(\vec{\hat{d}}\vec{q})^2 - \vec{q}^2 + r^2}.
+\end{align}$${#eq:sphere-ray-intersect}</p>
+<p>We first compute the determinant (part under the square root),</p>
+<pre><code class="language-rust #sphere-ray-intersect">let q = self.position - ray.origin;
+let b = ray.direction * q;
+let r = self.radius;
+let det = b*b - q*q + r*r;
+</code></pre>
+<p>If it is negative, there is no solution and the ray does not intersect with the sphere.</p>
+<pre><code class="language-rust #sphere-ray-intersect">if det &lt; 0. {
+    return None;
+}
+</code></pre>
+<p>Otherwise, it is safe to compute the square-root and return the first intersection at a distance larger than <code>EPS</code>.</p>
+<pre><code class="language-rust #sphere-ray-intersect">let rdet = det.sqrt();
+if b - rdet &gt; EPS {
+    Some(b - rdet)
+} else if b + rdet &gt; EPS {
+    Some(b + rdet)
+} else {
+    None
+}
+</code></pre>
+<h2 id="properties"><a class="header" href="#properties">Properties</a></h2>
+<p>A sphere has material properties. We can choose between <em>diffuse</em>, <em>specular</em> and <em>refractive</em> type.</p>
+<pre><code class="language-rust #material">enum Reflection
+    { Diffuse
+    , Specular
+    , Refractive }
+</code></pre>
+<p>:::: {.alert .alert-info}</p>
+<h3 id="sum-types"><a class="header" href="#sum-types">Sum types</a></h3>
+<p>Note that the Rust <code>enum</code> types are much richer than the <code>enum</code> you may be used to from C/C++. Together with <code>struct</code>, <code>enum</code> gives the corner stones of <em>algebraic data types</em>. Where a <code>struct</code> collects different members into a <em>product type</em>, an <code>enum</code> is a <em>sum type</em>, meaning that it either contains one value or the other.
+::::</p>
+<pre><code class="language-rust #sphere-members">, pub emission: RGBColour
+, pub colour: RGBColour
+, pub reflection: Reflection
+</code></pre>
+<h1 id="scene"><a class="header" href="#scene">Scene</a></h1>
+<p>The scene in SmallPt is an adaptation of the Cornell box.</p>
+<pre><code class="language-rust #scene">const SPHERES: [Sphere;9] =
+    &lt;&lt;scene-spheres&gt;&gt;
+</code></pre>
+<p>The scene consists of a red ceiling,</p>
+<pre><code class="language-rust #scene-spheres">[ Sphere { radius:  1e5,  position: vec(1e5+1.,   40.8, 81.6), emission: BLACK
+         , colour: rgb(0.75, 0.25, 0.25), reflection: Reflection::Diffuse }
+</code></pre>
+<p>four grey walls, one of which is black to emulate photons escaping,</p>
+<pre><code class="language-rust #scene-spheres">, Sphere { radius:  1e5,  position: vec(50., 40.8, 1e5),       emission: BLACK
+         , colour: rgb(0.75, 0.75, 0.75), reflection: Reflection::Diffuse }
+, Sphere { radius:  1e5,  position: vec(50., 40.8, -1e5+170.),  emission: BLACK
+         , colour: BLACK,                 reflection: Reflection::Diffuse }
+, Sphere { radius:  1e5,  position: vec(50., 1e5, 81.6),       emission: BLACK
+         , colour: rgb(0.75, 0.75, 0.75), reflection: Reflection::Diffuse }
+, Sphere { radius:  1e5,  position: vec(50., -1e5+81.6, 81.6), emission: BLACK
+         , colour: rgb(0.75, 0.75, 0.75), reflection: Reflection::Diffuse }
+</code></pre>
+<p>a blue floor,</p>
+<pre><code class="language-rust #scene-spheres">, Sphere { radius:  1e5,  position: vec(-1e5+99., 40.8, 81.6), emission: BLACK
+         , colour: rgb(0.25, 0.25, 0.75), reflection: Reflection::Diffuse }
+</code></pre>
+<p>a glass and a metal sphere,</p>
+<pre><code class="language-rust #scene-spheres">, Sphere { radius: 16.5,  position: vec(27., 16.5, 47.), emission: BLACK
+         , colour: rgb(0.999, 0.999, 0.999), reflection: Reflection::Specular }
+, Sphere { radius: 16.5,  position: vec(73., 16.5, 78.), emission: BLACK
+         , colour: rgb(0.999, 0.999, 0.999), reflection: Reflection::Refractive }
+</code></pre>
+<p>and a plafonniere</p>
+<pre><code class="language-rust #scene-spheres">, Sphere { radius:  600.,  position: vec(50., 681.6-0.27, 81.6)
+         , emission: rgb(12.0, 12.0, 12.0), colour: BLACK
+         , reflection: Reflection::Diffuse } ];
+</code></pre>
+<p>Given this scene, we can define the function <code>intersect</code> which computes the first intersection of a ray with any of the objects in the scene. If the ray intersects, a tuple is returned giving the distance and reference to the obstructing object.</p>
+<pre><code class="language-rust #scene">fn intersect(ray: &amp;Ray) -&gt; Option&lt;(f64, &amp;'static Sphere)&gt; {
+    let mut result : Option&lt;(f64, &amp;Sphere)&gt; = None;
+    for s in &amp;SPHERES {
+        if let Some(d) = s.intersect(ray) {
+            if result.is_none() || result.unwrap().0 &gt; d {
+                result = Some((d, s));
+            }
+        }
+    }
+    result
+}
+</code></pre>
+<p>It feel like we've done a lot of work here, but we've only arrived at line 48 of SmallPt.</p>
+<h1 id="path-tracing"><a class="header" href="#path-tracing">Path tracing</a></h1>
+<p>This is where all the physics happens. We need to generate random numbers.</p>
+<pre><code class="language-rust #imports">extern crate rand;
+use rand::Rng;
+</code></pre>
+<pre><code class="language-rust #constants">use std::f64::consts::PI;
+</code></pre>
+<p>The <code>radiance</code> function computes how many photons are traveling at a certain position in space from a certain direction.</p>
+<p>:::: {.alert}</p>
+<h3 id="recursion"><a class="header" href="#recursion">Recursion</a></h3>
+<p>One major change with respect to the original SmallPT is the recursion. SmallPT uses true recursion to compute the radiance of a ray. In Rust, this has led to some instances where a stack overflow was triggered. We may use a stack based implementation to prevent this from happening, but this has proven to be quite a bit slower. I ended up using a <code>loop</code>, modifying the traced path in place. Only in the case of partial reflection do we recursively call the <code>radiance</code> function.</p>
+<p>The result of each recursive radiance computation goes into an affine transformation ($ax + b$). We may compose two transformations</p>
+<p>$$(x \to ax + b) \circ (y \to cy + d) = y \to a(cy + d) + b = y \to acy + ad + b,$$</p>
+<p>meaning that if we express an affine transformation as a pair $(a, b)$ and a second $(c, d)$, we have $(a, b) \circ (c, d) = (ac, ad + b)$. This means we have a compact way to codify the contribution of each scattered ray.
+::::</p>
+<pre><code class="language-rust #path-tracing">fn radiance(ray: &amp;mut Ray, mut depth: u16) -&gt; RGBColour {
+    let mut rng = rand::thread_rng();
+    let mut colour = WHITE;
+    let mut output = BLACK;
+
+    loop {
+        &lt;&lt;do-intersect&gt;&gt;
+        &lt;&lt;russian-roulette-1&gt;&gt;
+        &lt;&lt;compute-normal&gt;&gt;
+        &lt;&lt;do-reflect&gt;&gt;
+    }
+}
+</code></pre>
+<p>The second argument keeps track of how deep we are tracing. It is used as a control to switch between sampling methods. One method is to reduce the brightness of the ray at every reflection off a diffuse object until we hit a light source. The second method, also known as <em>Russion Roulette</em>, is to keep the brightness of the ray constant, but only reflect with a probability given by the colour of the object. The first method will always give a nice smooth image but may take a long time wasted on very dim rays. The Russian Roulette wastes less time per sample, but produces grainy images at low sample rates. That is why SmallPt switches sampling methods if we are deeper than $n$ reflections.</p>
+<p>First, we need to see if the ray intersects any object in the scene; if not, we return the colour <code>BLACK</code>.</p>
+<pre><code class="language-rust #do-intersect">let hit = intersect(&amp;ray);
+if hit.is_none() { return output; }
+let (distance, object) = hit.unwrap();
+output = output + object.emission * colour;
+</code></pre>
+<h2 id="russian-roulette-1"><a class="header" href="#russian-roulette-1">Russian Roulette 1</a></h2>
+<p>The colour $f$ of an object reduces the radiance of a ray compared to the radiance of the reflected ray.</p>
+<p>$$r = f r_{\rm refl}.$${#eq:reflected-radiance}</p>
+<p>The first Russian Roulette happens at an integration depth of 5. The value $p$ is the probability of the ray being reflected. The value of $p$ can be anything between $0$ and $1$, and the math would still work out, however we choose it to be the maximum value of the colour of the object. Once the ray has overcome the odds of being absorbed, we have to renormalize the colour. If $p = 1$ the colour should remain the same. In other words, </p>
+<p>$$r = \frac{1}{N}\sum_{\rm N} p f' r_{\rm refl} = f r_{\rm refl},$${#eq:russian-roulette}</p>
+<p>meaning that $$f' = f / p$$. If the ray got absorbed, the radiance equals the emission of the object.</p>
+<pre><code class="language-rust #russian-roulette-1">let mut f = object.colour;
+let p = f.max();
+depth += 1;
+if depth &gt; 5 {
+    if rng.gen::&lt;f64&gt;() &lt; p {
+        f = f * (1. / p);
+    } else {
+        return output;
+        // current = stack.pop();
+        // continue;
+    }
+}
+</code></pre>
+<h2 id="normals"><a class="header" href="#normals">Normals</a></h2>
+<p>Now that we know that we hit an object, we need to compute the normal vector. Let $x$ be the position where the ray hits the object, and $\vec{n}$ be the normal vector (outward pointing) of the object.</p>
+<pre><code class="language-rust #compute-normal">let x = ray.origin + ray.direction * distance;
+let n = (x - object.position).normalize();
+</code></pre>
+<p>It could be that we're inside the object. In that case, the normal of reflection is opposite the normal of the object.</p>
+<pre><code class="language-rust #compute-normal">let n_refl = if n * ray.direction &lt; 0. { n } else { -n };
+</code></pre>
+<h2 id="reflection"><a class="header" href="#reflection">Reflection</a></h2>
+<p>We're at the point that we need to compute how much light is reflected. Of course, this depends on the type of material that the object is made of. SmallPt has three material types, <em>diffuse</em>, <em>specular</em>, and <em>refractive</em>, that each have their own physics.</p>
+<pre><code class="language-rust #do-reflect">match object.reflection {
+    Reflection::Diffuse =&gt; {
+        &lt;&lt;diffuse-reflection&gt;&gt;
+    }
+    Reflection::Specular =&gt; {
+        &lt;&lt;specular-reflection&gt;&gt;
+    }
+    Reflection::Refractive =&gt; {
+        &lt;&lt;refractive-reflection&gt;&gt;
+    }
+};
+</code></pre>
+<h3 id="diffuse-reflection"><a class="header" href="#diffuse-reflection">Diffuse reflection</a></h3>
+<p>There are many types of diffuse reflection. You could imagine a surface where rays have equal probability of reflecting to any direction. This would mean sampling vectors on a hemisphere. We have a uniform probability over longitude:</p>
+<pre><code class="language-rust #diffuse-reflection">let phi = 2.*PI * rng.gen::&lt;f64&gt;();
+</code></pre>
+<p>Taking $\theta$ to be the angle of incidence to the normal of the surface, we have a $p(\theta) \sim \sin \theta$ probability over latitude. The inverse CDF sampling method then gives than $\cos \theta$ has a uniform distribution in the interval $[0, 1]$.</p>
+<p>However, there is a second effect. If you shine a uniform bundle of light on a surface at an angle, the light intensity drops with a factor $\cos \theta$. The combination of sampling the hemisphere and the lighting is known has <em>cosine-weighted sampling</em>, and there is a trick called <em>Malley's Method</em>.
+We can sample points on a uniform disc, and project those onto the hemisphere [<a href="bibliography.html#Pbr-13.6.3">Pbr-13.6.3</a>].</p>
+<p>On a disc we have $p(r) \sim r$, so $p(r^2) \sim 1$,</p>
+<pre><code class="language-rust #diffuse-reflection">let r2 : f64 = rng.gen();
+let r = r2.sqrt();
+</code></pre>
+<p>We need a set of orthogonal axes in the plane of reflection. We pick a vector to start with, and compute the outer product with the normal to give one vector $\vec{u}$ orthogonal to $\vec{n}$. To prevent numberloss, the first vector should not be too close to the normal. The second vector $\vec{v}$ is found by taking another outer product of $\vec{u} \times \vec{n}$.</p>
+<pre><code class="language-rust #diffuse-reflection">let ncl = if n_refl.x.abs() &gt; 0.1 { vec(0., 1., 0.) } else { vec(1., 0., 0.) };
+let u = (ncl % n_refl).normalize();
+let v = n_refl % u;
+</code></pre>
+<p>The direction of the reflected ray is now known.</p>
+<pre><code class="language-rust #diffuse-reflection">let d = (u*phi.cos()*r + v*phi.sin()*r + n_refl*(1.-r2).sqrt()).normalize();
+</code></pre>
+<p>To compute the radiance, we need to know the radiance from the reflected ray.</p>
+<pre><code class="language-rust #diffuse-reflection">*ray = Ray {origin: x, direction: d};
+colour = f * colour;
+</code></pre>
+<h3 id="specular-reflection"><a class="header" href="#specular-reflection">Specular reflection</a></h3>
+<p>Specular reflection means we have to mirror the incident ray with respect to the normal. This means that only the $\vec{n}$ component of the direction flips,</p>
+<p>$$\vec{\hat{d}}' = \vec{\hat{d}} - 2 \vec{\hat{n}} (\vec{\hat{n}} \cdot \vec{\hat{d}})$$.</p>
+<pre><code class="language-rust #specular-reflection">let d = ray.direction - n * 2.*(n*ray.direction);
+*ray = Ray {origin: x, direction: d};
+colour = f * colour;
+</code></pre>
+<h3 id="refraction"><a class="header" href="#refraction">Refraction</a></h3>
+<p>Now some real optics! Discarding polarisation, there are several ways a photon may go at the boundary between two transparent media: <em>total internal reflection</em>, <em>refraction</em>, or <em>partial reflection</em>.</p>
+<p>There is always a reflective component,</p>
+<pre><code class="language-rust #refractive-reflection">let d = ray.direction - n * 2.*(n*ray.direction);
+let reflected_ray = Ray { origin: x, direction: d };
+</code></pre>
+<p>We need to know if we're moving into or out of the object.</p>
+<pre><code class="language-rust #refractive-reflection">let into = n * n_refl &gt; 0.;
+</code></pre>
+<h3 id="refractive-index"><a class="header" href="#refractive-index">Refractive index</a></h3>
+<p>The refractive index of glass can vary, but $n = 1.5$ seems reasonable.</p>
+<pre><code class="language-rust #constants">const N_GLASS: f64 = 1.5;
+const N_AIR: f64 = 1.0;
+</code></pre>
+<p>Depending on whether we're entering or leaving the glass object, the effective index of refraction is
+$n_{\rm air} / n_{\rm glass}$ or $n_{\rm glass} / n_{\rm air}$.</p>
+<pre><code class="language-rust #refractive-reflection">let n_eff = if into { N_AIR / N_GLASS } else { N_GLASS / N_AIR };
+</code></pre>
+<h3 id="total-internal-reflection"><a class="header" href="#total-internal-reflection">Total internal reflection</a></h3>
+<p>Total internal reflection happens if the angle of incidence is larger than some critical angle $\theta_c$, given by</p>
+<p>$$\theta_c = \arcsin \frac{n_{\rm outside}}{n_{\rm inside}}.$${#eq:tir-critical-angle}</p>
+<p>We can easily compute $\mu = \cos \theta$ using the inner product, so with a little algebra, total-internal-reflection happens if,</p>
+<p>$$\begin{align}
+\sin \theta &amp;&gt; {n_o \over n_i}\
+\sqrt{1 - \cos^2 \theta} &amp;&gt; {n_o \over n_i}\
+1 - \mu^2 &amp;&gt; \left({n_o \over n_i}\right)^2\
+n_{\rm eff}^2 \left(1 - \mu^2\right) &amp;&gt; 1
+\end{align}$$</p>
+<pre><code class="language-rust #refractive-reflection">let mu = ray.direction * n_refl;
+let cos2t = 1. - n_eff*n_eff*(1. - mu*mu);
+if cos2t &lt; 0. {
+    &lt;&lt;total-internal-reflection&gt;&gt;
+} else {
+    &lt;&lt;partial-reflection&gt;&gt;
+}
+</code></pre>
+<p>In that case, we recurse with the reflected ray.</p>
+<pre><code class="language-rust #total-internal-reflection">*ray = reflected_ray;
+colour = f * colour;
+</code></pre>
+<h3 id="partial-reflection"><a class="header" href="#partial-reflection">Partial reflection</a></h3>
+<p>In the case of partial reflection, we need to compute also the angle of the refracted ray. We have Snell's law,</p>
+<p>$${\sin \theta_i \over \sin \theta_o} = {n_o \over n_i} = {1 \over n_{\rm eff}}.$${#eq:snellius}</p>
+<p>We can decompose the incident ray direction into a normal component $d_n$ and a transverse component $d_t$. Then $|d_t| = \sin \theta_i$, and $|d_n| = \vec{d} \cdot \vec{n} = \cos \theta_i$. Similarly we can decompose the outgoing ray direction $\vec{d}'$,</p>
+<p>$$\begin{align}
+d_t' &amp;= n_{\rm eff} (\vec{d} - \mu \vec{n})\
+d_n' &amp;= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
+\end{align}$$</p>
+<p>where $|d_t|^2 = 1 - \mu^2$. That is convenient, because it turns out we have already computed $|d_n'|$, it is the square root of <code>cos2t</code>. Now, we also see where the total internal reflection comes from; there is no solution to Snell's law for those angles.</p>
+<pre><code class="language-rust #partial-reflection">let tdir = (ray.direction * n_eff - n_refl * (mu*n_eff + cos2t.sqrt())).normalize();
+</code></pre>
+<p>Next, we need to compute the fraction of light that is reflected. The Fresnel equations describe this process, but they are very complicated and also deal with polarisation. We use Schlick's approximation instead [<a href="bibliography.html#Schlick1994">Schlick1994</a>],</p>
+<p>$$R(\theta) = R_0 + (1 - R_0) (1 - \mu)^5,$$</p>
+<p>where</p>
+<p>$$R_0 = \left(\frac{n_i - n_o}{n_i + n_o}\right)^2.$$</p>
+<pre><code class="language-rust #constants">const R0: f64 =  (N_GLASS - N_AIR) * (N_GLASS - N_AIR)
+              / ((N_GLASS + N_AIR) * (N_GLASS + N_AIR));
+</code></pre>
+<pre><code class="language-rust #partial-reflection">let c = 1. - (if into { -mu } else {tdir * n});
+let re = R0 + (1. - R0) * c.powf(5.0);
+let tr = 1. - re;
+</code></pre>
+<h3 id="russian-roulette-2"><a class="header" href="#russian-roulette-2">Russian Roulette 2</a></h3>
+<pre><code class="language-rust #partial-reflection">let p = 0.25 + 0.5*re;
+let rp = re/p;
+let tp = tr/(1.-p);
+if depth &gt; 2 {
+    if rng.gen::&lt;f64&gt;() &lt; p {
+        *ray = reflected_ray;
+        colour = f * colour * rp;
+    } else {
+        *ray = Ray { origin: x, direction: tdir };
+        colour = f * colour * tp;
+    }
+} else {
+    let r = radiance(&amp;mut Ray {origin: x, direction: tdir}, depth);
+    output = output + r * f * colour * tr;
+    *ray = reflected_ray;
+    colour = f * colour * re;
+}
+</code></pre>
+<h1 id="image"><a class="header" href="#image">Image</a></h1>
+<pre><code class="language-rust #image">struct Image
+    { width: usize
+    , height: usize
+    , pub data: Vec&lt;RGBColour&gt; }
+
+impl Image {
+    fn new(width: usize, height: usize) -&gt; Image {
+        Image {
+            width: width, height: height,
+            data: vec![BLACK; width*height]
+        }
+    }
+
+    fn for_each&lt;F&gt;(&amp;mut self, f: F)
+        where F: Send + Sync + Fn(usize, usize, &amp;mut RGBColour)
+    {
+        use indicatif::ParallelProgressIterator;
+        // use rayon::iter::{ParallelIterator, IntoParallelRefIterator};
+
+        let w = self.width;
+        let size = self.size() as u64;
+        self.data
+            .par_iter_mut().progress_count(size)
+            .enumerate()
+            .for_each(|(i, c)| {
+                let x = i % w;
+                let y = i / w;
+                f(x, y, c);
+            });
+    }
+
+    fn size(&amp;self) -&gt; usize { self.width * self.height }
+
+    &lt;&lt;print-ppm&gt;&gt;
+}
+</code></pre>
+<h2 id="writing-to-ppm"><a class="header" href="#writing-to-ppm">Writing to PPM</a></h2>
+<p>To write output efficiently, we need a <code>BufWriter</code> instance.</p>
+<pre><code class="language-rust #print-ppm">fn print_ppm(&amp;self, path: &amp;str) -&gt; std::io::Result&lt;()&gt; {
+    use std::fs::File;
+    use std::io::Write;
+
+    let file = File::create(path)?;
+    let mut out = std::io::BufWriter::new(file);
+    write!(&amp;mut out, &quot;P3\n{} {}\n{}\n&quot;, self.width, self.height, 255)?;
+
+    for rgb in &amp;self.data {
+        let (r, g, b) = rgb.to_u24();
+        write!(&amp;mut out, &quot;{} {} {} &quot;, r, g, b)?;
+    }
+    Ok(())
+}
+</code></pre>
+<h1 id="main"><a class="header" href="#main">Main</a></h1>
+<h2 id="argument-parsing"><a class="header" href="#argument-parsing">Argument parsing</a></h2>
+<pre><code class="language-rust #imports">extern crate argh;
+use argh::FromArgs;
+</code></pre>
+<pre><code class="language-rust #constants">const SAMPLES: usize = 100;
+const WIDTH: usize = 640;
+const HEIGHT: usize = 480;
+</code></pre>
+<pre><code class="language-rust #arghs">#[derive(FromArgs)]
+/// Renders the Cornell box as interpreted by Kevin Beason's SmallPt
+pub struct Arghs {
+    /// optional sample size (100)
+    #[argh(option, short = 's', default = &quot;SAMPLES&quot;)]
+    samples: usize,
+
+    /// optional thread count
+    /// the default (0) will take the systems logical cpu count
+    #[argh(option, short = 't', default = &quot;0&quot;)]
+    threads: usize,
+
+    /// optional stack size in MB per thread
+    #[argh(option, short = 'z', default = &quot;8&quot;)]
+    stack: usize,
+
+    /// optional image size dimensions WxH (640x480)
+    #[argh(option, from_str_fn(into_plot_dimensions), default = &quot;(WIDTH, HEIGHT)&quot;)]
+    wxh: (usize, usize),
+}
+
+// Helper function for parsing plot dimensions from command line arguments.
+fn into_plot_dimensions(dim: &amp;str) -&gt; Result&lt;(usize, usize), String&gt; {
+    let (w, h) = dim
+        .split_once('x')
+        .ok_or(&quot;dimensions do not parse, no delimiter?&quot;)?;
+    let w = w.parse::&lt;usize&gt;().map_err(|e| e.to_string())?;
+    let h = h.parse::&lt;usize&gt;().map_err(|e| e.to_string())?;
+    Ok((w, h))
+}
+</code></pre>
+<h2 id="the-main-file"><a class="header" href="#the-main-file">The main file</a></h2>
+<pre><code class="language-rust file=src/main.rs">&lt;&lt;import-quickcheck&gt;&gt;
+&lt;&lt;imports&gt;&gt;
+extern crate indicatif;
+mod vec3;
+use vec3::*;
+
+mod colour;
+use colour::*;
+
+&lt;&lt;constants&gt;&gt;
+&lt;&lt;ray&gt;&gt;
+&lt;&lt;material&gt;&gt;
+&lt;&lt;sphere&gt;&gt;
+&lt;&lt;scene&gt;&gt;
+&lt;&lt;path-tracing&gt;&gt;
+&lt;&lt;image&gt;&gt;
+&lt;&lt;arghs&gt;&gt;
+
+
+fn main() -&gt; std::io::Result&lt;()&gt; {
+    // use rayon::current_thread_index;
+    // rayon::ThreadPoolBuilder::new().num_threads(4).build_global().unwrap();
+    let args: Arghs = argh::from_env();
+    let (w, h) = args.wxh;
+    let samps = args.samples / 4;
+
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(args.threads)
+        .stack_size(args.stack * 1024 * 1024)
+        .build_global()
+        .unwrap();
+
+    let cam = Ray { origin: vec(50., 52., 295.6), direction: vec(0.0, -0.045, -1.0).normalize() };
+    let cx = vec(w as f64 * 0.510 / h as f64, 0., 0.);
+    let cy = (cx % cam.direction).normalize() * 0.510;
+
+    let mut img = Image::new(w, h);
+    eprintln!(&quot;Rendering ({} spp)&quot;, samps*4);
+
+    img.for_each(|x, y, c| {
+        let mut rng = rand::thread_rng();
+        for sy in 0..2 {
+            for sx in 0..2 {
+                let mut r = BLACK.clone();
+                for _ in 0..samps {
+                    let r1 = 2. * rng.gen::&lt;f64&gt;();
+                    let dx = if r1 &lt; 1. { r1.sqrt() - 1. } else { 1. - (2. - r1).sqrt() };
+                    let r2 = 2. * rng.gen::&lt;f64&gt;();
+                    let dy = if r2 &lt; 1. { r2.sqrt() - 1. } else { 1. - (2. - r2).sqrt() };
+                    let d = cx*( ( (sx as f64 + 0.5 + dx) / 2. + x as f64) / w as f64 - 0.5 )
+                          + cy*( ( (sy as f64 + 0.5 + dy) / 2. + (h - y - 1) as f64) / h as f64 - 0.5 )
+                          + cam.direction;
+                    r = r + radiance(&amp;mut Ray {origin: cam.origin + d*140., direction: d.normalize()}, 0) * (1./samps as f64);
+                }
+                *c = *c + r.clamp() * 0.25;
+            }
+        }
+    });
+
+    eprintln!(&quot;\nWriting image.&quot;);
+    img.print_ppm(&quot;image_rust.ppm&quot;)
+}
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="full_source.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="full_source.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>

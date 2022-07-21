@@ -1,0 +1,21 @@
+[book]
+title = "Raytracing in Rust"
+authors = ["Johannes Hidding", "Luuk van der Duim"]
+description = "Kevin Beason's SmallPT, translated in to literate Rust"
+src = "lit"
+language = "en"
+
+[rust]
+edition = "2018"
+
+[build]
+build-dir = "book"
+
+[output.html]
+mathjax-support = true
+
+[output.html.playground]
+runnable = false
+
+[preprocessor.bib]
+bibliography = "ref.bib"

@@ -1,11 +1,3 @@
----
-title: LiteratePT
-subtitle: a translation of smallpt
-bibliography: lit/ref.bib
-reference-section-title: References
-link-citations: true
----
-
 # LiteratePT
 One of my favourite compute science books is ["Physically Based Rendering" by Matt Pharr, Wenzel Jakob and Greg Humphreys (PBRT)](https://pbrt.org/). For me, this book put the concept of Literate Programming on the map, as well as giving an awesome overview of the technologies that go into graphics rendering. Now PBRT is more than 1200 pages, so I thought what better than to create a tribute of some smaller size?
 
@@ -28,7 +20,7 @@ This is a translation into Rust; not in a 100 lines, but like PBRT, extremely li
 ## Getting started with Rust
 The easiest way to install the Rust compiler is through the [`rustup` command](https://rustup.rs/). This will install both the Rust compiler `rustc` and its accompanying package manager `cargo`. You'd normally start a new project by running `cargo init`. This command creates the skeleton structure of a Rust project: a `Cargo.toml` and a "Hello World" program in `src/main.rs`. Since my goal is to have everything in a single Markdown file, I include the `Cargo.toml` here:
 
-``` {.toml file=Cargo.toml}
+```toml file=Cargo.toml
 [package]
 name = "literatept"
 version = "0.2.0"
@@ -50,7 +42,7 @@ strip = "debuginfo"
 Now, if I want to introduce some features to this program that require external packages (called *crates* in Rust), I can do so by extending on the `<<dependencies>>` section. For example, I will need a random number generator. This is most commonly available in the `rand` crate:
 <!-- > The package description can be extended using [more keys and their definitions](https://doc.rust-lang.org/cargo/reference/manifest.html) -->
 
-``` {.toml #dependencies}
+```toml #dependencies
 rand = "0.8.5"
 ```
 
@@ -61,23 +53,24 @@ This all leads up to the core of the matter: [path tracing](#path-tracing). How 
 
 The program is not complete before we write a [main function](#main), including code to write the image to a PPM file, and some user interaction: command-line arguments and a friendly progress bar.
 
-``` {.toml #dependencies}
+```toml #dependencies
 rayon = "1.5.3"
 indicatif = { version = "0.16.2", features = ["rayon"] }
 argh = "0.1.7"
 ```
 
-``` {.rust #imports}
+```rust #imports
 extern crate rayon;
 
 use rayon::prelude::*;
 ```
 
+$$\renewcommand{\vec}[1]{{\bf #1}}$$
+
 # Vectors
-$\renewcommand{\vec}[1]{{\bf #1}}$
 The use of three-component vectors is ubiquitous in this little program.
 
-``` {.rust file=src/vec3.rs}
+```rust file=src/vec3.rs
 <<vector>>
 
 #[cfg(test)]
@@ -89,9 +82,9 @@ mod tests {
 }
 ```
 
-The `Vec3` type has three public members $x$, $y$ and $z$. We define the `struct` and a short-hand helper function `vec`.
+The `Vec3` type has three public members \\(x\\), \\(y\\) and \\(z\\). We define the `struct` and a short-hand helper function `vec`.
 
-``` {.rust #vector}
+```rust #vector
 #[derive(Clone,Copy,Debug)]
 pub(crate) struct Vec3 {
     pub x: f64,
@@ -114,7 +107,7 @@ Rust doesn't have classes. Instead, you define a `struct` with the data elements
 ## Operators
 Each of the overloaded operators only occupy a single line of code in SmallPt, but this is probably better. Rust has a trait for every standard operator in the language. These operators are syntactic sugar for the relevant function calls in each trait. Here we define `+`, and `-` (both unary and binary forms).
 
-``` {.rust #vector}
+```rust #vector
 impl std::ops::Add for Vec3 {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -145,7 +138,7 @@ SmallPt defines four kinds of multiplication: scaling, point-wise multiplication
 
 Here's scaling,
 
-``` {.rust #vector}
+```rust #vector
 impl std::ops::Mul<f64> for Vec3 {
     type Output = Self;
     fn mul(self, s: f64) -> Self {
@@ -160,7 +153,7 @@ the dot-product,
 
 $$\vec{a} \cdot \vec{b} = a_x b_x + a_y b_y + a_z b_z$$
 
-``` {.rust #vector}
+```rust #vector
 impl std::ops::Mul<Vec3> for Vec3 {
     type Output = f64;
     fn mul(self, other: Self) -> f64 {
@@ -179,7 +172,7 @@ a_x & a_y & a_z \\
 b_x & b_y & b_z
 \end{pmatrix}$$
 
-``` {.rust #vector}
+```rust #vector
 impl std::ops::Rem for Vec3 {
     type Output = Self;
     fn rem(self, other: Self) -> Self {
@@ -192,7 +185,7 @@ impl std::ops::Rem for Vec3 {
 
 Vectors can be normalized to a unit-vector.
 
-``` {.rust #vector}
+```rust #vector
 impl Vec3 {
     pub fn abs(self) -> f64 {
         (self * self).sqrt()
@@ -207,12 +200,12 @@ impl Vec3 {
 ## Tests
 We use the `quickcheck` crate to do some property testing on the `Vec3` type. The idea of property testing is that you define some properties (duh!) on a type that should always hold. Then, if you have a way to generate arbitrary elements of your type, you can see if these properties do indeed hold. In many cases where mathematics or physics is involved, these test are expressed in much cleaner code than the usual unit tests.
 
-``` {.toml #dev-dependencies}
+```toml #dev-dependencies
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
 ```
 
-``` {.rust #import-quickcheck}
+```rust #import-quickcheck
 #[cfg(test)]
 extern crate quickcheck;
 
@@ -223,7 +216,7 @@ extern crate quickcheck_macros;
 
 We need to be able to generate `Arbitrary` instances of `Vec`. I'm not sure if this will ever yield a zero-vector, or a sequence of vectors that lie in the same plane. We do want to check our properties on reasonable numbers though.
 
-``` {.rust #vector-tests}
+```rust #vector-tests
 impl Arbitrary for Vec3 {
     fn arbitrary(g: &mut Gen) -> Self {
         let x = f64::arbitrary(g);
@@ -247,11 +240,11 @@ impl Vec3 {
 }
 ```
 
-Now we can check that for any vectors $\vec{a}$ and $\vec{b}$, we have,
+Now we can check that for any vectors \\(\vec{a}\\) and \\(\vec{b}\\), we have,
 
 $$(\vec{a} \wedge \vec{b}) \cdot \vec{a} = 0,$$
 
-``` {.rust #vector-tests}
+```rust #vector-tests
 #[quickcheck]
 fn outer_product_orthogonal(a: Vec3, b: Vec3) -> TestResult {
     if !(a.reasonable() && b.reasonable()) { return TestResult::discard(); }
@@ -262,7 +255,7 @@ fn outer_product_orthogonal(a: Vec3, b: Vec3) -> TestResult {
 
 that any normalized vector has length 1,
 
-``` {.rust #vector-tests}
+```rust #vector-tests
 #[quickcheck]
 fn normalized_vec_length(a: Vec3) -> TestResult {
     if !a.reasonable() || (a * a) <= 0.0 { return TestResult::discard(); }
@@ -275,7 +268,7 @@ and that the outer product upholds anti-symmetry,
 
 $$\vec{a} \wedge \vec{b} = - \vec{b} \wedge \vec{a}.$$
 
-``` {.rust #vector-tests}
+```rust #vector-tests
 #[quickcheck]
 fn outer_product_anti_symmetry(a: Vec3, b: Vec3) -> TestResult {
     if !(a.reasonable() && b.reasonable()) { return TestResult::discard(); }
@@ -288,7 +281,7 @@ fn outer_product_anti_symmetry(a: Vec3, b: Vec3) -> TestResult {
 # Colours
 A colour on a computer is described by three numbers: red, green and blue intensity. There is a lot more interesting things to say about colour profiles, gamuts, CMYX, CIELAB or plain RGB encoding, but what it boils down to is the following: in the end we want RGB to store. So we may define a colour to be anything that converts to RGB.
 
-``` {.rust #colour file=src/colour.rs}
+```rust #colour file=src/colour.rs
 #[inline]
 pub(crate) fn clamp(x: f64) -> f64
 { 
@@ -319,7 +312,7 @@ pub trait Colour: Sized
 
 We can (and will) have a simple implementation in terms of a three-tuple of `f64`.
 
-``` {.rust #colour}
+```rust #colour
 #[derive(Clone,Copy,Debug)]
 pub(crate) struct RGBColour (f64, f64, f64);
 
@@ -343,7 +336,7 @@ impl Colour for RGBColour {
 ## Constants
 The two most important colours are black and white:
 
-``` {.rust #colour}
+```rust #colour
 pub(crate) const BLACK: RGBColour = rgb(0.0, 0.0, 0.0);
 pub(crate) const WHITE: RGBColour = rgb(1.0, 1.0, 1.0);
 ```
@@ -351,7 +344,7 @@ pub(crate) const WHITE: RGBColour = rgb(1.0, 1.0, 1.0);
 ## Operators
 Furthermore, we need to add subtract and multiply colours. For colours it makes most sense to have point-wise multiplication.
 
-``` {.rust #colour}
+```rust #colour
 impl std::ops::Add for RGBColour {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -380,22 +373,22 @@ impl std::ops::Mul<f64> for RGBColour {
 ```
 
 # Geometry
-With floating-point calculations, round-off can become a problem. If we bounce a ray off a sphere, how do we make sure that we don't detect another intersection with the same sphere? One way is to make sure that every ray travels a mininum distance before bouncing off anything. We'll call this distance `EPS`, short for *epsilon*, being the greek letter $\epsilon$, generally denoting small quantities.
+With floating-point calculations, round-off can become a problem. If we bounce a ray off a sphere, how do we make sure that we don't detect another intersection with the same sphere? One way is to make sure that every ray travels a mininum distance before bouncing off anything. We'll call this distance `EPS`, short for *epsilon*, being the greek letter \\(\epsilon\\), generally denoting small quantities.
 
-``` {.rust #constants}
+```rust #constants
 const EPS: f64 = 1e-4;
 ```
 
 ## Objects
 The only objects in our scene are spheres. When we do path tracing, we also need rays.
 
-``` {.rust #ray}
+```rust #ray
 struct Ray
     { pub origin: Vec3
     , pub direction: Vec3 }
 ```
 
-``` {.rust #sphere}
+```rust #sphere
 struct Sphere
     { pub radius: f64
     , pub position: Vec3
@@ -406,7 +399,7 @@ struct Sphere
 ## Intersections
 The `Shpere` has a method to detect intersection with a `Ray`.
 
-``` {.rust #sphere}
+```rust #sphere
 impl Sphere {
     fn intersect(&self, ray: &Ray) -> Option<f64> {
         <<sphere-ray-intersect>>
@@ -432,7 +425,7 @@ S \cap L:\ &(\vec{p} - \vec{o} - t\vec{\hat{d}})^2 = r^2\\
 
 We first compute the determinant (part under the square root),
 
-``` {.rust #sphere-ray-intersect}
+```rust #sphere-ray-intersect
 let q = self.position - ray.origin;
 let b = ray.direction * q;
 let r = self.radius;
@@ -441,7 +434,7 @@ let det = b*b - q*q + r*r;
 
 If it is negative, there is no solution and the ray does not intersect with the sphere.
 
-``` {.rust #sphere-ray-intersect}
+```rust #sphere-ray-intersect
 if det < 0. {
     return None;
 }
@@ -449,7 +442,7 @@ if det < 0. {
 
 Otherwise, it is safe to compute the square-root and return the first intersection at a distance larger than `EPS`.
 
-``` {.rust #sphere-ray-intersect}
+```rust #sphere-ray-intersect
 let rdet = det.sqrt();
 if b - rdet > EPS {
     Some(b - rdet)
@@ -463,7 +456,7 @@ if b - rdet > EPS {
 ## Properties
 A sphere has material properties. We can choose between *diffuse*, *specular* and *refractive* type.
 
-``` {.rust #material}
+```rust #material
 enum Reflection
     { Diffuse
     , Specular
@@ -475,7 +468,7 @@ enum Reflection
 Note that the Rust `enum` types are much richer than the `enum` you may be used to from C/C++. Together with `struct`, `enum` gives the corner stones of *algebraic data types*. Where a `struct` collects different members into a *product type*, an `enum` is a *sum type*, meaning that it either contains one value or the other.
 ::::
 
-``` {.rust #sphere-members}
+```rust #sphere-members
 , pub emission: RGBColour
 , pub colour: RGBColour
 , pub reflection: Reflection
@@ -484,21 +477,21 @@ Note that the Rust `enum` types are much richer than the `enum` you may be used 
 # Scene
 The scene in SmallPt is an adaptation of the Cornell box.
 
-``` {.rust #scene}
+```rust #scene
 const SPHERES: [Sphere;9] =
     <<scene-spheres>>
 ```
 
 The scene consists of a red ceiling,
 
-``` {.rust #scene-spheres}
+```rust #scene-spheres
 [ Sphere { radius:  1e5,  position: vec(1e5+1.,   40.8, 81.6), emission: BLACK
          , colour: rgb(0.75, 0.25, 0.25), reflection: Reflection::Diffuse }
 ```
 
 four grey walls, one of which is black to emulate photons escaping,
 
-``` {.rust #scene-spheres}
+```rust #scene-spheres
 , Sphere { radius:  1e5,  position: vec(50., 40.8, 1e5),       emission: BLACK
          , colour: rgb(0.75, 0.75, 0.75), reflection: Reflection::Diffuse }
 , Sphere { radius:  1e5,  position: vec(50., 40.8, -1e5+170.),  emission: BLACK
@@ -511,14 +504,14 @@ four grey walls, one of which is black to emulate photons escaping,
 
 a blue floor,
 
-``` {.rust #scene-spheres}
+```rust #scene-spheres
 , Sphere { radius:  1e5,  position: vec(-1e5+99., 40.8, 81.6), emission: BLACK
          , colour: rgb(0.25, 0.25, 0.75), reflection: Reflection::Diffuse }
 ```
 
 a glass and a metal sphere,
 
-``` {.rust #scene-spheres}
+```rust #scene-spheres
 , Sphere { radius: 16.5,  position: vec(27., 16.5, 47.), emission: BLACK
          , colour: rgb(0.999, 0.999, 0.999), reflection: Reflection::Specular }
 , Sphere { radius: 16.5,  position: vec(73., 16.5, 78.), emission: BLACK
@@ -527,7 +520,7 @@ a glass and a metal sphere,
 
 and a plafonniere
 
-``` {.rust #scene-spheres}
+```rust #scene-spheres
 , Sphere { radius:  600.,  position: vec(50., 681.6-0.27, 81.6)
          , emission: rgb(12.0, 12.0, 12.0), colour: BLACK
          , reflection: Reflection::Diffuse } ];
@@ -535,7 +528,7 @@ and a plafonniere
 
 Given this scene, we can define the function `intersect` which computes the first intersection of a ray with any of the objects in the scene. If the ray intersects, a tuple is returned giving the distance and reference to the obstructing object.
 
-``` {.rust #scene}
+```rust #scene
 fn intersect(ray: &Ray) -> Option<(f64, &'static Sphere)> {
     let mut result : Option<(f64, &Sphere)> = None;
     for s in &SPHERES {
@@ -554,12 +547,12 @@ It feel like we've done a lot of work here, but we've only arrived at line 48 of
 # Path tracing
 This is where all the physics happens. We need to generate random numbers.
 
-``` {.rust #imports}
+```rust #imports
 extern crate rand;
 use rand::Rng;
 ```
 
-``` {.rust #constants}
+```rust #constants
 use std::f64::consts::PI;
 ```
 
@@ -576,7 +569,7 @@ $$(x \to ax + b) \circ (y \to cy + d) = y \to a(cy + d) + b = y \to acy + ad + b
 meaning that if we express an affine transformation as a pair $(a, b)$ and a second $(c, d)$, we have $(a, b) \circ (c, d) = (ac, ad + b)$. This means we have a compact way to codify the contribution of each scattered ray.
 ::::
 
-``` {.rust #path-tracing}
+```rust #path-tracing
 fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
     let mut rng = rand::thread_rng();
     let mut colour = WHITE;
@@ -595,7 +588,7 @@ The second argument keeps track of how deep we are tracing. It is used as a cont
 
 First, we need to see if the ray intersects any object in the scene; if not, we return the colour `BLACK`.
 
-``` {.rust #do-intersect}
+```rust #do-intersect
 let hit = intersect(&ray);
 if hit.is_none() { return output; }
 let (distance, object) = hit.unwrap();
@@ -613,7 +606,7 @@ $$r = \frac{1}{N}\sum_{\rm N} p f' r_{\rm refl} = f r_{\rm refl},$${#eq:russian-
 
 meaning that $$f' = f / p$$. If the ray got absorbed, the radiance equals the emission of the object.
 
-``` {.rust #russian-roulette-1}
+```rust #russian-roulette-1
 let mut f = object.colour;
 let p = f.max();
 depth += 1;
@@ -631,21 +624,21 @@ if depth > 5 {
 ## Normals
 Now that we know that we hit an object, we need to compute the normal vector. Let $x$ be the position where the ray hits the object, and $\vec{n}$ be the normal vector (outward pointing) of the object.
 
-``` {.rust #compute-normal}
+```rust #compute-normal
 let x = ray.origin + ray.direction * distance;
 let n = (x - object.position).normalize();
 ```
 
 It could be that we're inside the object. In that case, the normal of reflection is opposite the normal of the object.
 
-``` {.rust #compute-normal}
+```rust #compute-normal
 let n_refl = if n * ray.direction < 0. { n } else { -n };
 ```
 
 ## Reflection
 We're at the point that we need to compute how much light is reflected. Of course, this depends on the type of material that the object is made of. SmallPt has three material types, *diffuse*, *specular*, and *refractive*, that each have their own physics.
 
-``` {.rust #do-reflect}
+```rust #do-reflect
 match object.reflection {
     Reflection::Diffuse => {
         <<diffuse-reflection>>
@@ -662,25 +655,25 @@ match object.reflection {
 ### Diffuse reflection
 There are many types of diffuse reflection. You could imagine a surface where rays have equal probability of reflecting to any direction. This would mean sampling vectors on a hemisphere. We have a uniform probability over longitude:
 
-``` {.rust #diffuse-reflection}
+```rust #diffuse-reflection
 let phi = 2.*PI * rng.gen::<f64>();
 ```
 
 Taking $\theta$ to be the angle of incidence to the normal of the surface, we have a $p(\theta) \sim \sin \theta$ probability over latitude. The inverse CDF sampling method then gives than $\cos \theta$ has a uniform distribution in the interval $[0, 1]$.
 
 However, there is a second effect. If you shine a uniform bundle of light on a surface at an angle, the light intensity drops with a factor $\cos \theta$. The combination of sampling the hemisphere and the lighting is known has *cosine-weighted sampling*, and there is a trick called *Malley's Method*.
-We can sample points on a uniform disc, and project those onto the hemisphere [@Pbr-13.6.3].
+We can sample points on a uniform disc, and project those onto the hemisphere {{#cite Pbr-13.6.3}}.
 
 On a disc we have $p(r) \sim r$, so $p(r^2) \sim 1$,
 
-``` {.rust #diffuse-reflection}
+```rust #diffuse-reflection
 let r2 : f64 = rng.gen();
 let r = r2.sqrt();
 ```
 
 We need a set of orthogonal axes in the plane of reflection. We pick a vector to start with, and compute the outer product with the normal to give one vector $\vec{u}$ orthogonal to $\vec{n}$. To prevent numberloss, the first vector should not be too close to the normal. The second vector $\vec{v}$ is found by taking another outer product of $\vec{u} \times \vec{n}$.
 
-``` {.rust #diffuse-reflection}
+```rust #diffuse-reflection
 let ncl = if n_refl.x.abs() > 0.1 { vec(0., 1., 0.) } else { vec(1., 0., 0.) };
 let u = (ncl % n_refl).normalize();
 let v = n_refl % u;
@@ -688,13 +681,13 @@ let v = n_refl % u;
 
 The direction of the reflected ray is now known.
 
-``` {.rust #diffuse-reflection}
+```rust #diffuse-reflection
 let d = (u*phi.cos()*r + v*phi.sin()*r + n_refl*(1.-r2).sqrt()).normalize();
 ```
 
 To compute the radiance, we need to know the radiance from the reflected ray.
 
-``` {.rust #diffuse-reflection}
+```rust #diffuse-reflection
 *ray = Ray {origin: x, direction: d};
 colour = f * colour;
 ```
@@ -704,7 +697,7 @@ Specular reflection means we have to mirror the incident ray with respect to the
 
 $$\vec{\hat{d}}' = \vec{\hat{d}} - 2 \vec{\hat{n}} (\vec{\hat{n}} \cdot \vec{\hat{d}})$$.
 
-``` {.rust #specular-reflection}
+```rust #specular-reflection
 let d = ray.direction - n * 2.*(n*ray.direction);
 *ray = Ray {origin: x, direction: d};
 colour = f * colour;
@@ -715,21 +708,21 @@ Now some real optics! Discarding polarisation, there are several ways a photon m
 
 There is always a reflective component,
 
-``` {.rust #refractive-reflection}
+```rust #refractive-reflection
 let d = ray.direction - n * 2.*(n*ray.direction);
 let reflected_ray = Ray { origin: x, direction: d };
 ```
 
 We need to know if we're moving into or out of the object.
 
-``` {.rust #refractive-reflection}
+```rust #refractive-reflection
 let into = n * n_refl > 0.;
 ```
 
 ### Refractive index
 The refractive index of glass can vary, but $n = 1.5$ seems reasonable.
 
-``` {.rust #constants}
+```rust #constants
 const N_GLASS: f64 = 1.5;
 const N_AIR: f64 = 1.0;
 ```
@@ -737,7 +730,7 @@ const N_AIR: f64 = 1.0;
 Depending on whether we're entering or leaving the glass object, the effective index of refraction is
 $n_{\rm air} / n_{\rm glass}$ or $n_{\rm glass} / n_{\rm air}$.
 
-``` {.rust #refractive-reflection}
+```rust #refractive-reflection
 let n_eff = if into { N_AIR / N_GLASS } else { N_GLASS / N_AIR };
 ```
 
@@ -755,7 +748,7 @@ $$\begin{align}
 n_{\rm eff}^2 \left(1 - \mu^2\right) &> 1
 \end{align}$$
 
-``` {.rust #refractive-reflection}
+```rust #refractive-reflection
 let mu = ray.direction * n_refl;
 let cos2t = 1. - n_eff*n_eff*(1. - mu*mu);
 if cos2t < 0. {
@@ -767,7 +760,7 @@ if cos2t < 0. {
 
 In that case, we recurse with the reflected ray.
 
-``` {.rust #total-internal-reflection}
+```rust #total-internal-reflection
 *ray = reflected_ray;
 colour = f * colour;
 ```
@@ -786,11 +779,11 @@ d_n' &= \sqrt{1 - n_{\rm eff}^2 |d_t|^2} \vec{n},
 
 where $|d_t|^2 = 1 - \mu^2$. That is convenient, because it turns out we have already computed $|d_n'|$, it is the square root of `cos2t`. Now, we also see where the total internal reflection comes from; there is no solution to Snell's law for those angles.
 
-``` {.rust #partial-reflection}
+```rust #partial-reflection
 let tdir = (ray.direction * n_eff - n_refl * (mu*n_eff + cos2t.sqrt())).normalize();
 ```
 
-Next, we need to compute the fraction of light that is reflected. The Fresnel equations describe this process, but they are very complicated and also deal with polarisation. We use Schlick's approximation instead [@Schlick1994],
+Next, we need to compute the fraction of light that is reflected. The Fresnel equations describe this process, but they are very complicated and also deal with polarisation. We use Schlick's approximation instead {{#cite Schlick1994}},
 
 $$R(\theta) = R_0 + (1 - R_0) (1 - \mu)^5,$$
 
@@ -798,12 +791,12 @@ where
 
 $$R_0 = \left(\frac{n_i - n_o}{n_i + n_o}\right)^2.$$
 
-``` {.rust #constants}
+```rust #constants
 const R0: f64 =  (N_GLASS - N_AIR) * (N_GLASS - N_AIR)
               / ((N_GLASS + N_AIR) * (N_GLASS + N_AIR));
 ```
 
-``` {.rust #partial-reflection}
+```rust #partial-reflection
 let c = 1. - (if into { -mu } else {tdir * n});
 let re = R0 + (1. - R0) * c.powf(5.0);
 let tr = 1. - re;
@@ -811,7 +804,7 @@ let tr = 1. - re;
 
 ### Russian Roulette 2
 
-``` {.rust #partial-reflection}
+```rust #partial-reflection
 let p = 0.25 + 0.5*re;
 let rp = re/p;
 let tp = tr/(1.-p);
@@ -833,7 +826,7 @@ if depth > 2 {
 
 # Image
 
-``` {.rust #image}
+```rust #image
 struct Image
     { width: usize
     , height: usize
@@ -874,7 +867,7 @@ impl Image {
 ## Writing to PPM
 To write output efficiently, we need a `BufWriter` instance.
 
-``` {.rust #print-ppm}
+```rust #print-ppm
 fn print_ppm(&self, path: &str) -> std::io::Result<()> {
     use std::fs::File;
     use std::io::Write;
@@ -895,18 +888,18 @@ fn print_ppm(&self, path: &str) -> std::io::Result<()> {
 
 ## Argument parsing
 
-``` {.rust #imports}
+```rust #imports
 extern crate argh;
 use argh::FromArgs;
 ```
 
-``` {.rust #constants}
+```rust #constants
 const SAMPLES: usize = 100;
 const WIDTH: usize = 640;
 const HEIGHT: usize = 480;
 ```
 
-``` {.rust #arghs}
+```rust #arghs
 #[derive(FromArgs)]
 /// Renders the Cornell box as interpreted by Kevin Beason's SmallPt
 pub struct Arghs {
@@ -940,7 +933,8 @@ fn into_plot_dimensions(dim: &str) -> Result<(usize, usize), String> {
 ```
 
 ## The main file
-``` {.rust file=src/main.rs}
+
+```rust file=src/main.rs
 <<import-quickcheck>>
 <<imports>>
 extern crate indicatif;
