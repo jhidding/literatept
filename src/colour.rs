@@ -1,5 +1,5 @@
 // ~\~ language=Rust filename=src/colour.rs
-// ~\~ begin <<lit/index.md|colour>>[init]
+// ~\~ begin <<lit/index.md|colour>>[0]
 #[inline]
 pub(crate) fn clamp(x: f64) -> f64
 { 
