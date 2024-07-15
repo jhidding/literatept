@@ -1,0 +1,11 @@
+.codemark {
+    margin-bottom: 0pt;
+    padding-left: 10pt;
+    border-bottom: thin solid black;
+    font-style: italic;
+    background: #eee;
+}
+
+.codemark + pre {
+    margin-top: 0pt;
+}

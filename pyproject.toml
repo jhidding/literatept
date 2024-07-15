@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "rustpt"
+version = "0.1.0"
+description = "Build env for Entangled"
+authors = ["Johan Hidding <j.hidding@esciencecenter.nl>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+entangled-cli = {path = "/home/johannes/Code/entangled/entangled.py", develop = true}
+mawk = "^0.1.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
