@@ -1,0 +1,125 @@
+{
+  "version": "2.0.6",
+  "files": [
+    {
+      "path": "lit/full_source.md",
+      "deps": null,
+      "modified": "2022-07-21T12:48:23.465229",
+      "hexdigest": "f1aec295c4aec1f72fd613d18c8d6b85cbf4c4b6ff0caadfbe2b735a663e47eb",
+      "size": 206
+    },
+    {
+      "path": "lit/SUMMARY.md",
+      "deps": null,
+      "modified": "2024-07-15T20:15:24.261841",
+      "hexdigest": "83501019b5d655289359a5db7ebeacefd392eec7868e19c1a8ab0c8a6607b22e",
+      "size": 266
+    },
+    {
+      "path": "lit/index.md",
+      "deps": null,
+      "modified": "2024-07-15T21:43:34.204222",
+      "hexdigest": "b5b987e03a99e5d14419ef8cc5fd648b2352db64b16d1d7d5f2d726806451bf3",
+      "size": 3945
+    },
+    {
+      "path": "lit/vectors.md",
+      "deps": null,
+      "modified": "2024-07-15T21:46:51.316962",
+      "hexdigest": "6f37310e7ff9a44fbef095d71cc56a485fb59df0af330c7f3404be8d46cfe7a1",
+      "size": 6192
+    },
+    {
+      "path": "lit/colours.md",
+      "deps": null,
+      "modified": "2024-07-15T18:29:25.014413",
+      "hexdigest": "2abd6e9ee8cb285a9880db61cf1f07239cd86d065dd6ec5ab90a36b8b573ea56",
+      "size": 2601
+    },
+    {
+      "path": "lit/geometry.md",
+      "deps": null,
+      "modified": "2024-07-15T22:33:41.766032",
+      "hexdigest": "29281a8753daf25b2fc424de03ca8f2c541d71ad417ba45d5538d2e6955b5bf8",
+      "size": 2945
+    },
+    {
+      "path": "lit/path-tracing.md",
+      "deps": null,
+      "modified": "2024-07-15T18:27:46.880334",
+      "hexdigest": "a01f14671e2de92aab79831e8788b199b75926ecad8f1bae22a4e4f2a70d03b7",
+      "size": 11107
+    },
+    {
+      "path": "lit/scene.md",
+      "deps": null,
+      "modified": "2024-07-15T18:28:35.515740",
+      "hexdigest": "702d54d7a23c2ff6513cdc9a5171266e7219ce97cf48b971b11a6c0944e27a1d",
+      "size": 2534
+    },
+    {
+      "path": "lit/images.md",
+      "deps": null,
+      "modified": "2024-07-15T18:27:10.828068",
+      "hexdigest": "2bd9176f85be3d2cae32ad30afb14dbb1dd4d4b7f6b828d1600b089595d3b52e",
+      "size": 1411
+    },
+    {
+      "path": "lit/main-app.md",
+      "deps": null,
+      "modified": "2024-07-15T18:25:53.605902",
+      "hexdigest": "4bfcc3c1f88f20436e6ecaa167fc54188b9ecee9696fb5aaead36d68381403a5",
+      "size": 3262
+    },
+    {
+      "path": "src/colour.rs",
+      "deps": [
+        "lit/colours.md"
+      ],
+      "modified": "2024-07-16T00:27:36.187728",
+      "hexdigest": "8d2aaad5a7887afb035584d14c48f6c06833c0207df5032e68464d0ad525e178",
+      "size": 2074
+    },
+    {
+      "path": "Cargo.toml",
+      "deps": [
+        "lit/index.md",
+        "lit/vectors.md"
+      ],
+      "modified": "2024-07-16T00:27:36.196728",
+      "hexdigest": "a903cf41a44e6366330f470ddffca0ae692e8dafe0aa5d359a09e30b001c273b",
+      "size": 606
+    },
+    {
+      "path": "src/vec3.rs",
+      "deps": [
+        "lit/vectors.md"
+      ],
+      "modified": "2024-07-16T00:27:36.199728",
+      "hexdigest": "533d0f7468da3b58077d97a390a07a7c3cb57fe1a352994922876e0712ebbe05",
+      "size": 3666
+    },
+    {
+      "path": "src/main.rs",
+      "deps": [
+        "lit/path-tracing.md",
+        "lit/index.md",
+        "lit/images.md",
+        "lit/main-app.md",
+        "lit/scene.md",
+        "lit/geometry.md",
+        "lit/vectors.md"
+      ],
+      "modified": "2024-07-16T00:27:36.201729",
+      "hexdigest": "92d6548f1c061079f1246381d03da16363af2f550c4f01264ab948ee309d4489",
+      "size": 14300
+    }
+  ],
+  "source": [],
+  "target": [
+    "src/colour.rs",
+    "Cargo.toml",
+    "src/vec3.rs",
+    "src/main.rs"
+  ]
+}

@@ -1,6 +1,5 @@
-// ~\~ language=Rust filename=src/vec3.rs
-// ~\~ begin <<lit/index.md|src/vec3.rs>>[0]
-// ~\~ begin <<lit/index.md|vector>>[0]
+// ~/~ begin <<lit/vectors.md#src/vec3.rs>>[init]
+// ~/~ begin <<lit/vectors.md#vector>>[init]
 #[derive(Clone,Copy,Debug)]
 pub(crate) struct Vec3 {
     pub x: f64,
@@ -11,8 +10,8 @@ pub(crate) struct Vec3 {
 pub(crate) const fn vec(x: f64, y: f64, z: f64) -> Vec3 {
     Vec3 { x: x, y: y, z: z }
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[1]
+// ~/~ end
+// ~/~ begin <<lit/vectors.md#vector>>[1]
 impl std::ops::Add for Vec3 {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -37,8 +36,8 @@ impl std::ops::Neg for Vec3 {
         Self { x: -self.x, y: -self.y, z: -self.z }
     }
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[2]
+// ~/~ end
+// ~/~ begin <<lit/vectors.md#vector>>[2]
 impl std::ops::Mul<f64> for Vec3 {
     type Output = Self;
     fn mul(self, s: f64) -> Self {
@@ -47,8 +46,8 @@ impl std::ops::Mul<f64> for Vec3 {
              , z: self.z * s }
     }
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[3]
+// ~/~ end
+// ~/~ begin <<lit/vectors.md#vector>>[3]
 impl std::ops::Mul<Vec3> for Vec3 {
     type Output = f64;
     fn mul(self, other: Self) -> f64 {
@@ -57,8 +56,8 @@ impl std::ops::Mul<Vec3> for Vec3 {
         self.z * other.z
     }
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[4]
+// ~/~ end
+// ~/~ begin <<lit/vectors.md#vector>>[4]
 impl std::ops::Rem for Vec3 {
     type Output = Self;
     fn rem(self, other: Self) -> Self {
@@ -67,8 +66,8 @@ impl std::ops::Rem for Vec3 {
              , z: self.x * other.y - self.y * other.x }
     }
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|vector>>[5]
+// ~/~ end
+// ~/~ begin <<lit/vectors.md#vector>>[5]
 impl Vec3 {
     pub fn abs(self) -> f64 {
         (self * self).sqrt()
@@ -78,14 +77,14 @@ impl Vec3 {
         self * (1.0 / self.abs())
     }
 }
-// ~\~ end
+// ~/~ end
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use quickcheck::*;
 
-    // ~\~ begin <<lit/index.md|vector-tests>>[0]
+    // ~/~ begin <<lit/vectors.md#vector-tests>>[init]
     impl Arbitrary for Vec3 {
         fn arbitrary(g: &mut Gen) -> Self {
             let x = f64::arbitrary(g);
@@ -107,24 +106,24 @@ mod tests {
                 self.z.log2().abs() < 16.0
         }
     }
-    // ~\~ end
-    // ~\~ begin <<lit/index.md|vector-tests>>[1]
+    // ~/~ end
+    // ~/~ begin <<lit/vectors.md#vector-tests>>[1]
     #[quickcheck]
     fn outer_product_orthogonal(a: Vec3, b: Vec3) -> TestResult {
         if !(a.reasonable() && b.reasonable()) { return TestResult::discard(); }
         let c = a % b;
         TestResult::from_bool((a * c).abs() < 1e-6 && (b * c).abs() < 1e-6)
     }
-    // ~\~ end
-    // ~\~ begin <<lit/index.md|vector-tests>>[2]
+    // ~/~ end
+    // ~/~ begin <<lit/vectors.md#vector-tests>>[2]
     #[quickcheck]
     fn normalized_vec_length(a: Vec3) -> TestResult {
         if !a.reasonable() || (a * a) <= 0.0 { return TestResult::discard(); }
         let b = a.normalize();
         TestResult::from_bool((1.0 - b * b).abs() < 1e-6)
     }
-    // ~\~ end
-    // ~\~ begin <<lit/index.md|vector-tests>>[3]
+    // ~/~ end
+    // ~/~ begin <<lit/vectors.md#vector-tests>>[3]
     #[quickcheck]
     fn outer_product_anti_symmetry(a: Vec3, b: Vec3) -> TestResult {
         if !(a.reasonable() && b.reasonable()) { return TestResult::discard(); }
@@ -132,6 +131,6 @@ mod tests {
         let d = b % a;
         TestResult::from_bool((c + d).abs() < 1e-6)
     }
-    // ~\~ end
+    // ~/~ end
 }
-// ~\~ end
+// ~/~ end

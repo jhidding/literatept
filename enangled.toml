@@ -1,5 +1,0 @@
-version="2.0"
-
-[markers]
-open="^(?P<indent>\\s*)```(?P<properties>[^{}]*)\\s*$"
-close="^(?P<indent>\\s*)```\\s*$"

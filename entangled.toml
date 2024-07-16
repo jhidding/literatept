@@ -1,0 +1,11 @@
+version="2.0"
+watch_list=["lit/*.md"]
+
+[markers]
+open="^(?P<indent>\\s*)```(?P<properties>[a-zA-Z].*)$"
+close="^(?P<indent>\\s*)```\\s*$"
+
+[[languages]]
+name="admonish"
+identifiers=["admonish"]
+comment={"open"="#"}

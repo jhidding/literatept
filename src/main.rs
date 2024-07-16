@@ -1,26 +1,25 @@
-// ~\~ language=Rust filename=src/main.rs
-// ~\~ begin <<lit/index.md|src/main.rs>>[0]
-// ~\~ begin <<lit/index.md|import-quickcheck>>[0]
+// ~/~ begin <<lit/main-app.md#src/main.rs>>[init]
+// ~/~ begin <<lit/vectors.md#import-quickcheck>>[init]
 #[cfg(test)]
 extern crate quickcheck;
 
 #[cfg(test)]
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
-// ~\~ end
-// ~\~ begin <<lit/index.md|imports>>[0]
+// ~/~ end
+// ~/~ begin <<lit/index.md#imports>>[init]
 extern crate rayon;
 
 use rayon::prelude::*;
-// ~\~ end
-// ~\~ begin <<lit/index.md|imports>>[1]
+// ~/~ end
+// ~/~ begin <<lit/path-tracing.md#imports>>[0]
 extern crate rand;
 use rand::Rng;
-// ~\~ end
-// ~\~ begin <<lit/index.md|imports>>[2]
+// ~/~ end
+// ~/~ begin <<lit/main-app.md#imports>>[0]
 extern crate argh;
 use argh::FromArgs;
-// ~\~ end
+// ~/~ end
 extern crate indicatif;
 mod vec3;
 use vec3::*;
@@ -28,62 +27,62 @@ use vec3::*;
 mod colour;
 use colour::*;
 
-// ~\~ begin <<lit/index.md|constants>>[0]
+// ~/~ begin <<lit/geometry.md#constants>>[init]
 const EPS: f64 = 1e-4;
-// ~\~ end
-// ~\~ begin <<lit/index.md|constants>>[1]
+// ~/~ end
+// ~/~ begin <<lit/path-tracing.md#constants>>[0]
 use std::f64::consts::PI;
-// ~\~ end
-// ~\~ begin <<lit/index.md|constants>>[2]
+// ~/~ end
+// ~/~ begin <<lit/path-tracing.md#constants>>[1]
 const N_GLASS: f64 = 1.5;
 const N_AIR: f64 = 1.0;
-// ~\~ end
-// ~\~ begin <<lit/index.md|constants>>[3]
+// ~/~ end
+// ~/~ begin <<lit/path-tracing.md#constants>>[2]
 const R0: f64 =  (N_GLASS - N_AIR) * (N_GLASS - N_AIR)
               / ((N_GLASS + N_AIR) * (N_GLASS + N_AIR));
-// ~\~ end
-// ~\~ begin <<lit/index.md|constants>>[4]
+// ~/~ end
+// ~/~ begin <<lit/main-app.md#constants>>[0]
 const SAMPLES: usize = 100;
 const WIDTH: usize = 640;
 const HEIGHT: usize = 480;
-// ~\~ end
-// ~\~ begin <<lit/index.md|ray>>[0]
+// ~/~ end
+// ~/~ begin <<lit/geometry.md#ray>>[init]
 struct Ray
     { pub origin: Vec3
     , pub direction: Vec3 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|material>>[0]
+// ~/~ end
+// ~/~ begin <<lit/geometry.md#material>>[init]
 enum Reflection
     { Diffuse
     , Specular
     , Refractive }
-// ~\~ end
-// ~\~ begin <<lit/index.md|sphere>>[0]
+// ~/~ end
+// ~/~ begin <<lit/geometry.md#sphere>>[init]
 struct Sphere
     { pub radius: f64
     , pub position: Vec3
-    // ~\~ begin <<lit/index.md|sphere-members>>[0]
+    // ~/~ begin <<lit/geometry.md#sphere-members>>[init]
     , pub emission: RGBColour
     , pub colour: RGBColour
     , pub reflection: Reflection
-    // ~\~ end
+    // ~/~ end
     }
-// ~\~ end
-// ~\~ begin <<lit/index.md|sphere>>[1]
+// ~/~ end
+// ~/~ begin <<lit/geometry.md#sphere>>[1]
 impl Sphere {
     fn intersect(&self, ray: &Ray) -> Option<f64> {
-        // ~\~ begin <<lit/index.md|sphere-ray-intersect>>[0]
+        // ~/~ begin <<lit/geometry.md#sphere-ray-intersect>>[init]
         let q = self.position - ray.origin;
         let b = ray.direction * q;
         let r = self.radius;
         let det = b*b - q*q + r*r;
-        // ~\~ end
-        // ~\~ begin <<lit/index.md|sphere-ray-intersect>>[1]
+        // ~/~ end
+        // ~/~ begin <<lit/geometry.md#sphere-ray-intersect>>[1]
         if det < 0. {
             return None;
         }
-        // ~\~ end
-        // ~\~ begin <<lit/index.md|sphere-ray-intersect>>[2]
+        // ~/~ end
+        // ~/~ begin <<lit/geometry.md#sphere-ray-intersect>>[2]
         let rdet = det.sqrt();
         if b - rdet > EPS {
             Some(b - rdet)
@@ -92,17 +91,17 @@ impl Sphere {
         } else {
             None
         }
-        // ~\~ end
+        // ~/~ end
     }
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|scene>>[0]
+// ~/~ end
+// ~/~ begin <<lit/scene.md#scene>>[init]
 const SPHERES: [Sphere;9] =
-    // ~\~ begin <<lit/index.md|scene-spheres>>[0]
+    // ~/~ begin <<lit/scene.md#scene-spheres>>[init]
     [ Sphere { radius:  1e5,  position: vec(1e5+1.,   40.8, 81.6), emission: BLACK
              , colour: rgb(0.75, 0.25, 0.25), reflection: Reflection::Diffuse }
-    // ~\~ end
-    // ~\~ begin <<lit/index.md|scene-spheres>>[1]
+    // ~/~ end
+    // ~/~ begin <<lit/scene.md#scene-spheres>>[1]
     , Sphere { radius:  1e5,  position: vec(50., 40.8, 1e5),       emission: BLACK
              , colour: rgb(0.75, 0.75, 0.75), reflection: Reflection::Diffuse }
     , Sphere { radius:  1e5,  position: vec(50., 40.8, -1e5+170.),  emission: BLACK
@@ -111,24 +110,24 @@ const SPHERES: [Sphere;9] =
              , colour: rgb(0.75, 0.75, 0.75), reflection: Reflection::Diffuse }
     , Sphere { radius:  1e5,  position: vec(50., -1e5+81.6, 81.6), emission: BLACK
              , colour: rgb(0.75, 0.75, 0.75), reflection: Reflection::Diffuse }
-    // ~\~ end
-    // ~\~ begin <<lit/index.md|scene-spheres>>[2]
+    // ~/~ end
+    // ~/~ begin <<lit/scene.md#scene-spheres>>[2]
     , Sphere { radius:  1e5,  position: vec(-1e5+99., 40.8, 81.6), emission: BLACK
              , colour: rgb(0.25, 0.25, 0.75), reflection: Reflection::Diffuse }
-    // ~\~ end
-    // ~\~ begin <<lit/index.md|scene-spheres>>[3]
+    // ~/~ end
+    // ~/~ begin <<lit/scene.md#scene-spheres>>[3]
     , Sphere { radius: 16.5,  position: vec(27., 16.5, 47.), emission: BLACK
              , colour: rgb(0.999, 0.999, 0.999), reflection: Reflection::Specular }
     , Sphere { radius: 16.5,  position: vec(73., 16.5, 78.), emission: BLACK
              , colour: rgb(0.999, 0.999, 0.999), reflection: Reflection::Refractive }
-    // ~\~ end
-    // ~\~ begin <<lit/index.md|scene-spheres>>[4]
+    // ~/~ end
+    // ~/~ begin <<lit/scene.md#scene-spheres>>[4]
     , Sphere { radius:  600.,  position: vec(50., 681.6-0.27, 81.6)
              , emission: rgb(12.0, 12.0, 12.0), colour: BLACK
              , reflection: Reflection::Diffuse } ];
-    // ~\~ end
-// ~\~ end
-// ~\~ begin <<lit/index.md|scene>>[1]
+    // ~/~ end
+// ~/~ end
+// ~/~ begin <<lit/scene.md#scene>>[1]
 fn intersect(ray: &Ray) -> Option<(f64, &'static Sphere)> {
     let mut result : Option<(f64, &Sphere)> = None;
     for s in &SPHERES {
@@ -140,21 +139,21 @@ fn intersect(ray: &Ray) -> Option<(f64, &'static Sphere)> {
     }
     result
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|path-tracing>>[0]
+// ~/~ end
+// ~/~ begin <<lit/path-tracing.md#path-tracing>>[init]
 fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
     let mut rng = rand::thread_rng();
     let mut colour = WHITE;
     let mut output = BLACK;
 
     loop {
-        // ~\~ begin <<lit/index.md|do-intersect>>[0]
+        // ~/~ begin <<lit/path-tracing.md#do-intersect>>[init]
         let hit = intersect(&ray);
         if hit.is_none() { return output; }
         let (distance, object) = hit.unwrap();
         output = output + object.emission * colour;
-        // ~\~ end
-        // ~\~ begin <<lit/index.md|russian-roulette-1>>[0]
+        // ~/~ end
+        // ~/~ begin <<lit/path-tracing.md#russian-roulette-1>>[init]
         let mut f = object.colour;
         let p = f.max();
         depth += 1;
@@ -167,73 +166,73 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
                 // continue;
             }
         }
-        // ~\~ end
-        // ~\~ begin <<lit/index.md|compute-normal>>[0]
+        // ~/~ end
+        // ~/~ begin <<lit/path-tracing.md#compute-normal>>[init]
         let x = ray.origin + ray.direction * distance;
         let n = (x - object.position).normalize();
-        // ~\~ end
-        // ~\~ begin <<lit/index.md|compute-normal>>[1]
+        // ~/~ end
+        // ~/~ begin <<lit/path-tracing.md#compute-normal>>[1]
         let n_refl = if n * ray.direction < 0. { n } else { -n };
-        // ~\~ end
-        // ~\~ begin <<lit/index.md|do-reflect>>[0]
+        // ~/~ end
+        // ~/~ begin <<lit/path-tracing.md#do-reflect>>[init]
         match object.reflection {
             Reflection::Diffuse => {
-                // ~\~ begin <<lit/index.md|diffuse-reflection>>[0]
+                // ~/~ begin <<lit/path-tracing.md#diffuse-reflection>>[init]
                 let phi = 2.*PI * rng.gen::<f64>();
-                // ~\~ end
-                // ~\~ begin <<lit/index.md|diffuse-reflection>>[1]
+                // ~/~ end
+                // ~/~ begin <<lit/path-tracing.md#diffuse-reflection>>[1]
                 let r2 : f64 = rng.gen();
                 let r = r2.sqrt();
-                // ~\~ end
-                // ~\~ begin <<lit/index.md|diffuse-reflection>>[2]
+                // ~/~ end
+                // ~/~ begin <<lit/path-tracing.md#diffuse-reflection>>[2]
                 let ncl = if n_refl.x.abs() > 0.1 { vec(0., 1., 0.) } else { vec(1., 0., 0.) };
                 let u = (ncl % n_refl).normalize();
                 let v = n_refl % u;
-                // ~\~ end
-                // ~\~ begin <<lit/index.md|diffuse-reflection>>[3]
+                // ~/~ end
+                // ~/~ begin <<lit/path-tracing.md#diffuse-reflection>>[3]
                 let d = (u*phi.cos()*r + v*phi.sin()*r + n_refl*(1.-r2).sqrt()).normalize();
-                // ~\~ end
-                // ~\~ begin <<lit/index.md|diffuse-reflection>>[4]
+                // ~/~ end
+                // ~/~ begin <<lit/path-tracing.md#diffuse-reflection>>[4]
                 *ray = Ray {origin: x, direction: d};
                 colour = f * colour;
-                // ~\~ end
+                // ~/~ end
             }
             Reflection::Specular => {
-                // ~\~ begin <<lit/index.md|specular-reflection>>[0]
+                // ~/~ begin <<lit/path-tracing.md#specular-reflection>>[init]
                 let d = ray.direction - n * 2.*(n*ray.direction);
                 *ray = Ray {origin: x, direction: d};
                 colour = f * colour;
-                // ~\~ end
+                // ~/~ end
             }
             Reflection::Refractive => {
-                // ~\~ begin <<lit/index.md|refractive-reflection>>[0]
+                // ~/~ begin <<lit/path-tracing.md#refractive-reflection>>[init]
                 let d = ray.direction - n * 2.*(n*ray.direction);
                 let reflected_ray = Ray { origin: x, direction: d };
-                // ~\~ end
-                // ~\~ begin <<lit/index.md|refractive-reflection>>[1]
+                // ~/~ end
+                // ~/~ begin <<lit/path-tracing.md#refractive-reflection>>[1]
                 let into = n * n_refl > 0.;
-                // ~\~ end
-                // ~\~ begin <<lit/index.md|refractive-reflection>>[2]
+                // ~/~ end
+                // ~/~ begin <<lit/path-tracing.md#refractive-reflection>>[2]
                 let n_eff = if into { N_AIR / N_GLASS } else { N_GLASS / N_AIR };
-                // ~\~ end
-                // ~\~ begin <<lit/index.md|refractive-reflection>>[3]
+                // ~/~ end
+                // ~/~ begin <<lit/path-tracing.md#refractive-reflection>>[3]
                 let mu = ray.direction * n_refl;
                 let cos2t = 1. - n_eff*n_eff*(1. - mu*mu);
                 if cos2t < 0. {
-                    // ~\~ begin <<lit/index.md|total-internal-reflection>>[0]
+                    // ~/~ begin <<lit/path-tracing.md#total-internal-reflection>>[init]
                     *ray = reflected_ray;
                     colour = f * colour;
-                    // ~\~ end
+                    // ~/~ end
                 } else {
-                    // ~\~ begin <<lit/index.md|partial-reflection>>[0]
+                    // ~/~ begin <<lit/path-tracing.md#partial-reflection>>[init]
                     let tdir = (ray.direction * n_eff - n_refl * (mu*n_eff + cos2t.sqrt())).normalize();
-                    // ~\~ end
-                    // ~\~ begin <<lit/index.md|partial-reflection>>[1]
+                    // ~/~ end
+                    // ~/~ begin <<lit/path-tracing.md#partial-reflection>>[1]
                     let c = 1. - (if into { -mu } else {tdir * n});
                     let re = R0 + (1. - R0) * c.powf(5.0);
                     let tr = 1. - re;
-                    // ~\~ end
-                    // ~\~ begin <<lit/index.md|partial-reflection>>[2]
+                    // ~/~ end
+                    // ~/~ begin <<lit/path-tracing.md#partial-reflection>>[2]
                     let p = 0.25 + 0.5*re;
                     let rp = re/p;
                     let tp = tr/(1.-p);
@@ -251,16 +250,16 @@ fn radiance(ray: &mut Ray, mut depth: u16) -> RGBColour {
                         *ray = reflected_ray;
                         colour = f * colour * re;
                     }
-                    // ~\~ end
+                    // ~/~ end
                 }
-                // ~\~ end
+                // ~/~ end
             }
         };
-        // ~\~ end
+        // ~/~ end
     }
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|image>>[0]
+// ~/~ end
+// ~/~ begin <<lit/images.md#image>>[init]
 struct Image
     { width: usize
     , height: usize
@@ -294,7 +293,7 @@ impl Image {
 
     fn size(&self) -> usize { self.width * self.height }
 
-    // ~\~ begin <<lit/index.md|print-ppm>>[0]
+    // ~/~ begin <<lit/images.md#print-ppm>>[init]
     fn print_ppm(&self, path: &str) -> std::io::Result<()> {
         use std::fs::File;
         use std::io::Write;
@@ -309,10 +308,10 @@ impl Image {
         }
         Ok(())
     }
-    // ~\~ end
+    // ~/~ end
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|arghs>>[0]
+// ~/~ end
+// ~/~ begin <<lit/main-app.md#arghs>>[init]
 #[derive(FromArgs)]
 /// Renders the Cornell box as interpreted by Kevin Beason's SmallPt
 pub struct Arghs {
@@ -343,7 +342,7 @@ fn into_plot_dimensions(dim: &str) -> Result<(usize, usize), String> {
     let h = h.parse::<usize>().map_err(|e| e.to_string())?;
     Ok((w, h))
 }
-// ~\~ end
+// ~/~ end
 
 
 fn main() -> std::io::Result<()> {
@@ -389,4 +388,4 @@ fn main() -> std::io::Result<()> {
     eprintln!("\nWriting image.");
     img.print_ppm("image_rust.ppm")
 }
-// ~\~ end
+// ~/~ end

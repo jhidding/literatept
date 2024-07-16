@@ -1,8 +1,7 @@
-// ~\~ language=Rust filename=src/colour.rs
-// ~\~ begin <<lit/index.md|colour>>[0]
+// ~/~ begin <<lit/colours.md#colour>>[init]
 #[inline]
 pub(crate) fn clamp(x: f64) -> f64
-{ 
+{
     if x < 0. { 0. } else if x > 1. { 1. } else { x }
 }
 
@@ -26,8 +25,8 @@ pub trait Colour: Sized
         (to_int(r), to_int(g), to_int(b))
     }
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|colour>>[1]
+// ~/~ end
+// ~/~ begin <<lit/colours.md#colour>>[1]
 #[derive(Clone,Copy,Debug)]
 pub(crate) struct RGBColour (f64, f64, f64);
 
@@ -46,12 +45,12 @@ impl Colour for RGBColour {
         RGBColour(clamp(*r), clamp(*g), clamp(*b))
     }
 }
-// ~\~ end
-// ~\~ begin <<lit/index.md|colour>>[2]
+// ~/~ end
+// ~/~ begin <<lit/colours.md#colour>>[2]
 pub(crate) const BLACK: RGBColour = rgb(0.0, 0.0, 0.0);
 pub(crate) const WHITE: RGBColour = rgb(1.0, 1.0, 1.0);
-// ~\~ end
-// ~\~ begin <<lit/index.md|colour>>[3]
+// ~/~ end
+// ~/~ begin <<lit/colours.md#colour>>[3]
 impl std::ops::Add for RGBColour {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -77,4 +76,4 @@ impl std::ops::Mul<f64> for RGBColour {
         RGBColour(r1*s,g1*s,b1*s)
     }
 }
-// ~\~ end
+// ~/~ end
