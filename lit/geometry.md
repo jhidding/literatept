@@ -1,4 +1,4 @@
-$$\renewcommand{\vec}[1]{{\bf #1}}$$
+\\[\renewcommand{\vec}[1]{{\bf #1}}\\]
 
 # Geometry
 With floating-point calculations, round-off can become a problem. If we bounce a ray off a sphere, how do we make sure that we don't detect another intersection with the same sphere? One way is to make sure that every ray travels a mininum distance before bouncing off anything. We'll call this distance `EPS`, short for *epsilon*, being the greek letter \\(\epsilon\\), generally denoting small quantities.
@@ -37,7 +37,7 @@ impl Sphere {
 
 The equation for the surface of a sphere at position \\(\vec{p}\\) and radius \\(r\\) is,
 
-$$S:\ (\vec{p} - \vec{x})^2 = r^2,$$
+\\[S:\ (\vec{p} - \vec{x})^2 = r^2,\\]
 
 and a ray from origin $\vec{o}$ and direction \\(\vec{\hat{d}}\\) describes the half-line,
 

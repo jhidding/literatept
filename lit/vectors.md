@@ -1,4 +1,4 @@
-$$\renewcommand{\vec}[1]{{\bf #1}}$$
+\\[\renewcommand{\vec}[1]{{\bf #1}}\\]
 
 # Vectors
 The use of three-component vectors is ubiquitous in this little program.
@@ -83,7 +83,7 @@ impl std::ops::Mul<f64> for Vec3 {
 
 the dot-product,
 
-$$\vec{a} \cdot \vec{b} = a_x b_x + a_y b_y + a_z b_z$$
+\\[\vec{a} \cdot \vec{b} = a_x b_x + a_y b_y + a_z b_z\\]
 
 ```rust #vector
 impl std::ops::Mul<Vec3> for Vec3 {
@@ -174,7 +174,7 @@ impl Vec3 {
 
 Now we can check that for any vectors \\(\vec{a}\\) and \\(\vec{b}\\), we have,
 
-$$(\vec{a} \wedge \vec{b}) \cdot \vec{a} = 0,$$
+\\[(\vec{a} \wedge \vec{b}) \cdot \vec{a} = 0,\\]
 
 ```rust #vector-tests
 #[quickcheck]
@@ -198,7 +198,7 @@ fn normalized_vec_length(a: Vec3) -> TestResult {
 
 and that the outer product upholds anti-symmetry,
 
-$$\vec{a} \wedge \vec{b} = - \vec{b} \wedge \vec{a}.$$
+\\[\vec{a} \wedge \vec{b} = - \vec{b} \wedge \vec{a}.\\]
 
 ```rust #vector-tests
 #[quickcheck]

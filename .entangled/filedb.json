@@ -46,9 +46,9 @@
     {
       "path": "lit/path-tracing.md",
       "deps": null,
-      "modified": "2024-07-15T18:27:46.880334",
-      "hexdigest": "a01f14671e2de92aab79831e8788b199b75926ecad8f1bae22a4e4f2a70d03b7",
-      "size": 11107
+      "modified": "2024-07-16T09:42:28.275485",
+      "hexdigest": "0b9bc2017589de777c744485d9a7cbdc74d924536f94ea435af9f213f0c223de",
+      "size": 11263
     },
     {
       "path": "lit/scene.md",
@@ -118,8 +118,8 @@
   "source": [],
   "target": [
     "src/colour.rs",
+    "src/main.rs",
     "Cargo.toml",
-    "src/vec3.rs",
-    "src/main.rs"
+    "src/vec3.rs"
   ]
 }
